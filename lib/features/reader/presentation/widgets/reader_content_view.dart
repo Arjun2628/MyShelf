@@ -6,11 +6,13 @@ import 'package:epub_audio/features/reader/presentation/widgets/image_block_widg
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-/// Renders structured [ChapterContent] into styled Flutter widgets.
+/// Renders structured [ChapterContent] into styled Flutter widgets with real-time audio synchronization.
 class ReaderContentView extends StatelessWidget {
   final ChapterContent content;
   final Book book;
   final ReaderPreferences preferences;
+  final int? activeParagraphIndex;
+  final void Function(int paragraphIndex)? onParagraphTapped;
   final void Function(LinkSpanNode link)? onLinkTapped;
   final ScrollController? scrollController;
 
@@ -19,6 +21,8 @@ class ReaderContentView extends StatelessWidget {
     required this.content,
     required this.book,
     required this.preferences,
+    this.activeParagraphIndex,
+    this.onParagraphTapped,
     this.onLinkTapped,
     this.scrollController,
   });
@@ -26,6 +30,8 @@ class ReaderContentView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = preferences.colors;
+
+    int textParagraphCounter = 0;
 
     return SelectionArea(
       child: ListView.builder(
@@ -37,7 +43,32 @@ class ReaderContentView extends StatelessWidget {
         itemCount: content.blocks.length,
         itemBuilder: (context, index) {
           final block = content.blocks[index];
-          return _buildBlockWidget(context, block, colors);
+          final isTextParagraph = block is ParagraphNode || block is HeadingNode;
+          final currentParaIdx = isTextParagraph ? textParagraphCounter++ : null;
+          final isHighlight = activeParagraphIndex != null &&
+              currentParaIdx != null &&
+              activeParagraphIndex == currentParaIdx;
+
+          return GestureDetector(
+            onTap: currentParaIdx != null ? () => onParagraphTapped?.call(currentParaIdx) : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              padding: isHighlight
+                  ? const EdgeInsets.symmetric(horizontal: 10, vertical: 4)
+                  : EdgeInsets.zero,
+              decoration: isHighlight
+                  ? BoxDecoration(
+                      color: colors.accent.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border(
+                        left: BorderSide(color: colors.accent, width: 3.5),
+                      ),
+                    )
+                  : null,
+              child: _buildBlockWidget(context, block, colors),
+            ),
+          );
         },
       ),
     );
@@ -93,7 +124,9 @@ class ReaderContentView extends StatelessWidget {
       margin: EdgeInsets.only(top: topMargin, bottom: bottomMargin),
       child: Text.rich(
         TextSpan(
-          children: heading.spans.map((s) => _buildInlineSpan(s, colors, baseFontSize: headingSize)).toList(),
+          children: heading.spans
+              .map((s) => _buildInlineSpan(s, colors, baseFontSize: headingSize))
+              .toList(),
         ),
         style: TextStyle(
           color: colors.text,
@@ -243,7 +276,9 @@ class ReaderContentView extends StatelessWidget {
       return TextSpan(text: span.text, style: style);
     } else if (span is LinkSpanNode) {
       return TextSpan(
-        children: span.spans.map((s) => _buildInlineSpan(s, colors, baseFontSize: effectiveSize)).toList(),
+        children: span.spans
+            .map((s) => _buildInlineSpan(s, colors, baseFontSize: effectiveSize))
+            .toList(),
         style: TextStyle(
           color: colors.accent,
           decoration: TextDecoration.underline,
@@ -297,7 +332,7 @@ class ReaderContentView extends StatelessWidget {
       case 'Monospace':
         return 'Courier';
       default:
-        return null; // Default system font
+        return null;
     }
   }
 }

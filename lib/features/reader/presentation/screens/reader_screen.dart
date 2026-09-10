@@ -1,21 +1,25 @@
+import 'package:epub_audio/features/audio/presentation/screens/audiobook_player_screen.dart';
+import 'package:epub_audio/features/audio/presentation/widgets/mini_audio_player.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
-import 'package:epub_audio/features/reader/presentation/controllers/reader_controller.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/bookmarks_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/reader_content_view.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/reader_settings_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/toc_drawer.dart';
+import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
 import 'package:flutter/material.dart';
 
-/// Fullscreen Reading Screen providing comfortable reading and navigation controls.
+/// Fullscreen Reading Screen providing comfortable reading, audio narration, and controls.
 class ReaderScreen extends StatefulWidget {
   final Book book;
   final int initialChapterIndex;
+  final int initialParagraphIndex;
 
   const ReaderScreen({
     super.key,
     required this.book,
     this.initialChapterIndex = 0,
+    this.initialParagraphIndex = 0,
   });
 
   @override
@@ -23,35 +27,37 @@ class ReaderScreen extends StatefulWidget {
 }
 
 class _ReaderScreenState extends State<ReaderScreen> {
-  late final ReaderController _controller;
+  late final BookSessionController _session;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _controller = ReaderController(
+    _session = BookSessionController(
       book: widget.book,
       initialChapterIndex: widget.initialChapterIndex,
+      initialParagraphIndex: widget.initialParagraphIndex,
     );
-    _controller.addListener(_onControllerUpdate);
+    _session.addListener(_onSessionUpdate);
   }
 
-  void _onControllerUpdate() {
+  void _onSessionUpdate() {
     if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onControllerUpdate);
-    _controller.dispose();
+    _session.removeListener(_onSessionUpdate);
+    _session.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = _controller.preferences.colors;
-    final currentContent = _controller.currentChapterContent;
+    final colors = _session.preferences.colors;
+    final currentContent = _session.currentChapterContent;
+    final audioPlaying = _session.audioState.isPlaying;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -59,22 +65,31 @@ class _ReaderScreenState extends State<ReaderScreen> {
         children: [
           // 1. Main Reading Canvas
           GestureDetector(
-            onTap: _controller.toggleControls,
+            onTap: _session.toggleControls,
             behavior: HitTestBehavior.translucent,
             child: SafeArea(
-              child: _controller.isLoading
+              child: _session.isLoading
                   ? Center(
                       child: CircularProgressIndicator(color: colors.accent),
                     )
-                  : _controller.errorMessage != null
+                  : _session.errorMessage != null
                       ? _buildErrorState(colors)
                       : currentContent != null
                           ? ReaderContentView(
                               content: currentContent,
-                              book: _controller.book,
-                              preferences: _controller.preferences,
+                              book: _session.book,
+                              preferences: _session.preferences,
+                              activeParagraphIndex: audioPlaying
+                                  ? _session.currentParagraphIndex
+                                  : null,
                               scrollController: _scrollController,
-                              onLinkTapped: _controller.handleLink,
+                              onParagraphTapped: (paraIdx) {
+                                _session.seekToParagraph(paraIdx);
+                                if (!audioPlaying) {
+                                  _session.playAudio();
+                                }
+                              },
+                              onLinkTapped: _session.handleLink,
                             )
                           : const SizedBox.shrink(),
             ),
@@ -84,20 +99,31 @@ class _ReaderScreenState extends State<ReaderScreen> {
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
-            top: _controller.showControls ? 0 : -100,
+            top: _session.showControls ? 0 : -100,
             left: 0,
             right: 0,
             child: _buildTopBar(colors),
           ),
 
-          // 3. Bottom Controls (Overlay)
+          // 3. Bottom Navigation & Mini Player (Overlay)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
-            bottom: _controller.showControls ? 0 : -140,
+            bottom: _session.showControls ? 0 : -200,
             left: 0,
             right: 0,
-            child: _buildBottomBar(colors),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Docked Mini Audiobook Player
+                MiniAudioPlayer(
+                  session: _session,
+                  preferences: _session.preferences,
+                  onExpand: _openAudiobookPlayer,
+                ),
+                _buildBottomBar(colors),
+              ],
+            ),
           ),
         ],
       ),
@@ -105,8 +131,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Widget _buildTopBar(ReaderThemeColors colors) {
-    final currentTitle = _controller.currentChapterContent?.title ??
-        _controller.book.metadata.title;
+    final currentTitle = _session.currentChapterContent?.title ??
+        _session.book.metadata.title;
 
     return Container(
       padding: EdgeInsets.only(
@@ -139,7 +165,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _controller.book.metadata.title,
+                  _session.book.metadata.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -160,23 +186,41 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ],
             ),
           ),
+
+          // Switch to Fullscreen Audiobook Mode
           IconButton(
             icon: Icon(
-              _controller.isCurrentChapterBookmarked
+              _session.audioState.isPlaying
+                  ? Icons.graphic_eq_rounded
+                  : Icons.headphones_outlined,
+              color: _session.audioState.isPlaying ? colors.accent : colors.text,
+            ),
+            tooltip: 'Audiobook Player',
+            onPressed: _openAudiobookPlayer,
+          ),
+
+          // Bookmark Button
+          IconButton(
+            icon: Icon(
+              _session.isCurrentChapterBookmarked
                   ? Icons.bookmark_rounded
                   : Icons.bookmark_border_rounded,
-              color: _controller.isCurrentChapterBookmarked
+              color: _session.isCurrentChapterBookmarked
                   ? colors.accent
                   : colors.text,
             ),
             tooltip: 'Bookmark',
-            onPressed: _controller.toggleBookmark,
+            onPressed: _session.toggleBookmark,
           ),
+
+          // Bookmarks List
           IconButton(
             icon: Icon(Icons.bookmarks_outlined, color: colors.text),
             tooltip: 'Bookmarks List',
             onPressed: _showBookmarksModal,
           ),
+
+          // Appearance Settings
           IconButton(
             icon: Icon(Icons.text_format_rounded, color: colors.text),
             tooltip: 'Appearance',
@@ -188,13 +232,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Widget _buildBottomBar(ReaderThemeColors colors) {
-    final progress = (_controller.readingProgress * 100).round();
+    final progress = (_session.readingProgress * 100).round();
 
     return Container(
       padding: EdgeInsets.only(
         left: 16,
         right: 16,
-        top: 12,
+        top: 10,
         bottom: MediaQuery.of(context).padding.bottom + 12,
       ),
       decoration: BoxDecoration(
@@ -211,11 +255,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Chapter Slider
+          // Chapter Progress Slider
           Row(
             children: [
               Text(
-                'Ch ${_controller.currentChapterIndex + 1}',
+                'Ch ${_session.currentChapterIndex + 1}',
                 style: TextStyle(
                   color: colors.secondaryText,
                   fontSize: 12,
@@ -224,16 +268,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
               Expanded(
                 child: Slider(
-                  value: _controller.currentChapterIndex.toDouble(),
+                  value: _session.currentChapterIndex.toDouble(),
                   min: 0,
-                  max: (_controller.book.chapterCount - 1).toDouble().clamp(0, double.infinity),
-                  divisions: _controller.book.chapterCount > 1
-                      ? _controller.book.chapterCount - 1
+                  max: (_session.book.chapterCount - 1).toDouble().clamp(0, double.infinity),
+                  divisions: _session.book.chapterCount > 1
+                      ? _session.book.chapterCount - 1
                       : 1,
                   activeColor: colors.accent,
                   inactiveColor: colors.divider,
                   onChanged: (val) {
-                    _controller.loadChapter(val.round());
+                    _session.loadChapter(val.round());
                   },
                 ),
               ),
@@ -255,8 +299,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
               TextButton.icon(
                 icon: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: colors.text),
                 label: Text('Prev', style: TextStyle(color: colors.text)),
-                onPressed: _controller.hasPreviousChapter
-                    ? _controller.previousChapter
+                onPressed: _session.hasPreviousChapter
+                    ? _session.previousChapter
                     : null,
               ),
               OutlinedButton.icon(
@@ -271,8 +315,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
               TextButton.icon(
                 icon: Text('Next', style: TextStyle(color: colors.text)),
                 label: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colors.text),
-                onPressed: _controller.hasNextChapter
-                    ? _controller.nextChapter
+                onPressed: _session.hasNextChapter
+                    ? _session.nextChapter
                     : null,
               ),
             ],
@@ -292,7 +336,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
             Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
             const SizedBox(height: 16),
             Text(
-              _controller.errorMessage ?? 'An error occurred',
+              _session.errorMessage ?? 'An error occurred',
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.text, fontSize: 16),
             ),
@@ -302,11 +346,20 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 backgroundColor: colors.accent,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () => _controller.loadChapter(_controller.currentChapterIndex),
+              onPressed: () => _session.loadChapter(_session.currentChapterIndex),
               child: const Text('Retry'),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _openAudiobookPlayer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AudiobookPlayerScreen(session: _session),
       ),
     );
   }
@@ -319,11 +372,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
       builder: (context) => FractionallySizedBox(
         heightFactor: 0.75,
         child: TocDrawer(
-          book: _controller.book,
-          currentChapterIndex: _controller.currentChapterIndex,
-          preferences: _controller.preferences,
+          book: _session.book,
+          currentChapterIndex: _session.currentChapterIndex,
+          preferences: _session.preferences,
           onChapterSelected: (index, {anchorId}) {
-            _controller.loadChapter(index, targetAnchor: anchorId);
+            _session.loadChapter(index, targetAnchor: anchorId);
           },
         ),
       ),
@@ -336,9 +389,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ReaderSettingsModal(
-        preferences: _controller.preferences,
+        preferences: _session.preferences,
         onPreferencesChanged: (newPrefs) {
-          _controller.updatePreferences(newPrefs);
+          _session.updatePreferences(newPrefs);
         },
       ),
     );
@@ -352,13 +405,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
       builder: (context) => FractionallySizedBox(
         heightFactor: 0.6,
         child: BookmarksModal(
-          bookmarks: _controller.bookmarks,
-          preferences: _controller.preferences,
+          bookmarks: _session.bookmarks,
+          preferences: _session.preferences,
           onBookmarkSelected: (bm) {
-            _controller.loadChapter(bm.chapterIndex, targetAnchor: bm.anchorId);
+            _session.loadChapter(bm.chapterIndex, targetAnchor: bm.anchorId);
           },
           onBookmarkDeleted: (bm) {
-            _controller.deleteBookmark(bm);
+            _session.deleteBookmark(bm);
           },
         ),
       ),

@@ -1,12 +1,14 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:epub_audio/features/audio/presentation/screens/audiobook_player_screen.dart';
 import 'package:epub_audio/features/epub/data/repositories/epub_repository_impl.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
 import 'package:epub_audio/features/library/data/sample_books_provider.dart';
 import 'package:epub_audio/features/reader/presentation/screens/reader_screen.dart';
+import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
 import 'package:flutter/material.dart';
 
-/// Main Library Screen showing available books, reading progress, and import options.
+/// Main Library Screen showing available books, reading progress, and quick Read/Listen actions.
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
@@ -116,13 +118,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
+  void _openAudiobook(Book book) {
+    final session = BookSessionController(book: book);
+    session.playAudio();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AudiobookPlayerScreen(session: session),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'EPUB Reader',
+          'EPUB & Audiobook',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
         ),
         backgroundColor: Colors.white,
@@ -165,7 +178,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Import an EPUB file to start reading.',
+              'Import an EPUB file to start reading and listening.',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
@@ -210,7 +223,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           sliver: SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.62,
+              childAspectRatio: 0.58,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
@@ -231,25 +244,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildBookCard(Book book) {
-    return GestureDetector(
-      onTap: () => _openReader(book),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cover Image
-            Expanded(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Cover Image (Tap to Read)
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _openReader(book),
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 child: book.coverImageBytes != null
@@ -261,14 +274,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     : _buildDefaultCover(book),
               ),
             ),
+          ),
 
-            // Book Details
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+          // Book Details & Actions
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => _openReader(book),
+                  child: Text(
                     book.metadata.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -278,55 +294,84 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       color: Color(0xFF0F172A),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    book.metadata.author,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  book.metadata.author,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          book.metadata.language?.toUpperCase() ?? 'EPUB',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2563EB),
+                ),
+                const SizedBox(height: 8),
+
+                // Quick Action Bar: Read & Listen
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _openReader(book),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.menu_book_rounded, size: 14, color: Color(0xFF334155)),
+                              SizedBox(width: 4),
+                              Text(
+                                'Read',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      Text(
-                        '${book.chapterCount} ch',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _openAudiobook(book),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.headphones_rounded, size: 14, color: Color(0xFF2563EB)),
+                              SizedBox(width: 4),
+                              Text(
+                                'Listen',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildDefaultCover(Book book) {
-    // Generate harmonious gradient based on title
     final hash = book.metadata.title.hashCode;
     final color1 = HSLColor.fromAHSL(1.0, (hash.abs() % 360).toDouble(), 0.65, 0.45).toColor();
     final color2 = HSLColor.fromAHSL(1.0, ((hash.abs() + 40) % 360).toDouble(), 0.75, 0.35).toColor();
