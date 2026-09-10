@@ -34,10 +34,27 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
         } catch (_) {}
       }
 
-      await _flutterTts.setSpeechRate(0.5);
+      if (!kIsWeb && Platform.isAndroid) {
+        await _flutterTts.setSpeechRate(1.0);
+      } else {
+        await _flutterTts.setSpeechRate(0.5);
+      }
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
       await _flutterTts.awaitSpeakCompletion(false);
+
+      // Print engine diagnostics for troubleshooting
+      try {
+        final engines = await _flutterTts.getEngines;
+        final defaultEngine = await _flutterTts.getDefaultEngine;
+        final languages = await _flutterTts.getLanguages;
+        final defaultVoice = await _flutterTts.getDefaultVoice;
+        debugPrint('[TTS Diagnostics] Available engines: $engines | Default engine: $defaultEngine');
+        debugPrint('[TTS Diagnostics] Available languages count: ${languages is List ? languages.length : languages}');
+        debugPrint('[TTS Diagnostics] Default voice: $defaultVoice');
+      } catch (e) {
+        debugPrint('[TTS Diagnostics] Could not query engine metadata: $e');
+      }
 
       _flutterTts.setStartHandler(() {
         debugPrint('[TTS] Speech started');
@@ -175,8 +192,14 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   Future<void> setRate(double rate) async {
     try {
-      final ttsRate = (rate * 0.5).clamp(0.1, 1.0);
-      await _flutterTts.setSpeechRate(ttsRate);
+      if (!kIsWeb && Platform.isAndroid) {
+        // Android TextToSpeech standard rate: 1.0 is normal speed
+        await _flutterTts.setSpeechRate(rate.clamp(0.25, 2.0));
+      } else {
+        // iOS/macOS AVSpeechSynthesizer: 0.5 is normal speed
+        final ttsRate = (rate * 0.5).clamp(0.1, 1.0);
+        await _flutterTts.setSpeechRate(ttsRate);
+      }
     } catch (_) {}
   }
 
