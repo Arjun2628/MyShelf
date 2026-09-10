@@ -9,6 +9,8 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   VoidCallback? _onCompletion;
   void Function(String message)? _onError;
   bool _isInitialized = false;
+  String? _lastText;
+  bool _fallbackAttempted = false;
 
   FlutterTtsAudioEngine({FlutterTts? flutterTts})
       : _flutterTts = flutterTts ?? FlutterTts();
@@ -40,12 +42,33 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
       _flutterTts.setCompletionHandler(() {
         debugPrint('[TTS] Paragraph completed');
+        _fallbackAttempted = false;
         _onCompletion?.call();
       });
 
-      _flutterTts.setErrorHandler((dynamic msg) {
-        debugPrint('[TTS] Error: $msg');
-        _onError?.call(msg.toString());
+      _flutterTts.setErrorHandler((dynamic msg) async {
+        final errStr = msg.toString();
+        debugPrint('[TTS] Error: $errStr');
+
+        // Error -7 is ERROR_NOT_INSTALLED_YET on Android TTS
+        if ((errStr.contains('-7') || errStr.contains('NOT_INSTALLED')) &&
+            !_fallbackAttempted &&
+            _lastText != null &&
+            _lastText!.trim().isNotEmpty) {
+          _fallbackAttempted = true;
+          debugPrint(
+              '[TTS] Voice data not installed for requested language. Automatically falling back to default voice...');
+          try {
+            await _flutterTts.setLanguage('en-US');
+            final res = await _flutterTts.speak(_lastText!);
+            debugPrint('[TTS] Fallback speak result: $res');
+            return;
+          } catch (e) {
+            debugPrint('[TTS] Fallback speak error: $e');
+          }
+        }
+
+        _onError?.call(errStr);
       });
 
       _flutterTts.setCancelHandler(() {
@@ -67,27 +90,51 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
       return;
     }
 
+    _lastText = text;
+    _fallbackAttempted = false;
+
     try {
       if (language != null) {
         final normalizedLang = _normalizeLanguageTag(language);
+        bool canUseLang = false;
+
         try {
-          final isAvail = await _flutterTts.isLanguageAvailable(normalizedLang);
-          if (isAvail == true || isAvail == 1) {
-            await _flutterTts.setLanguage(normalizedLang);
-          } else {
-            debugPrint('[TTS] Language $normalizedLang unavailable, falling back to default voice');
+          // Check if language is actually downloaded/installed (Android)
+          final isInstalled =
+              await _flutterTts.isLanguageInstalled(normalizedLang);
+          if (isInstalled == true || isInstalled == 1) {
+            canUseLang = true;
           }
         } catch (_) {
-          // Some desktop platforms don't support isLanguageAvailable, attempt direct set
+          // If isLanguageInstalled is unsupported, check isLanguageAvailable
+          try {
+            final isAvail =
+                await _flutterTts.isLanguageAvailable(normalizedLang);
+            if (isAvail == true || isAvail == 1) {
+              canUseLang = true;
+            }
+          } catch (_) {
+            canUseLang = true;
+          }
+        }
+
+        if (canUseLang) {
           try {
             await _flutterTts.setLanguage(normalizedLang);
+          } catch (_) {}
+        } else {
+          debugPrint(
+              '[TTS] Language $normalizedLang voice not installed/available, keeping default system voice.');
+          try {
+            await _flutterTts.setLanguage('en-US');
           } catch (_) {}
         }
       }
 
       await _flutterTts.setVolume(1.0);
       final result = await _flutterTts.speak(text);
-      debugPrint('[TTS] speak result: $result for "${text.substring(0, text.length.clamp(0, 30))}..."');
+      debugPrint(
+          '[TTS] speak result: $result for "${text.substring(0, text.length.clamp(0, 30))}..."');
     } catch (e) {
       debugPrint('[TTS] Speak error: $e');
       _onError?.call('TTS speak error: $e');
@@ -150,6 +197,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   void dispose() {
     stop();
+    _lastText = null;
     _onCompletion = null;
     _onError = null;
   }
