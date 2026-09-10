@@ -152,7 +152,7 @@ void main() {
     // Verify floating audio playing tile is rendered on Home Screen
     expect(find.byIcon(Icons.graphic_eq_rounded), findsOneWidget);
     expect(find.byIcon(Icons.pause_rounded), findsWidgets);
-    expect(find.byIcon(Icons.forward_10_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
 
     // Stop audio
