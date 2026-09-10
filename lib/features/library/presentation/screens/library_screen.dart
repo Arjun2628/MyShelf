@@ -343,9 +343,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _selectedTabIndex == 0
-              ? _buildHomeLibrarySection()
-              : _buildSavedSection(),
+          : Stack(
+              children: [
+                _selectedTabIndex == 0
+                    ? _buildHomeLibrarySection()
+                    : _buildSavedSection(),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildActiveAudioPlayerTile(),
+                ),
+              ],
+            ),
       floatingActionButton: _selectedTabIndex == 0
           ? FloatingActionButton.extended(
               onPressed: _importEpubFile,
@@ -396,6 +406,180 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ----------------- ACTIVE AUDIO PLAYER TILE (HOME SCREEN) -----------------
+
+  Widget _buildActiveAudioPlayerTile() {
+    return ValueListenableBuilder<BookSessionController?>(
+      valueListenable: BookSessionController.activeSessionNotifier,
+      builder: (context, session, _) {
+        if (session == null) return const SizedBox.shrink();
+
+        return AnimatedBuilder(
+          animation: session,
+          builder: (context, _) {
+            if (session.audioState.isStopped) {
+              return const SizedBox.shrink();
+            }
+
+            final isPlaying = session.audioState.isPlaying;
+            final book = session.book;
+            final chapterTitle = session.currentChapterContent?.title ??
+                'Chapter ${session.currentChapterIndex + 1}';
+            final paraIdx = session.currentParagraphIndex + 1;
+            final totalParas = session.currentChapterParagraphs.length;
+
+            return Container(
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(color: const Color(0xFF334155)),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _openAudiobook(book),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    child: Row(
+                      children: [
+                        // Mini Book Cover
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            width: 38,
+                            height: 48,
+                            child: book.coverImageBytes != null
+                                ? Image.memory(
+                                    book.coverImageBytes!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : _buildDefaultCover(book, isMini: true),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
+                        // Title, Chapter & Playing Icon
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  if (isPlaying)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 6),
+                                      child: Icon(
+                                        Icons.graphic_eq_rounded,
+                                        size: 14,
+                                        color: Color(0xFF60A5FA),
+                                      ),
+                                    ),
+                                  Expanded(
+                                    child: Text(
+                                      book.metadata.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                totalParas > 0
+                                    ? '$chapterTitle • Para $paraIdx/$totalParas'
+                                    : chapterTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF94A3B8),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Actions: Previous, Play/Pause, Next, Close
+                        IconButton(
+                          icon: const Icon(Icons.skip_previous_rounded,
+                              size: 20, color: Colors.white),
+                          tooltip: 'Previous',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(),
+                          onPressed: session.previousAudioParagraph,
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF2563EB),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              isPlaying
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            tooltip: isPlaying ? 'Pause' : 'Play',
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.all(6),
+                            constraints: const BoxConstraints(),
+                            onPressed: session.toggleAudioPlayPause,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.skip_next_rounded,
+                              size: 20, color: Colors.white),
+                          tooltip: 'Next',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(),
+                          onPressed: session.nextAudioParagraph,
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded,
+                              size: 18, color: Color(0xFF94A3B8)),
+                          tooltip: 'Stop & Dismiss',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            session.stopAudio();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

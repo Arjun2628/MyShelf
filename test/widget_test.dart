@@ -1,10 +1,16 @@
 import 'dart:io';
+import 'package:epub_audio/features/epub/data/repositories/epub_repository_impl.dart';
+import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
+import 'package:epub_audio/features/library/data/sample_books_provider.dart';
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
+import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'mocks/mock_audio_source_engine.dart';
 
 void main() {
   setUp(() async {
@@ -123,5 +129,36 @@ void main() {
     expect(find.textContaining('കടപ്പുറത്ത് കാറ്റ് വീശുന്നു'), findsOneWidget);
     expect(find.textContaining('Wind at beach note'), findsOneWidget);
     expect(find.textContaining('A memorable passage from chapter 2'), findsOneWidget);
+  });
+
+  testWidgets('LibraryScreen displays active audio player tile when an audiobook session is active', (WidgetTester tester) async {
+    const provider = SampleBooksProvider(OpenEpubUseCase(EpubRepositoryImpl()));
+    final book = await provider.getEnglishSampleBook();
+    final mockAudio = MockAudioSourceEngine();
+    final session = BookSessionController(
+      book: book,
+      audioEngine: mockAudio,
+    );
+
+    await tester.runAsync(() async {
+      await session.seekToParagraph(0, autoPlay: true);
+    });
+
+    await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
+    for (int i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify floating audio playing tile is rendered on Home Screen
+    expect(find.byIcon(Icons.graphic_eq_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.pause_rounded), findsWidgets);
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+
+    // Stop audio
+    await tester.tap(find.byIcon(Icons.close_rounded), warnIfMissed: false);
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
   });
 }

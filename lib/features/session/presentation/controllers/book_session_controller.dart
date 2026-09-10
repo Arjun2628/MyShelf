@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:epub_audio/core/utils/path_utils.dart';
+import 'package:epub_audio/features/audio/data/services/audio_notification_service.dart';
 import 'package:epub_audio/features/audio/data/services/flutter_tts_audio_engine.dart';
 import 'package:epub_audio/features/audio/domain/entities/audio_playback_state.dart';
 import 'package:epub_audio/features/audio/domain/services/audio_source_engine.dart';
@@ -16,6 +17,11 @@ import 'package:flutter/foundation.dart';
 /// Unified session controller managing shared reading position, audio narration,
 /// chapter navigation, preferences, and bookmarks with persistent progress.
 class BookSessionController extends ChangeNotifier {
+  /// Global active session tracker for Home Screen player and notification sync.
+  static BookSessionController? activeSession;
+  static final ValueNotifier<BookSessionController?> activeSessionNotifier =
+      ValueNotifier<BookSessionController?>(null);
+
   final Book book;
   final AudioSourceEngine _audioEngine;
   final ParseChapterContentUseCase _parseChapterUseCase;
@@ -56,9 +62,59 @@ class BookSessionController extends ChangeNotifier {
             initialCharOffset,
           ),
         ) {
+    activeSession = this;
+    activeSessionNotifier.value = this;
+    _setupNotificationHandlers();
     _initAudioEngine();
     _initInitialChapter(_currentPosition.chapterIndex, _currentPosition.paragraphIndex);
     _loadBookmarks();
+  }
+
+  void _setupNotificationHandlers() {
+    final notif = AudioNotificationService();
+    notif.onPlayPressed = () {
+      if (activeSession == this) {
+        playAudio();
+      }
+    };
+    notif.onPausePressed = () {
+      if (activeSession == this) {
+        pauseAudio();
+      }
+    };
+    notif.onNextPressed = () {
+      if (activeSession == this) {
+        nextAudioParagraph();
+      }
+    };
+    notif.onPrevPressed = () {
+      if (activeSession == this) {
+        previousAudioParagraph();
+      }
+    };
+    notif.onStopPressed = () {
+      if (activeSession == this) {
+        stopAudio();
+      }
+    };
+  }
+
+  void _syncNotification() {
+    final snippet = _currentChapterParagraphs.isNotEmpty &&
+            _currentPosition.paragraphIndex < _currentChapterParagraphs.length
+        ? _currentChapterParagraphs[_currentPosition.paragraphIndex]
+        : null;
+
+    final chTitle = _currentChapterContent?.title ??
+        'Chapter ${_currentPosition.chapterIndex + 1}';
+
+    AudioNotificationService().showOrUpdatePlaybackNotification(
+      bookTitle: book.metadata.title,
+      author: book.metadata.author,
+      chapterTitle: chTitle,
+      isPlaying: _audioState.isPlaying,
+      currentTextSnippet: snippet,
+    );
   }
 
   void _loadBookmarks() {
@@ -339,6 +395,7 @@ class BookSessionController extends ChangeNotifier {
     );
     _persistProgress();
     notifyListeners();
+    _syncNotification();
 
     await _audioEngine.stop();
   }
@@ -362,6 +419,7 @@ class BookSessionController extends ChangeNotifier {
     );
     _persistProgress();
     notifyListeners();
+    AudioNotificationService().cancelNotification();
 
     await _audioEngine.stop();
   }
@@ -463,6 +521,7 @@ class BookSessionController extends ChangeNotifier {
     );
     _persistProgress();
     notifyListeners();
+    _syncNotification();
 
     await _audioEngine.speakParagraph(textToSpeak, language: book.metadata.language);
   }
