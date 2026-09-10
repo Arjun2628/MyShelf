@@ -16,6 +16,7 @@ class Book {
   final List<TocEntry> toc;
   final Uint8List? coverImageBytes;
   final EpubArchive archive;
+  final bool isPdf;
 
   const Book({
     required this.id,
@@ -25,6 +26,7 @@ class Book {
     required this.toc,
     required this.archive,
     this.coverImageBytes,
+    this.isPdf = false,
   });
 
   /// Total number of linear chapters/spine items.

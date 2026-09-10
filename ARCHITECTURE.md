@@ -270,6 +270,14 @@ lib/
 │   │           ├── toc_drawer.dart
 │   │           └── translation_modal.dart
 │   │
+│   ├── pdf/ (PDF Parsing & Ingestion)
+│   │   ├── domain/
+│   │   │   └── usecases/
+│   │   │       └── open_pdf_usecase.dart
+│   │   └── data/
+│   │       └── parsers/
+│   │           └── pdf_document_parser.dart
+│   │
 │   ├── audio/ (Audio & TTS System)
 │   │   ├── domain/
 │   │   │   └── entities/

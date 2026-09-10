@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
+import 'package:epub_audio/features/pdf/domain/usecases/open_pdf_usecase.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/session/domain/entities/book_progress.dart';
@@ -60,10 +61,11 @@ class HiveStorageService {
 
   // ----------------- IMPORTED BOOKS PERSISTENCE -----------------
 
-  /// Saves an imported EPUB file to device storage and indexes its metadata in Hive.
-  Future<Book> saveImportedEpub({
+  /// Saves an imported EPUB or PDF file to device storage and indexes its metadata in Hive.
+  Future<Book> saveImportedBook({
     required Uint8List bytes,
     required Book book,
+    bool isPdf = false,
   }) async {
     await init();
 
@@ -76,13 +78,14 @@ class HiveStorageService {
         basePath = Directory.systemTemp.path;
       }
 
-      final epubsDir = Directory('$basePath/epubs');
-      if (!epubsDir.existsSync()) {
-        epubsDir.createSync(recursive: true);
+      final booksDir = Directory('$basePath/books');
+      if (!booksDir.existsSync()) {
+        booksDir.createSync(recursive: true);
       }
 
+      final ext = isPdf ? 'pdf' : 'epub';
       final sanitizedId = book.id.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
-      final filePath = '${epubsDir.path}/$sanitizedId.epub';
+      final filePath = '${booksDir.path}/$sanitizedId.$ext';
       final file = File(filePath);
       await file.writeAsBytes(bytes);
 
@@ -95,6 +98,7 @@ class HiveStorageService {
         'filePath': filePath,
         'coverBytes': book.coverImageBytes,
         'chapterCount': book.chapterCount,
+        'isPdf': isPdf,
         'dateAdded': DateTime.now().toIso8601String(),
       };
 
@@ -107,22 +111,47 @@ class HiveStorageService {
     }
   }
 
-  /// Loads all stored imported books from disk.
-  Future<List<Book>> loadAllImportedBooks(OpenEpubUseCase openUseCase) async {
+  /// Backward-compatible alias for saveImportedBook with EPUB files.
+  Future<Book> saveImportedEpub({
+    required Uint8List bytes,
+    required Book book,
+  }) {
+    return saveImportedBook(bytes: bytes, book: book, isPdf: false);
+  }
+
+  /// Loads all stored imported EPUB and PDF books from disk.
+  Future<List<Book>> loadAllImportedBooks(
+    OpenEpubUseCase openUseCase, [
+    OpenPdfUseCase? pdfUseCase,
+  ]) async {
     await init();
     final List<Book> loadedBooks = [];
     if (_booksBox == null) return loadedBooks;
+
+    final actualPdfUseCase = pdfUseCase ?? OpenPdfUseCase();
 
     for (final key in _booksBox!.keys) {
       try {
         final data = _booksBox!.get(key);
         if (data is Map) {
           final filePath = data['filePath'] as String?;
+          final isPdf = (data['isPdf'] == true) ||
+              (filePath != null && filePath.toLowerCase().endsWith('.pdf'));
+
           if (filePath != null) {
             final file = File(filePath);
             if (await file.exists()) {
               final bytes = await file.readAsBytes();
-              final book = await openUseCase.fromBytes(bytes, bookId: key.toString());
+              final Book book;
+              if (isPdf) {
+                book = await actualPdfUseCase.fromBytes(
+                  bytes,
+                  bookId: key.toString(),
+                  fallbackTitle: data['title'] as String?,
+                );
+              } else {
+                book = await openUseCase.fromBytes(bytes, bookId: key.toString());
+              }
               loadedBooks.add(book);
             }
           }

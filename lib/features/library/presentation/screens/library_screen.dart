@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:epub_audio/features/audio/presentation/screens/audiobook_player_screen.dart';
 import 'package:epub_audio/features/epub/data/repositories/epub_repository_impl.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/library/data/sample_books_provider.dart';
+import 'package:epub_audio/features/pdf/domain/usecases/open_pdf_usecase.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/reader/presentation/screens/reader_screen.dart';
@@ -26,6 +28,7 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   final OpenEpubUseCase _openEpubUseCase =
       const OpenEpubUseCase(EpubRepositoryImpl());
+  final OpenPdfUseCase _openPdfUseCase = OpenPdfUseCase();
   late final SampleBooksProvider _sampleProvider;
 
   final TextEditingController _searchController = TextEditingController();
@@ -62,8 +65,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     });
 
     try {
-      final importedBooks =
-          await HiveStorageService().loadAllImportedBooks(_openEpubUseCase);
+      final importedBooks = await HiveStorageService()
+          .loadAllImportedBooks(_openEpubUseCase, _openPdfUseCase);
       final mlBook = await _sampleProvider.getMalayalamSampleBook();
       final enBook = await _sampleProvider.getEnglishSampleBook();
       final allProgress = HiveStorageService().getAllProgress();
@@ -91,11 +94,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  Future<void> _importEpubFile() async {
+  Future<void> _importBookFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['epub'],
+        allowedExtensions: ['epub', 'pdf'],
         withData: true,
       );
 
@@ -106,23 +109,60 @@ class _LibraryScreenState extends State<LibraryScreen> {
         });
 
         Book importedBook;
+        final isPdf = file.name.toLowerCase().endsWith('.pdf');
         final bytes = file.bytes;
-        if (bytes != null) {
-          importedBook = await _openEpubUseCase.fromBytes(
-            bytes,
-            bookId: file.name,
-          );
-          await HiveStorageService().saveImportedEpub(
-            bytes: bytes,
-            book: importedBook,
-          );
-        } else if (file.path != null) {
-          importedBook = await _openEpubUseCase.fromPath(
-            file.path!,
-            bookId: file.name,
-          );
+
+        if (isPdf) {
+          if (bytes != null) {
+            importedBook = await _openPdfUseCase.fromBytes(
+              bytes,
+              bookId: file.name,
+              fallbackTitle: file.name,
+            );
+            await HiveStorageService().saveImportedBook(
+              bytes: bytes,
+              book: importedBook,
+              isPdf: true,
+            );
+          } else if (file.path != null) {
+            importedBook = await _openPdfUseCase.fromPath(
+              file.path!,
+              bookId: file.name,
+            );
+            final fileBytes = await File(file.path!).readAsBytes();
+            await HiveStorageService().saveImportedBook(
+              bytes: fileBytes,
+              book: importedBook,
+              isPdf: true,
+            );
+          } else {
+            throw Exception('Could not read PDF file data');
+          }
         } else {
-          throw Exception('Could not read file data');
+          if (bytes != null) {
+            importedBook = await _openEpubUseCase.fromBytes(
+              bytes,
+              bookId: file.name,
+            );
+            await HiveStorageService().saveImportedBook(
+              bytes: bytes,
+              book: importedBook,
+              isPdf: false,
+            );
+          } else if (file.path != null) {
+            importedBook = await _openEpubUseCase.fromPath(
+              file.path!,
+              bookId: file.name,
+            );
+            final fileBytes = await File(file.path!).readAsBytes();
+            await HiveStorageService().saveImportedBook(
+              bytes: fileBytes,
+              book: importedBook,
+              isPdf: false,
+            );
+          } else {
+            throw Exception('Could not read EPUB file data');
+          }
         }
 
         setState(() {
@@ -142,7 +182,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to import EPUB: $e'),
+            content: Text('Failed to import book: $e'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -269,7 +309,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
       final lang = (book.metadata.language ?? '').toLowerCase();
 
       // 2. Category Tag Filter
-      if (_selectedFilterTag == 'In Progress') {
+      if (_selectedFilterTag == 'EPUB') {
+        return !book.isPdf;
+      } else if (_selectedFilterTag == 'PDF') {
+        return book.isPdf;
+      } else if (_selectedFilterTag == 'In Progress') {
         return _progressMap.containsKey(book.id);
       } else if (_selectedFilterTag == 'Malayalam') {
         return lang.contains('ml') ||
@@ -284,6 +328,55 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
       return true;
     }).toList();
+  }
+
+  /// Builds a visual badge distinguishing EPUB from PDF books.
+  Widget _buildFormatBadge(Book book, {bool isMini = false}) {
+    final isPdf = book.isPdf;
+    final bgColors = isPdf
+        ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+        : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)];
+    final icon =
+        isPdf ? Icons.picture_as_pdf_rounded : Icons.auto_stories_rounded;
+    final label = isPdf ? 'PDF' : 'EPUB';
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMini ? 5 : 6.5,
+        vertical: isMini ? 1.5 : 2.5,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: bgColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: (isPdf ? Colors.red : Colors.blue).withValues(alpha: 0.35),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: isMini ? 9 : 10.5, color: Colors.white),
+          SizedBox(width: isMini ? 2.5 : 3.5),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isMini ? 8.5 : 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatRelativeTime(DateTime dateTime) {
@@ -324,10 +417,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: FilledButton.icon(
-                onPressed: _importEpubFile,
+                onPressed: _importBookFile,
                 icon: const Icon(Icons.file_upload_outlined, size: 16),
                 label: const Text(
-                  'Import EPUB',
+                  'Import Book',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12.5,
@@ -558,6 +651,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                               ],
                                             ),
                                           ),
+                                        _buildFormatBadge(book, isMini: true),
+                                        const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
                                             book.metadata.title,
@@ -719,6 +814,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importedBooks = _books
         .where((b) => b.id != 'sample_chemmeen' && b.id != 'sample_alice')
         .toList();
+    final importedEpubs = importedBooks.where((b) => !b.isPdf).toList();
+    final importedPdfs = importedBooks.where((b) => b.isPdf).toList();
+
     final malayalamBooks = _books
         .where((b) =>
             (b.metadata.language ?? '').toLowerCase().contains('ml') ||
@@ -803,22 +901,42 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           ],
 
-          // 4. Row 2: Featured & Imported Shelf
-          if (importedBooks.isNotEmpty) ...[
+          // 4. Row 2: Imported PDFs Shelf (if any imported)
+          if (importedPdfs.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: _buildShelfHeader(
-                title: 'Your Imported Books',
-                subtitle: 'Custom EPUBs on your device',
-                icon: Icons.folder_special_rounded,
-                iconColor: const Color(0xFF0284C7),
-                count: importedBooks.length,
+                title: 'Your Imported PDFs',
+                subtitle: 'PDF documents & e-books with TTS audio',
+                icon: Icons.picture_as_pdf_rounded,
+                iconColor: const Color(0xFFDC2626),
+                count: importedPdfs.length,
               ),
             ),
             SliverToBoxAdapter(
               child: _buildHorizontalShelf(
-                books: importedBooks,
+                books: importedPdfs,
+                tagColor: const Color(0xFFDC2626),
+                shelfTag: 'PDF',
+              ),
+            ),
+          ],
+
+          // 5. Row 3: Imported EPUBs Shelf
+          if (importedEpubs.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: _buildShelfHeader(
+                title: 'Your Imported EPUBs',
+                subtitle: 'Custom EPUB books on your device',
+                icon: Icons.folder_special_rounded,
+                iconColor: const Color(0xFF0284C7),
+                count: importedEpubs.length,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildHorizontalShelf(
+                books: importedEpubs,
                 tagColor: const Color(0xFF0284C7),
-                shelfTag: 'Imported',
+                shelfTag: 'EPUB',
               ),
             ),
           ],
@@ -929,7 +1047,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildCategoryChipsBar() {
-    final tags = ['All', 'In Progress', 'Malayalam', 'English', 'Imported'];
+    final tags = [
+      'All',
+      'EPUB',
+      'PDF',
+      'In Progress',
+      'Malayalam',
+      'English',
+      'Imported'
+    ];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -940,6 +1066,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           int count = 0;
           if (tag == 'All') {
             count = _books.length;
+          } else if (tag == 'EPUB') {
+            count = _books.where((b) => !b.isPdf).length;
+          } else if (tag == 'PDF') {
+            count = _books.where((b) => b.isPdf).length;
           } else if (tag == 'In Progress') {
             count = _recentProgressList.length;
           } else if (tag == 'Malayalam') {
@@ -1154,6 +1284,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
+                          _buildFormatBadge(book, isMini: true),
+                          const SizedBox(width: 6),
                           const Icon(Icons.access_time_rounded,
                               size: 11, color: Color(0xFF94A3B8)),
                           const SizedBox(width: 3),
@@ -1331,25 +1463,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                 ),
-                // Language / Category Tag
+                // Format Badge & Language Tag
                 Positioned(
                   top: 6,
                   left: 6,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: tagColor.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      tag,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildFormatBadge(book, isMini: true),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: tagColor.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          tag,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
                 // Delete button for custom imported books
@@ -1571,6 +1710,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
+                      _buildFormatBadge(book, isMini: true),
+                      const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 1.5),
@@ -1674,28 +1815,36 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                 ),
-                // Progress Chip
-                if (progress != null)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Ch ${progress.chapterIndex + 1}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
+                // Format Badge & Progress Chip
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildFormatBadge(book, isMini: true),
+                      if (progress != null) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Ch ${progress.chapterIndex + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      ],
+                    ],
                   ),
+                ),
                 // Delete button for custom imported books
                 if (isCustomBook)
                   Positioned(
@@ -1812,13 +1961,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildDefaultCover(Book book, {bool isMini = false}) {
+    final isPdf = book.isPdf;
     final hash = book.metadata.title.hashCode;
-    final color1 = HSLColor.fromAHSL(
-            1.0, (hash.abs() % 360).toDouble(), 0.65, 0.45)
-        .toColor();
-    final color2 = HSLColor.fromAHSL(
-            1.0, ((hash.abs() + 40) % 360).toDouble(), 0.75, 0.35)
-        .toColor();
+    final color1 = isPdf
+        ? const Color(0xFF991B1B)
+        : HSLColor.fromAHSL(1.0, (hash.abs() % 360).toDouble(), 0.65, 0.45)
+            .toColor();
+    final color2 = isPdf
+        ? const Color(0xFF7F1D1D)
+        : HSLColor.fromAHSL(
+                1.0, ((hash.abs() + 40) % 360).toDouble(), 0.75, 0.35)
+            .toColor();
 
     return Container(
       width: double.infinity,
@@ -1835,8 +1988,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(
-            Icons.menu_book_rounded,
-            color: Colors.white.withValues(alpha: 0.7),
+            isPdf ? Icons.picture_as_pdf_rounded : Icons.menu_book_rounded,
+            color: Colors.white.withValues(alpha: 0.85),
             size: isMini ? 18 : 32,
           ),
           if (!isMini) ...[
@@ -1903,14 +2056,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Import an EPUB file to start reading and listening.',
+              'Import an EPUB or PDF file to start reading and listening.',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _importEpubFile,
+              onPressed: _importBookFile,
               icon: const Icon(Icons.file_open_rounded),
-              label: const Text('Import EPUB File'),
+              label: const Text('Import EPUB / PDF'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,

@@ -25,7 +25,7 @@ void main() {
     }
 
     expect(find.textContaining('EPUB'), findsWidgets);
-    expect(find.text('Import EPUB'), findsOneWidget);
+    expect(find.text('Import Book'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
     expect(find.textContaining('Malayalam Literature'), findsOneWidget);
     expect(find.textContaining('Chemmeen'), findsWidgets);
