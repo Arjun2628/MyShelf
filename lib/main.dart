@@ -1,8 +1,10 @@
+import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await HiveStorageService().init();
   runApp(const EpubReaderApp());
 }
 

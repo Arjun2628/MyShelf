@@ -7,13 +7,14 @@ import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/entities/chapter_content.dart';
 import 'package:epub_audio/features/epub/domain/entities/content_nodes.dart';
 import 'package:epub_audio/features/epub/domain/usecases/parse_chapter_content_usecase.dart';
+import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/session/domain/entities/book_position.dart';
 import 'package:flutter/foundation.dart';
 
 /// Unified session controller managing shared reading position, audio narration,
-/// chapter navigation, preferences, and bookmarks.
+/// chapter navigation, preferences, and bookmarks with persistent progress.
 class BookSessionController extends ChangeNotifier {
   final Book book;
   final AudioSourceEngine _audioEngine;
@@ -36,24 +37,62 @@ class BookSessionController extends ChangeNotifier {
     AudioSourceEngine? audioEngine,
     ParseChapterContentUseCase parseChapterUseCase =
         const ParseChapterContentUseCase(),
-    int initialChapterIndex = 0,
-    int initialParagraphIndex = 0,
+    int? initialChapterIndex,
+    int? initialParagraphIndex,
   })  : _audioEngine = audioEngine ?? FlutterTtsAudioEngine(),
         _parseChapterUseCase = parseChapterUseCase,
-        _currentPosition = BookPosition(
-          chapterIndex: initialChapterIndex,
-          paragraphIndex: initialParagraphIndex,
-          timestamp: DateTime.now(),
+        _currentPosition = _computeInitialPosition(
+          book,
+          initialChapterIndex,
+          initialParagraphIndex,
         ),
         _audioState = AudioPlaybackState(
-          position: BookPosition(
-            chapterIndex: initialChapterIndex,
-            paragraphIndex: initialParagraphIndex,
-            timestamp: DateTime.now(),
+          position: _computeInitialPosition(
+            book,
+            initialChapterIndex,
+            initialParagraphIndex,
           ),
         ) {
     _initAudioEngine();
-    _initInitialChapter(initialChapterIndex, initialParagraphIndex);
+    _initInitialChapter(_currentPosition.chapterIndex, _currentPosition.paragraphIndex);
+  }
+
+  static BookPosition _computeInitialPosition(
+    Book book,
+    int? chapterIdx,
+    int? paraIdx,
+  ) {
+    if (chapterIdx != null && paraIdx != null) {
+      return BookPosition(
+        chapterIndex: chapterIdx,
+        paragraphIndex: paraIdx,
+        timestamp: DateTime.now(),
+      );
+    }
+    // Check saved progress from Hive
+    final saved = HiveStorageService().getProgress(book.id);
+    if (saved != null &&
+        saved.chapterIndex >= 0 &&
+        saved.chapterIndex < (book.chapterCount > 0 ? book.chapterCount : 1)) {
+      return BookPosition(
+        chapterIndex: saved.chapterIndex,
+        paragraphIndex: saved.paragraphIndex,
+        timestamp: saved.lastUpdated,
+      );
+    }
+    return BookPosition(
+      chapterIndex: chapterIdx ?? 0,
+      paragraphIndex: paraIdx ?? 0,
+      timestamp: DateTime.now(),
+    );
+  }
+
+  void _persistProgress() {
+    HiveStorageService().saveProgress(
+      bookId: book.id,
+      chapterIndex: _currentPosition.chapterIndex,
+      paragraphIndex: _currentPosition.paragraphIndex,
+    );
   }
 
   void _initInitialChapter(int chapterIndex, int paragraphIndex) {
@@ -176,6 +215,7 @@ class BookSessionController extends ChangeNotifier {
       _errorMessage = 'Failed to load chapter: $e';
     } finally {
       _isLoading = false;
+      _persistProgress();
       notifyListeners();
     }
   }
@@ -219,6 +259,7 @@ class BookSessionController extends ChangeNotifier {
       currentText: currentText,
       status: shouldPlay ? AudioPlaybackStatus.playing : _audioState.status,
     );
+    _persistProgress();
     notifyListeners();
 
     if (shouldPlay) {
@@ -251,6 +292,7 @@ class BookSessionController extends ChangeNotifier {
           ? _currentChapterParagraphs[pIdx]
           : null,
     );
+    _persistProgress();
     notifyListeners();
 
     await _speakCurrentParagraph();
@@ -263,6 +305,7 @@ class BookSessionController extends ChangeNotifier {
       status: AudioPlaybackStatus.paused,
       position: _currentPosition,
     );
+    _persistProgress();
     notifyListeners();
   }
 
@@ -279,6 +322,7 @@ class BookSessionController extends ChangeNotifier {
   Future<void> stopAudio() async {
     await _audioEngine.stop();
     _audioState = _audioState.copyWith(status: AudioPlaybackStatus.stopped);
+    _persistProgress();
     notifyListeners();
   }
 
@@ -356,6 +400,7 @@ class BookSessionController extends ChangeNotifier {
       currentText: text,
       position: _currentPosition.copyWith(paragraphIndex: pIdx),
     );
+    _persistProgress();
     notifyListeners();
 
     await _audioEngine.speakParagraph(text, language: book.metadata.language);
@@ -434,6 +479,7 @@ class BookSessionController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _persistProgress();
     _sleepTimer?.cancel();
     _audioEngine.dispose();
     super.dispose();

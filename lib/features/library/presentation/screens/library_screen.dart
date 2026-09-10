@@ -1,11 +1,12 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:epub_audio/features/audio/presentation/screens/audiobook_player_screen.dart';
 import 'package:epub_audio/features/epub/data/repositories/epub_repository_impl.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
+import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/library/data/sample_books_provider.dart';
 import 'package:epub_audio/features/reader/presentation/screens/reader_screen.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 /// Main Library Screen showing available books, reading progress, and quick Read/Listen actions.
@@ -37,13 +38,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
     });
 
     try {
+      final importedBooks =
+          await HiveStorageService().loadAllImportedBooks(_openEpubUseCase);
       final mlBook = await _sampleProvider.getMalayalamSampleBook();
       final enBook = await _sampleProvider.getEnglishSampleBook();
 
       if (mounted) {
         setState(() {
           _books.clear();
-          _books.addAll([mlBook, enBook]);
+          _books.addAll([...importedBooks, mlBook, enBook]);
           _isLoading = false;
         });
       }
@@ -71,10 +74,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
         });
 
         Book importedBook;
-        if (file.bytes != null) {
+        final bytes = file.bytes;
+        if (bytes != null) {
           importedBook = await _openEpubUseCase.fromBytes(
-            file.bytes!,
+            bytes,
             bookId: file.name,
+          );
+          await HiveStorageService().saveImportedEpub(
+            bytes: bytes,
+            book: importedBook,
           );
         } else if (file.path != null) {
           importedBook = await _openEpubUseCase.fromPath(
@@ -86,6 +94,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         }
 
         setState(() {
+          _books.removeWhere((b) => b.id == importedBook.id);
           _books.insert(0, importedBook);
           _isLoading = false;
         });
@@ -109,24 +118,54 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  void _openReader(Book book) {
-    Navigator.push(
+  Future<void> _deleteBook(Book book) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Book'),
+        content: Text('Are you sure you want to remove "${book.metadata.title}" from your library?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await HiveStorageService().deleteBook(book.id);
+      setState(() {
+        _books.removeWhere((b) => b.id == book.id);
+      });
+    }
+  }
+
+  void _openReader(Book book) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ReaderScreen(book: book),
       ),
     );
+    if (mounted) setState(() {});
   }
 
-  void _openAudiobook(Book book) {
+  void _openAudiobook(Book book) async {
     final session = BookSessionController(book: book);
     session.playAudio();
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => AudiobookPlayerScreen(session: session),
       ),
     );
+    if (mounted) setState(() {});
   }
 
   @override
@@ -244,6 +283,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildBookCard(Book book) {
+    final progress = HiveStorageService().getProgress(book.id);
+    final isCustomBook =
+        book.id != 'sample_chemmeen' && book.id != 'sample_alice';
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -259,20 +302,71 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cover Image (Tap to Read)
+          // Cover Image with Badges (Tap to Read)
           Expanded(
-            child: GestureDetector(
-              onTap: () => _openReader(book),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: book.coverImageBytes != null
-                    ? Image.memory(
-                        book.coverImageBytes!,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : _buildDefaultCover(book),
-              ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () => _openReader(book),
+                    child: ClipRRect(
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: book.coverImageBytes != null
+                          ? Image.memory(
+                              book.coverImageBytes!,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : _buildDefaultCover(book),
+                    ),
+                  ),
+                ),
+                // Progress Chip
+                if (progress != null)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Ch ${progress.chapterIndex + 1} • P ${progress.paragraphIndex + 1}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                // Delete button for imported books
+                if (isCustomBook)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () => _deleteBook(book),
+                        child: const Padding(
+                          padding: EdgeInsets.all(5.0),
+                          child: Icon(
+                            Icons.delete_outline_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
 
@@ -305,6 +399,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     color: Color(0xFF64748B),
                   ),
                 ),
+                if (progress != null && book.chapterCount > 0) ...[
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: ((progress.chapterIndex + 1) / book.chapterCount)
+                          .clamp(0.0, 1.0),
+                      minHeight: 3.5,
+                      backgroundColor: const Color(0xFFE2E8F0),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF2563EB)),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
 
                 // Quick Action Bar: Read & Listen
@@ -324,11 +432,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.menu_book_rounded, size: 14, color: Color(0xFF334155)),
+                              Icon(Icons.menu_book_rounded,
+                                  size: 14, color: Color(0xFF334155)),
                               SizedBox(width: 4),
                               Text(
                                 'Read',
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF334155)),
                               ),
                             ],
                           ),
@@ -347,14 +459,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.headphones_rounded, size: 14, color: Color(0xFF2563EB)),
-                              SizedBox(width: 4),
+                              const Icon(Icons.headphones_rounded,
+                                  size: 14, color: Color(0xFF2563EB)),
+                              const SizedBox(width: 4),
                               Text(
-                                'Listen',
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                                progress != null ? 'Resume' : 'Listen',
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2563EB)),
                               ),
                             ],
                           ),
