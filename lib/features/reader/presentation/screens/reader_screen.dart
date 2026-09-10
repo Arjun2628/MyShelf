@@ -1,11 +1,15 @@
 import 'package:epub_audio/features/audio/presentation/screens/audiobook_player_screen.dart';
 import 'package:epub_audio/features/audio/presentation/widgets/mini_audio_player.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
+import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
+import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/bookmarks_modal.dart';
+import 'package:epub_audio/features/reader/presentation/widgets/highlights_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/reader_content_view.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/reader_settings_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/toc_drawer.dart';
+import 'package:epub_audio/features/reader/presentation/widgets/translation_modal.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +33,8 @@ class ReaderScreen extends StatefulWidget {
 class _ReaderScreenState extends State<ReaderScreen> {
   late final BookSessionController _session;
   final ScrollController _scrollController = ScrollController();
+  List<TextHighlight> _highlights = [];
+  int _lastLoadedChapter = -1;
 
   @override
   void initState() {
@@ -39,9 +45,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
       initialParagraphIndex: widget.initialParagraphIndex,
     );
     _session.addListener(_onSessionUpdate);
+    _loadHighlights();
+  }
+
+  void _loadHighlights() {
+    _highlights = HiveStorageService().getHighlightsForChapter(
+      widget.book.id,
+      _session.currentChapterIndex,
+    );
+    _lastLoadedChapter = _session.currentChapterIndex;
   }
 
   void _onSessionUpdate() {
+    if (_lastLoadedChapter != _session.currentChapterIndex) {
+      _loadHighlights();
+    }
     if (mounted) setState(() {});
   }
 
@@ -64,35 +82,36 @@ class _ReaderScreenState extends State<ReaderScreen> {
       body: Stack(
         children: [
           // 1. Main Reading Canvas
-          GestureDetector(
-            onTap: _session.toggleControls,
-            behavior: HitTestBehavior.translucent,
-            child: SafeArea(
-              child: _session.isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(color: colors.accent),
-                    )
-                  : _session.errorMessage != null
-                      ? _buildErrorState(colors)
-                      : currentContent != null
-                          ? ReaderContentView(
-                              content: currentContent,
-                              book: _session.book,
-                              preferences: _session.preferences,
-                              activeParagraphIndex: _session.currentParagraphIndex,
-                              charOffset: _session.currentPosition.charOffset,
-                              isPlaying: audioPlaying,
-                              scrollController: _scrollController,
-                              onParagraphTapped: (paraIdx) {
-                                _session.seekToParagraph(paraIdx);
-                                if (!audioPlaying) {
-                                  _session.playAudio();
-                                }
-                              },
-                              onLinkTapped: _session.handleLink,
-                            )
-                          : const SizedBox.shrink(),
-            ),
+          SafeArea(
+            child: _session.isLoading
+                ? Center(
+                    child: CircularProgressIndicator(color: colors.accent),
+                  )
+                : _session.errorMessage != null
+                    ? _buildErrorState(colors)
+                    : currentContent != null
+                        ? ReaderContentView(
+                            content: currentContent,
+                            book: _session.book,
+                            chapterIndex: _session.currentChapterIndex,
+                            preferences: _session.preferences,
+                            activeParagraphIndex: _session.currentParagraphIndex,
+                            charOffset: _session.currentPosition.charOffset,
+                            isPlaying: audioPlaying,
+                            highlights: List<TextHighlight>.from(_highlights),
+                            scrollController: _scrollController,
+                            onParagraphTapped: (paraIdx) {
+                              _session.seekToParagraph(paraIdx);
+                              if (!audioPlaying) {
+                                _session.playAudio();
+                              }
+                            },
+                            onLinkTapped: _session.handleLink,
+                            onHighlightCreated: _onHighlightCreated,
+                            onTranslateRequested: _showTranslationModal,
+                            onSpeakTextRequested: (text) => _session.speakCustomText(text),
+                          )
+                        : const SizedBox.shrink(),
           ),
 
           // 2. Top Navigation Bar (Overlay)
@@ -125,6 +144,47 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ],
             ),
           ),
+
+          // 4. Quick Controls Pill (when overlay is hidden)
+          if (!_session.showControls)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+              right: 16,
+              child: InkWell(
+                onTap: _session.toggleControls,
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colors.cardBackground.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: colors.divider),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.tune_rounded, size: 16, color: colors.accent),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Menu',
+                        style: TextStyle(
+                          color: colors.text,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -197,6 +257,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ),
             tooltip: 'Audiobook Player',
             onPressed: _openAudiobookPlayer,
+          ),
+
+          // Highlights & Notes
+          IconButton(
+            icon: Icon(Icons.border_color_outlined, color: colors.text),
+            tooltip: 'Highlights & Notes',
+            onPressed: _showHighlightsModal,
           ),
 
           // Bookmark Button
@@ -412,6 +479,88 @@ class _ReaderScreenState extends State<ReaderScreen> {
           },
           onBookmarkDeleted: (bm) {
             _session.deleteBookmark(bm);
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onHighlightCreated(TextHighlight highlight) async {
+    if (!_highlights.any((h) => h.id == highlight.id)) {
+      _highlights.add(highlight);
+    }
+    setState(() {});
+
+    await HiveStorageService().saveHighlight(highlight);
+    _loadHighlights();
+    if (mounted) setState(() {});
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: highlight.color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text('Highlight saved'),
+            ],
+          ),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
+  void _showTranslationModal(String text) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TranslationModal(
+        text: text,
+        preferences: _session.preferences,
+        bookLanguage: widget.book.metadata.language,
+        onSaveAsNote: (translatedText) {
+          final hl = TextHighlight(
+            id: 'hl_${DateTime.now().millisecondsSinceEpoch}',
+            bookId: widget.book.id,
+            chapterIndex: _session.currentChapterIndex,
+            selectedText: text,
+            colorValue: Colors.amber.toARGB32(),
+            createdAt: DateTime.now(),
+            note: translatedText,
+          );
+          _onHighlightCreated(hl);
+        },
+      ),
+    );
+  }
+
+  void _showHighlightsModal() {
+    final bookHighlights = HiveStorageService().getHighlightsForBook(widget.book.id);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.75,
+        child: HighlightsModal(
+          highlights: bookHighlights,
+          preferences: _session.preferences,
+          onHighlightSelected: (hl) {
+            _session.loadChapter(hl.chapterIndex);
+          },
+          onHighlightDeleted: (hl) {
+            HiveStorageService().deleteHighlight(hl.id);
+            _loadHighlights();
+            setState(() {});
           },
         ),
       ),

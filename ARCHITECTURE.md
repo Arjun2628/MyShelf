@@ -246,10 +246,15 @@ lib/
 │   │           └── parse_chapter_content_usecase.dart
 │   │
 │   ├── reader/
+│   │   ├── data/
+│   │   │   └── services/
+│   │   │       └── translation_service.dart
 │   │   ├── domain/
 │   │   │   └── entities/
 │   │   │       ├── bookmark.dart
-│   │   │       └── reader_preferences.dart
+│   │   │       ├── reader_preferences.dart
+│   │   │       ├── text_highlight.dart
+│   │   │       └── translation_result.dart
 │   │   └── presentation/
 │   │       ├── controllers/
 │   │       │   └── reader_controller.dart
@@ -257,18 +262,40 @@ lib/
 │   │       │   └── reader_screen.dart
 │   │       └── widgets/
 │   │           ├── bookmarks_modal.dart
+│   │           ├── highlight_picker_menu.dart
+│   │           ├── highlights_modal.dart
 │   │           ├── image_block_widget.dart
 │   │           ├── reader_content_view.dart
 │   │           ├── reader_settings_modal.dart
-│   │           └── toc_drawer.dart
+│   │           ├── toc_drawer.dart
+│   │           └── translation_modal.dart
 │   │
-│   ├── audio/ (Step 2 - Audio & TTS System)
+│   ├── audio/ (Audio & TTS System)
 │   │   ├── domain/
+│   │   │   └── entities/
+│   │   │       └── audio_track_state.dart
 │   │   ├── data/
+│   │   │   └── services/
+│   │   │       └── tts_audio_service.dart
 │   │   └── presentation/
+│   │       ├── screens/
+│   │       │   └── audiobook_player_screen.dart
+│   │       └── widgets/
+│   │           └── mini_audio_player.dart
+│   │
+│   ├── session/ (Bidirectional Reader & Audiobook Synchronization)
+│   │   ├── domain/
+│   │   │   └── entities/
+│   │   │       ├── book_progress.dart
+│   │   │       └── reading_position.dart
+│   │   └── presentation/
+│   │       └── controllers/
+│   │           └── book_session_controller.dart
 │   │
 │   └── library/
 │       ├── data/
+│       │   ├── datasources/
+│       │   │   └── hive_storage_service.dart
 │       │   └── sample_books_provider.dart
 │       └── presentation/
 │           └── screens/

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
+import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/session/domain/entities/book_progress.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -10,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 class HiveStorageService {
   static const String booksBoxName = 'imported_books_v1';
   static const String progressBoxName = 'reading_progress_v1';
+  static const String highlightsBoxName = 'highlights_v1';
 
   static final HiveStorageService _instance = HiveStorageService._internal();
   factory HiveStorageService() => _instance;
@@ -17,6 +19,7 @@ class HiveStorageService {
 
   Box<dynamic>? _booksBox;
   Box<dynamic>? _progressBox;
+  Box<dynamic>? _highlightsBox;
   bool _isInitialized = false;
 
   /// Initializes Hive and opens required boxes.
@@ -37,6 +40,7 @@ class HiveStorageService {
       }
       _booksBox = await Hive.openBox(booksBoxName);
       _progressBox = await Hive.openBox(progressBoxName);
+      _highlightsBox = await Hive.openBox(highlightsBoxName);
       _isInitialized = true;
       debugPrint('[HiveStorage] Initialized successfully. Stored books: ${_booksBox?.length}');
     } catch (e) {
@@ -197,5 +201,45 @@ class HiveStorageService {
       } catch (_) {}
     }
     return result;
+  }
+
+  // ----------------- HIGHLIGHTS PERSISTENCE -----------------
+
+  /// Saves or updates a text highlight in Hive.
+  Future<void> saveHighlight(TextHighlight highlight) async {
+    await init();
+    await _highlightsBox?.put(highlight.id, highlight.toMap());
+  }
+
+  /// Deletes a highlight by ID.
+  Future<void> deleteHighlight(String highlightId) async {
+    await init();
+    await _highlightsBox?.delete(highlightId);
+  }
+
+  /// Retrieves all highlights saved for a specific book.
+  List<TextHighlight> getHighlightsForBook(String bookId) {
+    final List<TextHighlight> result = [];
+    if (_highlightsBox == null) return result;
+
+    for (final key in _highlightsBox!.keys) {
+      try {
+        final data = _highlightsBox!.get(key);
+        if (data is Map) {
+          final h = TextHighlight.fromMap(data);
+          if (h.bookId == bookId) {
+            result.add(h);
+          }
+        }
+      } catch (_) {}
+    }
+    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return result;
+  }
+
+  /// Retrieves all highlights for a specific book and chapter.
+  List<TextHighlight> getHighlightsForChapter(String bookId, int chapterIndex) {
+    final all = getHighlightsForBook(bookId);
+    return all.where((h) => h.chapterIndex == chapterIndex).toList();
   }
 }

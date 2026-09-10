@@ -535,6 +535,11 @@ class BookSessionController extends ChangeNotifier {
     }
   }
 
+  /// Speaks ad-hoc custom text snippet (e.g. for translation or pronunciation)
+  Future<void> speakCustomText(String text, {String? language}) async {
+    await _audioEngine.speakParagraph(text, language: language ?? book.metadata.language);
+  }
+
   @override
   void dispose() {
     _persistProgress();
