@@ -150,5 +150,27 @@ void main() {
       session.setSleepTimer(null);
       expect(session.audioState.sleepTimerRemaining, isNull);
     });
+
+    test('clicking on another paragraph while audio is playing instantly plays from clicked text', () async {
+      final book = await provider.getEnglishSampleBook();
+      final session = BookSessionController(
+        book: book,
+        audioEngine: mockAudio,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // Start playing paragraph 0
+      await session.seekToParagraph(0, autoPlay: true);
+      expect(session.audioState.isPlaying, isTrue);
+      expect(session.currentParagraphIndex, 0);
+
+      // While playing, user clicks on paragraph 2
+      await session.seekToParagraph(2, autoPlay: true);
+
+      expect(session.audioState.isPlaying, isTrue);
+      expect(session.currentParagraphIndex, 2);
+      expect(mockAudio.spokenParagraphs.last, contains('White Rabbit'));
+    });
   });
 }

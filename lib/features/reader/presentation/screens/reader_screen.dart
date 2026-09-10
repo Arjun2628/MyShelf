@@ -101,10 +101,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             highlights: List<TextHighlight>.from(_highlights),
                             scrollController: _scrollController,
                             onParagraphTapped: (paraIdx) {
-                              _session.seekToParagraph(paraIdx);
-                              if (!audioPlaying) {
-                                _session.playAudio();
-                              }
+                              _session.seekToParagraph(paraIdx, autoPlay: true);
                             },
                             onLinkTapped: _session.handleLink,
                             onHighlightCreated: _onHighlightCreated,

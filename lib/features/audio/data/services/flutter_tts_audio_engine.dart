@@ -157,6 +157,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     _fallbackAttempted = false;
 
     try {
+      await _flutterTts.stop();
       if (language != null) {
         final normalized = _normalizeLanguageTag(language);
         if (_currentConfiguredLanguage != normalized) {

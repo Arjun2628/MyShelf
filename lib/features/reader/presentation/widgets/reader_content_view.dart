@@ -159,79 +159,89 @@ class _ReaderContentViewState extends State<ReaderContentView> {
                   currentParaIdx != null &&
                   widget.activeParagraphIndex == currentParaIdx;
 
-              return Container(
-                margin: isHighlight
-                    ? const EdgeInsets.symmetric(vertical: 4)
-                    : EdgeInsets.zero,
-                padding: isHighlight
-                    ? const EdgeInsets.fromLTRB(12, 6, 12, 6)
-                    : EdgeInsets.zero,
-                decoration: isHighlight
-                    ? BoxDecoration(
-                        color: colors.accent.withValues(
-                            alpha: widget.isPlaying ? 0.12 : 0.06),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border(
-                          left: BorderSide(
-                            color: colors.accent,
-                            width: 4.0,
+              return InkWell(
+                onTap: currentParaIdx != null
+                    ? () {
+                        widget.onParagraphTapped?.call(currentParaIdx);
+                      }
+                    : null,
+                borderRadius: BorderRadius.circular(10),
+                splashColor: colors.accent.withValues(alpha: 0.12),
+                highlightColor: colors.accent.withValues(alpha: 0.06),
+                child: Container(
+                  margin: isHighlight
+                      ? const EdgeInsets.symmetric(vertical: 4)
+                      : const EdgeInsets.symmetric(vertical: 2),
+                  padding: isHighlight
+                      ? const EdgeInsets.fromLTRB(12, 6, 12, 6)
+                      : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: isHighlight
+                      ? BoxDecoration(
+                          color: colors.accent.withValues(
+                              alpha: widget.isPlaying ? 0.12 : 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border(
+                            left: BorderSide(
+                              color: colors.accent,
+                              width: 4.0,
+                            ),
+                          ),
+                        )
+                      : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isHighlight)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.accent,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      widget.isPlaying
+                                          ? Icons.volume_up_rounded
+                                          : Icons.pause_rounded,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      widget.isPlaying
+                                          ? (widget.charOffset != null && widget.charOffset! > 0
+                                              ? 'PLAYING FROM WORD'
+                                              : 'PLAYING')
+                                          : (widget.charOffset != null && widget.charOffset! > 0
+                                              ? 'PAUSED AT WORD'
+                                              : 'PAUSED'),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      )
-                    : null,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isHighlight)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.accent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    widget.isPlaying
-                                        ? Icons.volume_up_rounded
-                                        : Icons.pause_rounded,
-                                    size: 12,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    widget.isPlaying
-                                        ? (widget.charOffset != null && widget.charOffset! > 0
-                                            ? 'PLAYING FROM WORD'
-                                            : 'PLAYING')
-                                        : (widget.charOffset != null && widget.charOffset! > 0
-                                            ? 'PAUSED AT WORD'
-                                            : 'PAUSED'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    _buildBlockWidget(context, block, colors,
-                        isHighlight: isHighlight),
-                  ],
+                      _buildBlockWidget(context, block, colors,
+                          isHighlight: isHighlight),
+                    ],
+                  ),
                 ),
               );
             },
