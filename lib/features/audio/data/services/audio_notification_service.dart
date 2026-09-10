@@ -131,13 +131,16 @@ class AudioNotificationService {
     }
   }
 
-  /// Displays or updates the media control notification in the notification shade.
+  /// Displays or updates the media control notification in the notification shade (Spotify-style rich media tile).
   Future<void> showOrUpdatePlaybackNotification({
     required String bookTitle,
     required String author,
     required String chapterTitle,
     required bool isPlaying,
     String? currentTextSnippet,
+    Uint8List? coverImageBytes,
+    int currentParagraph = 0,
+    int totalParagraphs = 0,
   }) async {
     await init();
     if (!_isInitialized) return;
@@ -146,29 +149,37 @@ class AudioNotificationService {
       final actions = <AndroidNotificationAction>[
         const AndroidNotificationAction(
           actionPrev,
-          'Previous',
+          '⏮ Prev',
           showsUserInterface: false,
           cancelNotification: false,
         ),
         AndroidNotificationAction(
           isPlaying ? actionPause : actionPlay,
-          isPlaying ? 'Pause' : 'Play',
+          isPlaying ? '⏸ Pause' : '▶ Play',
           showsUserInterface: false,
           cancelNotification: false,
         ),
         const AndroidNotificationAction(
           actionNext,
-          'Next',
+          '⏭ Next',
           showsUserInterface: false,
           cancelNotification: false,
         ),
         const AndroidNotificationAction(
           actionStop,
-          'Stop',
+          '⏹ Stop',
           showsUserInterface: false,
           cancelNotification: true,
         ),
       ];
+
+      final largeIcon = coverImageBytes != null
+          ? ByteArrayAndroidBitmap(coverImageBytes)
+          : null;
+
+      final progressPercent = totalParagraphs > 0
+          ? ((currentParagraph / totalParagraphs) * 100).toInt().clamp(0, 100)
+          : 0;
 
       final androidDetails = AndroidNotificationDetails(
         channelId,
@@ -184,12 +195,22 @@ class AudioNotificationService {
         actions: actions,
         category: AndroidNotificationCategory.transport,
         visibility: NotificationVisibility.public,
+        color: const Color(0xFF1DB954), // Spotify Green / Modern Media Tint
+        colorized: true, // Renders the rich media background like Spotify
+        largeIcon: largeIcon,
+        subText: totalParagraphs > 0
+            ? '$progressPercent% • Paragraph $currentParagraph of $totalParagraphs'
+            : (author.isNotEmpty ? author : 'Audiobook'),
+        showProgress: totalParagraphs > 0,
+        maxProgress: 100,
+        progress: progressPercent,
+        indeterminate: false,
         styleInformation: BigTextStyleInformation(
           currentTextSnippet != null && currentTextSnippet.trim().isNotEmpty
-              ? '$chapterTitle\n$currentTextSnippet'
+              ? '$chapterTitle\n\n"$currentTextSnippet"'
               : chapterTitle,
           contentTitle: bookTitle,
-          summaryText: author.isNotEmpty ? author : 'Audiobook',
+          summaryText: author.isNotEmpty ? author : 'EPUB Audio',
         ),
       );
 

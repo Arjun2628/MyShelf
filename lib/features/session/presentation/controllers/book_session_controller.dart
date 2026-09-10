@@ -114,6 +114,9 @@ class BookSessionController extends ChangeNotifier {
       chapterTitle: chTitle,
       isPlaying: _audioState.isPlaying,
       currentTextSnippet: snippet,
+      coverImageBytes: book.coverImageBytes,
+      currentParagraph: _currentPosition.paragraphIndex + 1,
+      totalParagraphs: _currentChapterParagraphs.length,
     );
   }
 
