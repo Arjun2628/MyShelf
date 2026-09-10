@@ -100,11 +100,6 @@ class BookSessionController extends ChangeNotifier {
   }
 
   void _syncNotification() {
-    final snippet = _currentChapterParagraphs.isNotEmpty &&
-            _currentPosition.paragraphIndex < _currentChapterParagraphs.length
-        ? _currentChapterParagraphs[_currentPosition.paragraphIndex]
-        : null;
-
     final chTitle = _currentChapterContent?.title ??
         'Chapter ${_currentPosition.chapterIndex + 1}';
 
@@ -113,7 +108,6 @@ class BookSessionController extends ChangeNotifier {
       author: book.metadata.author,
       chapterTitle: chTitle,
       isPlaying: _audioState.isPlaying,
-      currentTextSnippet: snippet,
       coverImageBytes: book.coverImageBytes,
       currentParagraph: _currentPosition.paragraphIndex + 1,
       totalParagraphs: _currentChapterParagraphs.length,

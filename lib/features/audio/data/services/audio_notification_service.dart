@@ -131,13 +131,12 @@ class AudioNotificationService {
     }
   }
 
-  /// Displays or updates the media control notification in the notification shade (Spotify-style rich media tile).
+  /// Displays or updates the media control notification in the notification shade matching the home screen tile format.
   Future<void> showOrUpdatePlaybackNotification({
     required String bookTitle,
     required String author,
     required String chapterTitle,
     required bool isPlaying,
-    String? currentTextSnippet,
     Uint8List? coverImageBytes,
     int currentParagraph = 0,
     int totalParagraphs = 0,
@@ -181,6 +180,10 @@ class AudioNotificationService {
           ? ((currentParagraph / totalParagraphs) * 100).toInt().clamp(0, 100)
           : 0;
 
+      final formattedSubtitle = totalParagraphs > 0
+          ? '$chapterTitle • Para $currentParagraph/$totalParagraphs'
+          : chapterTitle;
+
       final androidDetails = AndroidNotificationDetails(
         channelId,
         channelName,
@@ -195,23 +198,14 @@ class AudioNotificationService {
         actions: actions,
         category: AndroidNotificationCategory.transport,
         visibility: NotificationVisibility.public,
-        color: const Color(0xFF1DB954), // Spotify Green / Modern Media Tint
-        colorized: true, // Renders the rich media background like Spotify
+        color: const Color(0xFF2563EB),
+        colorized: true,
         largeIcon: largeIcon,
-        subText: totalParagraphs > 0
-            ? '$progressPercent% • Paragraph $currentParagraph of $totalParagraphs'
-            : (author.isNotEmpty ? author : 'Audiobook'),
+        subText: author.isNotEmpty ? author : 'EPUB Audio',
         showProgress: totalParagraphs > 0,
         maxProgress: 100,
         progress: progressPercent,
         indeterminate: false,
-        styleInformation: BigTextStyleInformation(
-          currentTextSnippet != null && currentTextSnippet.trim().isNotEmpty
-              ? '$chapterTitle\n\n"$currentTextSnippet"'
-              : chapterTitle,
-          contentTitle: bookTitle,
-          summaryText: author.isNotEmpty ? author : 'EPUB Audio',
-        ),
       );
 
       const darwinDetails = DarwinNotificationDetails(
@@ -229,7 +223,7 @@ class AudioNotificationService {
       await _notificationsPlugin.show(
         id: notificationId,
         title: bookTitle,
-        body: chapterTitle,
+        body: formattedSubtitle,
         notificationDetails: notificationDetails,
       );
     } catch (e) {
