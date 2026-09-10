@@ -19,6 +19,8 @@ class AudiobookPlayerScreen extends StatefulWidget {
 class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
   BookSessionController get _session => widget.session;
 
+  int? _sliderDragIndex;
+
   @override
   void initState() {
     super.initState();
@@ -48,7 +50,8 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
             : 'Ready to listen');
 
     final totalParagraphs = _session.currentChapterParagraphs.length;
-    final currentParagraphNum = (_session.currentParagraphIndex + 1).clamp(0, totalParagraphs);
+    final activeParaIndex = _sliderDragIndex ?? _session.currentParagraphIndex;
+    final currentParagraphNum = (activeParaIndex + 1).clamp(0, totalParagraphs);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -103,19 +106,21 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
                       ? Image.memory(
                           book.coverImageBytes!,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildDefaultCover(colors),
                         )
                       : _buildDefaultCover(colors),
                 ),
               ),
 
-              const Spacer(flex: 1),
+              const SizedBox(height: 24),
 
-              // 2. Title & Chapter
+              // 2. Book & Chapter Info
               Text(
                 book.metadata.title,
-                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: colors.text,
                   fontSize: 20,
@@ -125,75 +130,43 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
               const SizedBox(height: 6),
               Text(
                 currentChapterTitle,
-                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: colors.accent,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                book.metadata.author,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: colors.secondaryText,
-                  fontSize: 13,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              // 3. Current Speaking Text Box
+              // 3. Current Live Spoken Paragraph Preview (Highlighted)
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                constraints: const BoxConstraints(maxHeight: 90),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: colors.cardBackground,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: audioState.isPlaying
-                        ? colors.accent.withValues(alpha: 0.4)
-                        : colors.divider,
+                    color: colors.accent.withValues(alpha: 0.3),
+                    width: 1,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.format_quote_rounded,
-                          color: colors.accent,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'PARAGRAPH $currentParagraphNum OF $totalParagraphs',
-                          style: TextStyle(
-                            color: colors.accent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      currentParagraph,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      '"$currentParagraph"',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         color: colors.text,
                         fontSize: 14,
-                        height: 1.5,
                         fontStyle: FontStyle.italic,
+                        height: 1.4,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
 
@@ -212,7 +185,7 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
                   ),
                   Expanded(
                     child: Slider(
-                      value: _session.currentParagraphIndex.toDouble().clamp(
+                      value: activeParaIndex.toDouble().clamp(
                             0,
                             (totalParagraphs > 0 ? totalParagraphs - 1 : 0).toDouble(),
                           ),
@@ -222,7 +195,16 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
                       activeColor: colors.accent,
                       inactiveColor: colors.divider,
                       onChanged: (val) {
-                        _session.seekToParagraph(val.round());
+                        setState(() {
+                          _sliderDragIndex = val.round();
+                        });
+                      },
+                      onChangeEnd: (val) {
+                        final target = _sliderDragIndex ?? val.round();
+                        setState(() {
+                          _sliderDragIndex = null;
+                        });
+                        _session.seekToParagraph(target);
                       },
                     ),
                   ),

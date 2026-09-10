@@ -31,7 +31,14 @@ class ReaderContentView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = preferences.colors;
 
-    int textParagraphCounter = 0;
+    final Map<int, int> blockIndexToParaIndex = {};
+    int textParaCount = 0;
+    for (int i = 0; i < content.blocks.length; i++) {
+      final b = content.blocks[i];
+      if (b is ParagraphNode || b is HeadingNode) {
+        blockIndexToParaIndex[i] = textParaCount++;
+      }
+    }
 
     return SelectionArea(
       child: ListView.builder(
@@ -43,8 +50,7 @@ class ReaderContentView extends StatelessWidget {
         itemCount: content.blocks.length,
         itemBuilder: (context, index) {
           final block = content.blocks[index];
-          final isTextParagraph = block is ParagraphNode || block is HeadingNode;
-          final currentParaIdx = isTextParagraph ? textParagraphCounter++ : null;
+          final currentParaIdx = blockIndexToParaIndex[index];
           final isHighlight = activeParagraphIndex != null &&
               currentParaIdx != null &&
               activeParagraphIndex == currentParaIdx;

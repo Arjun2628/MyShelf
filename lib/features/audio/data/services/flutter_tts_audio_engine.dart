@@ -10,6 +10,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   void Function(String message)? _onError;
   bool _isInitialized = false;
   String? _lastText;
+  String? _currentConfiguredLanguage;
   bool _fallbackAttempted = false;
 
   FlutterTtsAudioEngine({FlutterTts? flutterTts})
@@ -33,7 +34,9 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
         } catch (_) {}
       }
 
-      // Ensure speak() triggers handlers asynchronously without deadlocking
+      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.setVolume(1.0);
+      await _flutterTts.setPitch(1.0);
       await _flutterTts.awaitSpeakCompletion(false);
 
       _flutterTts.setStartHandler(() {
@@ -60,6 +63,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
               '[TTS] Voice data not installed for requested language. Automatically falling back to default voice...');
           try {
             await _flutterTts.setLanguage('en-US');
+            _currentConfiguredLanguage = 'en-US';
             final res = await _flutterTts.speak(_lastText!);
             debugPrint('[TTS] Fallback speak result: $res');
             return;
@@ -82,6 +86,43 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     }
   }
 
+  Future<void> _configureLanguage(String rawLanguage) async {
+    final normalizedLang = _normalizeLanguageTag(rawLanguage);
+    if (_currentConfiguredLanguage == normalizedLang) return;
+
+    bool canUseLang = false;
+    try {
+      final isInstalled = await _flutterTts.isLanguageInstalled(normalizedLang);
+      if (isInstalled == true || isInstalled == 1) {
+        canUseLang = true;
+      }
+    } catch (_) {
+      try {
+        final isAvail = await _flutterTts.isLanguageAvailable(normalizedLang);
+        if (isAvail == true || isAvail == 1) {
+          canUseLang = true;
+        }
+      } catch (_) {
+        canUseLang = true;
+      }
+    }
+
+    if (canUseLang) {
+      try {
+        await _flutterTts.setLanguage(normalizedLang);
+        _currentConfiguredLanguage = normalizedLang;
+        debugPrint('[TTS] Configured language to $normalizedLang');
+      } catch (_) {}
+    } else {
+      debugPrint(
+          '[TTS] Language $normalizedLang voice not installed/available, keeping default/en-US voice.');
+      try {
+        await _flutterTts.setLanguage('en-US');
+        _currentConfiguredLanguage = 'en-US';
+      } catch (_) {}
+    }
+  }
+
   @override
   Future<void> speakParagraph(String text, {String? language}) async {
     await init();
@@ -95,43 +136,12 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
     try {
       if (language != null) {
-        final normalizedLang = _normalizeLanguageTag(language);
-        bool canUseLang = false;
-
-        try {
-          // Check if language is actually downloaded/installed (Android)
-          final isInstalled =
-              await _flutterTts.isLanguageInstalled(normalizedLang);
-          if (isInstalled == true || isInstalled == 1) {
-            canUseLang = true;
-          }
-        } catch (_) {
-          // If isLanguageInstalled is unsupported, check isLanguageAvailable
-          try {
-            final isAvail =
-                await _flutterTts.isLanguageAvailable(normalizedLang);
-            if (isAvail == true || isAvail == 1) {
-              canUseLang = true;
-            }
-          } catch (_) {
-            canUseLang = true;
-          }
-        }
-
-        if (canUseLang) {
-          try {
-            await _flutterTts.setLanguage(normalizedLang);
-          } catch (_) {}
-        } else {
-          debugPrint(
-              '[TTS] Language $normalizedLang voice not installed/available, keeping default system voice.');
-          try {
-            await _flutterTts.setLanguage('en-US');
-          } catch (_) {}
+        final normalized = _normalizeLanguageTag(language);
+        if (_currentConfiguredLanguage != normalized) {
+          await _configureLanguage(language);
         }
       }
 
-      await _flutterTts.setVolume(1.0);
       final result = await _flutterTts.speak(text);
       debugPrint(
           '[TTS] speak result: $result for "${text.substring(0, text.length.clamp(0, 30))}..."');
