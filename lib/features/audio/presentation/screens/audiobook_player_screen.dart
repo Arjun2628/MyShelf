@@ -366,7 +366,7 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
   void _showSpeedModal() {
     final colors = _session.preferences.colors;
     final currentSpeed = _session.audioState.speechRate;
-    final speeds = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+    final speeds = [0.5, 0.65, 0.75, 0.85, 1.0, 1.25, 1.5, 2.0];
 
     showModalBottomSheet(
       context: context,

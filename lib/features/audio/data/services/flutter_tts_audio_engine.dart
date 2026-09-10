@@ -34,11 +34,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
         } catch (_) {}
       }
 
-      if (!kIsWeb && Platform.isAndroid) {
-        await _flutterTts.setSpeechRate(1.0);
-      } else {
-        await _flutterTts.setSpeechRate(0.5);
-      }
+      await _flutterTts.setSpeechRate(0.38);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
       await _flutterTts.awaitSpeakCompletion(false);
@@ -192,14 +188,9 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   Future<void> setRate(double rate) async {
     try {
-      if (!kIsWeb && Platform.isAndroid) {
-        // Android TextToSpeech standard rate: 1.0 is normal speed
-        await _flutterTts.setSpeechRate(rate.clamp(0.25, 2.0));
-      } else {
-        // iOS/macOS AVSpeechSynthesizer: 0.5 is normal speed
-        final ttsRate = (rate * 0.5).clamp(0.1, 1.0);
-        await _flutterTts.setSpeechRate(ttsRate);
-      }
+      // In flutter_tts, 0.38 gives a pleasant, comfortable reading pace for 1.0x
+      final ttsRate = (rate * 0.38).clamp(0.10, 1.0);
+      await _flutterTts.setSpeechRate(ttsRate);
     } catch (_) {}
   }
 
