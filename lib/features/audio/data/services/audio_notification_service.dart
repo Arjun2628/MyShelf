@@ -131,7 +131,7 @@ class AudioNotificationService {
     }
   }
 
-  /// Displays or updates the media control notification in the notification shade matching the home screen tile format.
+  /// Displays or updates the media control notification in the notification shade matching the requested mockup layout.
   Future<void> showOrUpdatePlaybackNotification({
     required String bookTitle,
     required String author,
@@ -148,7 +148,7 @@ class AudioNotificationService {
       final actions = <AndroidNotificationAction>[
         const AndroidNotificationAction(
           actionPrev,
-          '⏮ Prev',
+          '⏪ Prev',
           showsUserInterface: false,
           cancelNotification: false,
         ),
@@ -160,7 +160,7 @@ class AudioNotificationService {
         ),
         const AndroidNotificationAction(
           actionNext,
-          '⏭ Next',
+          '⏩ Next',
           showsUserInterface: false,
           cancelNotification: false,
         ),
@@ -180,8 +180,11 @@ class AudioNotificationService {
           ? ((currentParagraph / totalParagraphs) * 100).toInt().clamp(0, 100)
           : 0;
 
+      final remainingParas = totalParagraphs - currentParagraph;
       final formattedSubtitle = totalParagraphs > 0
-          ? '$chapterTitle • Para $currentParagraph/$totalParagraphs'
+          ? (remainingParas > 0
+              ? '$chapterTitle · $remainingParas left'
+              : '$chapterTitle · Finished')
           : chapterTitle;
 
       final androidDetails = AndroidNotificationDetails(
@@ -199,9 +202,9 @@ class AudioNotificationService {
         category: AndroidNotificationCategory.transport,
         visibility: NotificationVisibility.public,
         color: const Color(0xFF2563EB),
-        colorized: true,
+        colorized: false,
         largeIcon: largeIcon,
-        subText: author.isNotEmpty ? author : 'EPUB Audio',
+        subText: 'EPUB Reader',
         showProgress: totalParagraphs > 0,
         maxProgress: 100,
         progress: progressPercent,

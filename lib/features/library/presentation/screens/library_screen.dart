@@ -576,7 +576,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                     const SizedBox(height: 3),
                                     Text(
                                       totalParas > 0
-                                          ? '$chapterTitle • Para $paraIdx of $totalParas'
+                                          ? (totalParas - paraIdx > 0
+                                              ? '$chapterTitle · ${totalParas - paraIdx} left'
+                                              : '$chapterTitle · Finished')
                                           : chapterTitle,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
