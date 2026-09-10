@@ -156,7 +156,7 @@ class AudioNotificationService {
       final actions = <AndroidNotificationAction>[
         const AndroidNotificationAction(
           actionPrev,
-          '⏪ -15s',
+          '⏮ Prev',
           showsUserInterface: true,
           cancelNotification: false,
         ),
@@ -168,13 +168,13 @@ class AudioNotificationService {
         ),
         const AndroidNotificationAction(
           actionNext,
-          '⏩ +15s',
+          '⏭ Next',
           showsUserInterface: true,
           cancelNotification: false,
         ),
         const AndroidNotificationAction(
           actionStop,
-          '⏹ Stop',
+          '✕ Close',
           showsUserInterface: true,
           cancelNotification: true,
         ),
@@ -188,11 +188,8 @@ class AudioNotificationService {
           ? ((currentParagraph / totalParagraphs) * 100).toInt().clamp(0, 100)
           : 0;
 
-      final remainingParas = totalParagraphs - currentParagraph;
       final formattedSubtitle = totalParagraphs > 0
-          ? (remainingParas > 0
-              ? '$chapterTitle · $remainingParas left'
-              : '$chapterTitle · Finished')
+          ? '$chapterTitle • Para $currentParagraph of $totalParagraphs'
           : chapterTitle;
 
       final androidDetails = AndroidNotificationDetails(
@@ -212,7 +209,7 @@ class AudioNotificationService {
         color: const Color(0xFF2563EB),
         colorized: false,
         largeIcon: largeIcon,
-        subText: 'EPUB Reader',
+        subText: isPlaying ? 'Now Playing' : 'Paused',
         showProgress: totalParagraphs > 0,
         maxProgress: 100,
         progress: progressPercent,
