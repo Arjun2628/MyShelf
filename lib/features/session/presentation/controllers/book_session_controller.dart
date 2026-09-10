@@ -39,33 +39,40 @@ class BookSessionController extends ChangeNotifier {
         const ParseChapterContentUseCase(),
     int? initialChapterIndex,
     int? initialParagraphIndex,
+    int? initialCharOffset,
   })  : _audioEngine = audioEngine ?? FlutterTtsAudioEngine(),
         _parseChapterUseCase = parseChapterUseCase,
         _currentPosition = _computeInitialPosition(
           book,
           initialChapterIndex,
           initialParagraphIndex,
+          initialCharOffset,
         ),
         _audioState = AudioPlaybackState(
           position: _computeInitialPosition(
             book,
             initialChapterIndex,
             initialParagraphIndex,
+            initialCharOffset,
           ),
         ) {
     _initAudioEngine();
     _initInitialChapter(_currentPosition.chapterIndex, _currentPosition.paragraphIndex);
   }
 
+  int _currentParagraphSpeakingOffset = 0;
+
   static BookPosition _computeInitialPosition(
     Book book,
     int? chapterIdx,
-    int? paraIdx,
-  ) {
+    int? paraIdx, [
+    int? charOffset,
+  ]) {
     if (chapterIdx != null) {
       return BookPosition(
         chapterIndex: chapterIdx,
         paragraphIndex: paraIdx ?? 0,
+        charOffset: charOffset ?? 0,
         timestamp: DateTime.now(),
       );
     }
@@ -77,12 +84,14 @@ class BookSessionController extends ChangeNotifier {
       return BookPosition(
         chapterIndex: saved.chapterIndex,
         paragraphIndex: saved.paragraphIndex,
+        charOffset: saved.charOffset,
         timestamp: saved.lastUpdated,
       );
     }
     return BookPosition(
       chapterIndex: 0,
       paragraphIndex: 0,
+      charOffset: 0,
       timestamp: DateTime.now(),
     );
   }
@@ -92,6 +101,7 @@ class BookSessionController extends ChangeNotifier {
       bookId: book.id,
       chapterIndex: _currentPosition.chapterIndex,
       paragraphIndex: _currentPosition.paragraphIndex,
+      charOffset: _currentPosition.charOffset,
     );
   }
 
@@ -117,6 +127,7 @@ class BookSessionController extends ChangeNotifier {
 
   void _initAudioEngine() {
     _audioEngine.setOnCompletion(_onParagraphAudioFinished);
+    _audioEngine.setOnProgress(_onAudioProgress);
     _audioEngine.setOnError((msg) {
       debugPrint('[SessionController] Audio error: $msg');
       _audioState = _audioState.copyWith(
@@ -125,6 +136,15 @@ class BookSessionController extends ChangeNotifier {
       );
       notifyListeners();
     });
+  }
+
+  void _onAudioProgress(String text, int startOffset, int endOffset, String word) {
+    if (!_audioState.isPlaying) return;
+
+    final absoluteCharOffset = _currentParagraphSpeakingOffset + startOffset;
+    _currentPosition = _currentPosition.copyWith(charOffset: absoluteCharOffset);
+    _audioState = _audioState.copyWith(position: _currentPosition);
+    notifyListeners();
   }
 
   // ----------------- GETTERS -----------------
@@ -172,9 +192,11 @@ class BookSessionController extends ChangeNotifier {
       await _audioEngine.stop();
     }
 
+    _currentParagraphSpeakingOffset = 0;
     _currentPosition = _currentPosition.copyWith(
       chapterIndex: index,
       paragraphIndex: paragraphIndex,
+      charOffset: 0,
       timestamp: DateTime.now(),
     );
 
@@ -195,7 +217,10 @@ class BookSessionController extends ChangeNotifier {
             _currentChapterContent!.findBlockIndexByAnchor(targetAnchor);
         if (anchorIdx != null && _currentChapterParagraphs.isNotEmpty) {
           paragraphIndex = anchorIdx.clamp(0, _currentChapterParagraphs.length - 1);
-          _currentPosition = _currentPosition.copyWith(paragraphIndex: paragraphIndex);
+          _currentPosition = _currentPosition.copyWith(
+            paragraphIndex: paragraphIndex,
+            charOffset: 0,
+          );
         }
       }
 
@@ -209,7 +234,7 @@ class BookSessionController extends ChangeNotifier {
       );
 
       if (wasPlaying && _currentChapterParagraphs.isNotEmpty) {
-        await _speakCurrentParagraph();
+        await _speakCurrentParagraph(fromCharOffset: false);
       }
     } catch (e) {
       _errorMessage = 'Failed to load chapter: $e';
@@ -246,8 +271,10 @@ class BookSessionController extends ChangeNotifier {
 
     final clampedIdx =
         paragraphIndex.clamp(0, _currentChapterParagraphs.length - 1);
+    _currentParagraphSpeakingOffset = 0;
     _currentPosition = _currentPosition.copyWith(
       paragraphIndex: clampedIdx,
+      charOffset: 0,
       timestamp: DateTime.now(),
     );
 
@@ -257,19 +284,19 @@ class BookSessionController extends ChangeNotifier {
     _audioState = _audioState.copyWith(
       position: _currentPosition,
       currentText: currentText,
-      status: shouldPlay ? AudioPlaybackStatus.playing : _audioState.status,
+      status: shouldPlay ? AudioPlaybackStatus.playing : AudioPlaybackStatus.paused,
     );
     _persistProgress();
     notifyListeners();
 
     if (shouldPlay) {
-      await _speakCurrentParagraph();
+      await _speakCurrentParagraph(fromCharOffset: false);
     }
   }
 
   // ----------------- AUDIO PLAYBACK CONTROLS -----------------
 
-  /// Starts or resumes audio playback from the current position.
+  /// Starts or resumes audio playback from the current position and paused word offset.
   Future<void> playAudio() async {
     if (_currentChapterParagraphs.isEmpty) {
       if (_currentChapterContent == null) {
@@ -295,10 +322,10 @@ class BookSessionController extends ChangeNotifier {
     _persistProgress();
     notifyListeners();
 
-    await _speakCurrentParagraph();
+    await _speakCurrentParagraph(fromCharOffset: true);
   }
 
-  /// Pauses audio playback without losing the current paragraph position.
+  /// Pauses audio playback without losing the current paragraph or word position.
   Future<void> pauseAudio() async {
     _audioState = _audioState.copyWith(
       status: AudioPlaybackStatus.paused,
@@ -321,8 +348,11 @@ class BookSessionController extends ChangeNotifier {
 
   /// Stops audio playback.
   Future<void> stopAudio() async {
+    _currentPosition = _currentPosition.copyWith(charOffset: 0);
+    _currentParagraphSpeakingOffset = 0;
     _audioState = _audioState.copyWith(
       status: AudioPlaybackStatus.stopped,
+      position: _currentPosition,
     );
     _persistProgress();
     notifyListeners();
@@ -337,7 +367,7 @@ class BookSessionController extends ChangeNotifier {
     } else if (hasNextChapter) {
       await loadChapter(_currentPosition.chapterIndex + 1, paragraphIndex: 0);
       if (_audioState.isPlaying) {
-        await _speakCurrentParagraph();
+        await _speakCurrentParagraph(fromCharOffset: false);
       }
     } else {
       await stopAudio();
@@ -390,35 +420,59 @@ class BookSessionController extends ChangeNotifier {
     });
   }
 
-  Future<void> _speakCurrentParagraph() async {
+  Future<void> _speakCurrentParagraph({bool fromCharOffset = false}) async {
     if (_currentChapterParagraphs.isEmpty) return;
 
     final pIdx = _currentPosition.paragraphIndex.clamp(
       0,
       _currentChapterParagraphs.length - 1,
     );
-    final text = _currentChapterParagraphs[pIdx];
+    final fullText = _currentChapterParagraphs[pIdx];
+
+    int startOffset = 0;
+    if (fromCharOffset &&
+        _currentPosition.charOffset > 0 &&
+        _currentPosition.charOffset < fullText.length) {
+      startOffset = _currentPosition.charOffset;
+      // Skip leading spaces to start cleanly on the word
+      while (startOffset < fullText.length && fullText[startOffset] == ' ') {
+        startOffset++;
+      }
+    }
+
+    _currentParagraphSpeakingOffset = startOffset;
+    final textToSpeak = (startOffset > 0 && startOffset < fullText.length)
+        ? fullText.substring(startOffset)
+        : fullText;
+
+    if (textToSpeak.trim().isEmpty) {
+      _onParagraphAudioFinished();
+      return;
+    }
 
     _audioState = _audioState.copyWith(
       status: AudioPlaybackStatus.playing,
-      currentText: text,
+      currentText: fullText,
       position: _currentPosition.copyWith(paragraphIndex: pIdx),
     );
     _persistProgress();
     notifyListeners();
 
-    await _audioEngine.speakParagraph(text, language: book.metadata.language);
+    await _audioEngine.speakParagraph(textToSpeak, language: book.metadata.language);
   }
 
   void _onParagraphAudioFinished() {
     if (!_audioState.isPlaying) return;
+
+    _currentPosition = _currentPosition.copyWith(charOffset: 0);
+    _currentParagraphSpeakingOffset = 0;
 
     if (_currentPosition.paragraphIndex < _currentChapterParagraphs.length - 1) {
       seekToParagraph(_currentPosition.paragraphIndex + 1);
     } else if (hasNextChapter) {
       loadChapter(_currentPosition.chapterIndex + 1, paragraphIndex: 0).then((_) {
         if (_audioState.isPlaying) {
-          _speakCurrentParagraph();
+          _speakCurrentParagraph(fromCharOffset: false);
         }
       });
     } else {

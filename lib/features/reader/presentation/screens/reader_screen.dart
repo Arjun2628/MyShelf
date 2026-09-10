@@ -80,6 +80,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               book: _session.book,
                               preferences: _session.preferences,
                               activeParagraphIndex: _session.currentParagraphIndex,
+                              charOffset: _session.currentPosition.charOffset,
                               isPlaying: audioPlaying,
                               scrollController: _scrollController,
                               onParagraphTapped: (paraIdx) {

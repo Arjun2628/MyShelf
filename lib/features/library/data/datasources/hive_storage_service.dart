@@ -150,6 +150,7 @@ class HiveStorageService {
     required String bookId,
     required int chapterIndex,
     required int paragraphIndex,
+    int charOffset = 0,
   }) async {
     await init();
     if (bookId.isEmpty) return;
@@ -158,6 +159,7 @@ class HiveStorageService {
       bookId: bookId,
       chapterIndex: chapterIndex,
       paragraphIndex: paragraphIndex,
+      charOffset: charOffset,
       lastUpdated: DateTime.now(),
     );
 

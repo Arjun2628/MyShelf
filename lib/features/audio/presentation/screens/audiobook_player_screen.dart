@@ -172,20 +172,28 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (audioState.isPlaying)
+                        if (audioState.isPlaying || _session.currentPosition.charOffset > 0)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
+                            padding: const EdgeInsets.only(bottom: 8.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.graphic_eq_rounded,
+                                  audioState.isPlaying
+                                      ? Icons.graphic_eq_rounded
+                                      : Icons.pause_circle_filled_rounded,
                                   size: 14,
                                   color: colors.accent,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'NOW PLAYING',
+                                  audioState.isPlaying
+                                      ? (_session.currentPosition.charOffset > 0
+                                          ? 'PLAYING FROM WORD'
+                                          : 'NOW PLAYING')
+                                      : (_session.currentPosition.charOffset > 0
+                                          ? 'PAUSED AT WORD'
+                                          : 'PAUSED'),
                                   style: TextStyle(
                                     color: colors.accent,
                                     fontSize: 10,

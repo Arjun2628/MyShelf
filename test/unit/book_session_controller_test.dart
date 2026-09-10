@@ -92,6 +92,46 @@ void main() {
       expect(mockAudio.spokenParagraphs.last, contains('തീരത്ത് വള്ളങ്ങൾ'));
     });
 
+    test('word-level pause and resume continues from the exact word offset', () async {
+      final book = await provider.getEnglishSampleBook();
+      final session = BookSessionController(
+        book: book,
+        audioEngine: mockAudio,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // Seek to paragraph 1 and play
+      await session.seekToParagraph(1);
+      expect(session.currentParagraphIndex, 1);
+      expect(session.audioState.isPlaying, isTrue);
+
+      final fullParagraph = session.currentChapterParagraphs[1];
+      expect(fullParagraph, contains('Alice was beginning to get very tired'));
+
+      // Simulate TTS progress callback firing as Alice speaks to word "tired" (e.g. charOffset = 31)
+      mockAudio.triggerProgress(fullParagraph, 31, 36, 'tired');
+      expect(session.currentPosition.charOffset, 31);
+
+      // User pauses
+      await session.pauseAudio();
+      expect(session.audioState.isPaused, isTrue);
+      expect(session.currentPosition.charOffset, 31);
+
+      // User resumes -> Audio engine should speak only the remaining substring starting from character 31 ("tired of sitting...")
+      await session.playAudio();
+      expect(session.audioState.isPlaying, isTrue);
+      expect(session.currentParagraphIndex, 1);
+      expect(mockAudio.spokenParagraphs.last, startsWith('tired of sitting'));
+      expect(mockAudio.spokenParagraphs.last, isNot(startsWith('Alice was beginning')));
+
+      // Finish remaining paragraph -> charOffset resets to 0 and advances to next paragraph
+      mockAudio.triggerCompletion();
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(session.currentParagraphIndex, 2);
+      expect(session.currentPosition.charOffset, 0);
+    });
+
     test('supports speed adjustment and sleep timer', () async {
       final book = await provider.getEnglishSampleBook();
       final session = BookSessionController(

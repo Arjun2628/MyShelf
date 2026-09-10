@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 class MockAudioSourceEngine implements AudioSourceEngine {
   VoidCallback? _onCompletion;
   void Function(String message)? _onError;
+  void Function(String text, int startOffset, int endOffset, String word)? _onProgress;
 
   final List<String> spokenParagraphs = [];
   bool isPlaying = false;
@@ -57,8 +58,18 @@ class MockAudioSourceEngine implements AudioSourceEngine {
   }
 
   @override
+  void setOnProgress(void Function(String text, int startOffset, int endOffset, String word) callback) {
+    _onProgress = callback;
+  }
+
+  @override
   void setOnError(void Function(String message) callback) {
     _onError = callback;
+  }
+
+  /// Manually trigger progress with character offset in tests.
+  void triggerProgress(String text, int startOffset, int endOffset, String word) {
+    _onProgress?.call(text, startOffset, endOffset, word);
   }
 
   /// Manually trigger completion of current paragraph in tests.
@@ -75,6 +86,7 @@ class MockAudioSourceEngine implements AudioSourceEngine {
   void dispose() {
     isPlaying = false;
     _onCompletion = null;
+    _onProgress = null;
     _onError = null;
   }
 }

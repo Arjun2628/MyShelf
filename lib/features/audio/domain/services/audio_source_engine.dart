@@ -29,6 +29,9 @@ abstract class AudioSourceEngine {
   /// Sets completion callback for when the current paragraph finishes playing.
   void setOnCompletion(VoidCallback callback);
 
+  /// Sets progress callback with word and character offset tracking.
+  void setOnProgress(void Function(String text, int startOffset, int endOffset, String word) callback);
+
   /// Sets error callback.
   void setOnError(void Function(String message) callback);
 

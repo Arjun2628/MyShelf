@@ -8,6 +8,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   final FlutterTts _flutterTts;
   VoidCallback? _onCompletion;
   void Function(String message)? _onError;
+  void Function(String text, int startOffset, int endOffset, String word)? _onProgress;
   bool _isInitialized = false;
   String? _lastText;
   String? _currentConfiguredLanguage;
@@ -54,6 +55,14 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
       _flutterTts.setStartHandler(() {
         debugPrint('[TTS] Speech started');
+      });
+
+      _flutterTts.setProgressHandler((dynamic text, dynamic start, dynamic end, dynamic word) {
+        final startOffset = start is int ? start : int.tryParse(start.toString()) ?? 0;
+        final endOffset = end is int ? end : int.tryParse(end.toString()) ?? 0;
+        final wordStr = word?.toString() ?? '';
+        final textStr = text?.toString() ?? '';
+        _onProgress?.call(textStr, startOffset, endOffset, wordStr);
       });
 
       _flutterTts.setCompletionHandler(() {
@@ -214,6 +223,11 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   }
 
   @override
+  void setOnProgress(void Function(String text, int startOffset, int endOffset, String word) callback) {
+    _onProgress = callback;
+  }
+
+  @override
   void setOnError(void Function(String message) callback) {
     _onError = callback;
   }
@@ -223,6 +237,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     stop();
     _lastText = null;
     _onCompletion = null;
+    _onProgress = null;
     _onError = null;
   }
 

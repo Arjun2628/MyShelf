@@ -12,6 +12,7 @@ class ReaderContentView extends StatelessWidget {
   final Book book;
   final ReaderPreferences preferences;
   final int? activeParagraphIndex;
+  final int? charOffset;
   final bool isPlaying;
   final void Function(int paragraphIndex)? onParagraphTapped;
   final void Function(LinkSpanNode link)? onLinkTapped;
@@ -23,6 +24,7 @@ class ReaderContentView extends StatelessWidget {
     required this.book,
     required this.preferences,
     this.activeParagraphIndex,
+    this.charOffset,
     this.isPlaying = false,
     this.onParagraphTapped,
     this.onLinkTapped,
@@ -123,7 +125,13 @@ class ReaderContentView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  isPlaying ? 'PLAYING NOW' : 'PAUSED HERE',
+                                  isPlaying
+                                      ? (charOffset != null && charOffset! > 0
+                                          ? 'PLAYING FROM WORD'
+                                          : 'PLAYING NOW')
+                                      : (charOffset != null && charOffset! > 0
+                                          ? 'PAUSED AT WORD'
+                                          : 'PAUSED HERE'),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 9,
