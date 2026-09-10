@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
+import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -117,15 +118,22 @@ class AudioNotificationService {
   void handleActionId(String actionId) {
     debugPrint('[AudioNotificationService] Dispatched action: $actionId');
 
+    final session = BookSessionController.activeSession;
+
     if (actionId == actionPlay) {
+      session?.playAudio();
       onPlayPressed?.call();
     } else if (actionId == actionPause) {
+      session?.pauseAudio();
       onPausePressed?.call();
     } else if (actionId == actionNext) {
+      session?.nextAudioParagraph();
       onNextPressed?.call();
     } else if (actionId == actionPrev) {
+      session?.previousAudioParagraph();
       onPrevPressed?.call();
     } else if (actionId == actionStop) {
+      session?.stopAudio();
       onStopPressed?.call();
       cancelNotification();
     }
@@ -148,26 +156,26 @@ class AudioNotificationService {
       final actions = <AndroidNotificationAction>[
         const AndroidNotificationAction(
           actionPrev,
-          '⏪ Prev',
-          showsUserInterface: false,
+          '⏪ -15s',
+          showsUserInterface: true,
           cancelNotification: false,
         ),
         AndroidNotificationAction(
           isPlaying ? actionPause : actionPlay,
           isPlaying ? '⏸ Pause' : '▶ Play',
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: false,
         ),
         const AndroidNotificationAction(
           actionNext,
-          '⏩ Next',
-          showsUserInterface: false,
+          '⏩ +15s',
+          showsUserInterface: true,
           cancelNotification: false,
         ),
         const AndroidNotificationAction(
           actionStop,
           '⏹ Stop',
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: true,
         ),
       ];
