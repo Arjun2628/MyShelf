@@ -1,15 +1,27 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-/// Top-level or static background action handler for notification action button taps.
+/// Top-level background action handler for notification action button taps.
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
-  AudioNotificationService().handleNotificationResponse(notificationResponse);
+  final actionId = notificationResponse.actionId ?? notificationResponse.payload;
+  if (actionId != null && actionId.isNotEmpty) {
+    final sendPort =
+        IsolateNameServer.lookupPortByName(AudioNotificationService.isolatePortName);
+    if (sendPort != null) {
+      sendPort.send(actionId);
+    } else {
+      AudioNotificationService().handleActionId(actionId);
+    }
+  }
 }
 
 /// Service that creates and maintains media playback notifications in the system notification shade.
 class AudioNotificationService {
+  static const String isolatePortName = 'epub_audio_notification_port';
   static const int notificationId = 8801;
   static const String channelId = 'epub_audio_playback';
   static const String channelName = 'Audiobook Playback';
@@ -30,6 +42,7 @@ class AudioNotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  ReceivePort? _receivePort;
   bool _isInitialized = false;
 
   VoidCallback? onPlayPressed;
@@ -38,11 +51,26 @@ class AudioNotificationService {
   VoidCallback? onPrevPressed;
   VoidCallback? onStopPressed;
 
-  /// Initializes the local notifications plugin and configures notification channels.
+  /// Initializes the local notifications plugin and configures notification channels and isolate port.
   Future<void> init() async {
     if (_isInitialized) return;
 
     try {
+      // Setup isolate communication for background notification clicks
+      _receivePort?.close();
+      _receivePort = ReceivePort();
+      IsolateNameServer.removePortNameMapping(isolatePortName);
+      IsolateNameServer.registerPortWithName(
+        _receivePort!.sendPort,
+        isolatePortName,
+      );
+
+      _receivePort!.listen((message) {
+        if (message is String) {
+          handleActionId(message);
+        }
+      });
+
       const androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
       const darwinSettings = DarwinInitializationSettings(
@@ -61,7 +89,10 @@ class AudioNotificationService {
         await _notificationsPlugin.initialize(
           settings: initSettings,
           onDidReceiveNotificationResponse: (response) {
-            handleNotificationResponse(response);
+            final action = response.actionId ?? response.payload;
+            if (action != null && action.isNotEmpty) {
+              handleActionId(action);
+            }
           },
           onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
         );
@@ -82,10 +113,9 @@ class AudioNotificationService {
     }
   }
 
-  /// Handles action button taps from the system notification bar.
-  void handleNotificationResponse(NotificationResponse response) {
-    final actionId = response.actionId;
-    debugPrint('[AudioNotificationService] Notification action received: $actionId');
+  /// Handles action ID strings from either direct foreground callback or background isolate port.
+  void handleActionId(String actionId) {
+    debugPrint('[AudioNotificationService] Dispatched action: $actionId');
 
     if (actionId == actionPlay) {
       onPlayPressed?.call();
@@ -144,8 +174,8 @@ class AudioNotificationService {
         channelId,
         channelName,
         channelDescription: channelDescription,
-        importance: Importance.low,
-        priority: Priority.low,
+        importance: Importance.defaultImportance,
+        priority: Priority.high,
         ongoing: isPlaying,
         autoCancel: false,
         showWhen: false,

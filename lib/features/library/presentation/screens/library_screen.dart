@@ -312,7 +312,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           _selectedTabIndex == 0 ? 'EPUB & Audiobooks' : 'Saved & Bookmarks',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: 19,
             color: Color(0xFF0F172A),
           ),
         ),
@@ -321,10 +321,35 @@ class _LibraryScreenState extends State<LibraryScreen> {
         elevation: 0,
         actions: [
           if (_selectedTabIndex == 0) ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: FilledButton.icon(
+                onPressed: _importEpubFile,
+                icon: const Icon(Icons.file_upload_outlined, size: 16),
+                label: const Text(
+                  'Import EPUB',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  minimumSize: const Size(0, 36),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
             IconButton(
               icon: Icon(
                 _isGridView ? Icons.view_stream_rounded : Icons.grid_view_rounded,
                 color: const Color(0xFF334155),
+                size: 22,
               ),
               tooltip: _isGridView ? 'Shelf View' : 'Grid View',
               onPressed: () {
@@ -335,10 +360,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           ],
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155), size: 22),
             tooltip: 'Reload Library',
             onPressed: _loadInitialData,
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: _isLoading
@@ -356,18 +382,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ],
             ),
-      floatingActionButton: _selectedTabIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: _importEpubFile,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text(
-                'Import EPUB',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-            )
-          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedTabIndex,
         onDestinationSelected: (index) {
@@ -430,150 +444,248 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 'Chapter ${session.currentChapterIndex + 1}';
             final paraIdx = session.currentParagraphIndex + 1;
             final totalParas = session.currentChapterParagraphs.length;
+            final progressFactor =
+                totalParas > 0 ? (paraIdx / totalParas).clamp(0.0, 1.0) : 0.0;
 
             return Container(
-              margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              key: const ValueKey('active_audio_tile'),
+              margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF0F172A),
+                    Color(0xFF1E293B),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.22),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.18),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
                 ],
-                border: Border.all(color: const Color(0xFF334155)),
+                border: Border.all(
+                  color: isPlaying
+                      ? const Color(0xFF3B82F6).withValues(alpha: 0.4)
+                      : const Color(0xFF334155),
+                  width: 1.2,
+                ),
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => _openAudiobook(book),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    child: Row(
-                      children: [
-                        // Mini Book Cover
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: SizedBox(
-                            width: 38,
-                            height: 48,
-                            child: book.coverImageBytes != null
-                                ? Image.memory(
-                                    book.coverImageBytes!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : _buildDefaultCover(book, isMini: true),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _openAudiobook(book),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
                           ),
-                        ),
-                        const SizedBox(width: 10),
-
-                        // Title, Chapter & Playing Icon
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                          child: Row(
                             children: [
-                              Row(
-                                children: [
-                                  if (isPlaying)
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 6),
-                                      child: Icon(
-                                        Icons.graphic_eq_rounded,
-                                        size: 14,
-                                        color: Color(0xFF60A5FA),
-                                      ),
+                              // Mini Book Cover with drop shadow and border
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(9),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.4),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
                                     ),
-                                  Expanded(
-                                    child: Text(
-                                      book.metadata.title,
+                                  ],
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: SizedBox(
+                                    width: 40,
+                                    height: 52,
+                                    child: book.coverImageBytes != null
+                                        ? Image.memory(
+                                            book.coverImageBytes!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : _buildDefaultCover(book, isMini: true),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              // Title, Chapter, Paragraph status & Equalizer icon
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        if (isPlaying)
+                                          Container(
+                                            margin:
+                                                const EdgeInsets.only(right: 6),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 5, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF2563EB)
+                                                  .withValues(alpha: 0.25),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.graphic_eq_rounded,
+                                                  size: 13,
+                                                  color: Color(0xFF60A5FA),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        Expanded(
+                                          child: Text(
+                                            book.metadata.title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13.5,
+                                              letterSpacing: -0.2,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      totalParas > 0
+                                          ? '$chapterTitle • Para $paraIdx of $totalParas'
+                                          : chapterTitle,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
+                                        color: Color(0xFF94A3B8),
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
+                                  ],
+                                ),
+                              ),
+
+                              // Quick Audio Controls
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.skip_previous_rounded,
+                                      size: 22,
+                                      color: Color(0xFFE2E8F0),
+                                    ),
+                                    tooltip: 'Previous Paragraph',
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(),
+                                    onPressed: session.previousAudioParagraph,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF3B82F6),
+                                          Color(0xFF1D4ED8),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF2563EB)
+                                              .withValues(alpha: 0.45),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: IconButton(
+                                      icon: Icon(
+                                        isPlaying
+                                            ? Icons.pause_rounded
+                                            : Icons.play_arrow_rounded,
+                                        size: 22,
+                                        color: Colors.white,
+                                      ),
+                                      tooltip: isPlaying ? 'Pause' : 'Play',
+                                      padding: EdgeInsets.zero,
+                                      onPressed: session.toggleAudioPlayPause,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.skip_next_rounded,
+                                      size: 22,
+                                      color: Color(0xFFE2E8F0),
+                                    ),
+                                    tooltip: 'Next Paragraph',
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(),
+                                    onPressed: session.nextAudioParagraph,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      size: 18,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                    tooltip: 'Stop & Dismiss',
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(),
+                                    onPressed: session.stopAudio,
                                   ),
                                 ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                totalParas > 0
-                                    ? '$chapterTitle • Para $paraIdx/$totalParas'
-                                    : chapterTitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color(0xFF94A3B8),
-                                  fontSize: 11,
-                                ),
                               ),
                             ],
                           ),
                         ),
-
-                        // Actions: Previous, Play/Pause, Next, Close
-                        IconButton(
-                          icon: const Icon(Icons.skip_previous_rounded,
-                              size: 20, color: Colors.white),
-                          tooltip: 'Previous',
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(),
-                          onPressed: session.previousAudioParagraph,
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF2563EB),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              isPlaying
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                            tooltip: isPlaying ? 'Pause' : 'Play',
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.all(6),
-                            constraints: const BoxConstraints(),
-                            onPressed: session.toggleAudioPlayPause,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          icon: const Icon(Icons.skip_next_rounded,
-                              size: 20, color: Colors.white),
-                          tooltip: 'Next',
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(),
-                          onPressed: session.nextAudioParagraph,
-                        ),
-                        const SizedBox(width: 4),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded,
-                              size: 18, color: Color(0xFF94A3B8)),
-                          tooltip: 'Stop & Dismiss',
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(),
-                          onPressed: () {
-                            session.stopAudio();
-                          },
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    // Chapter Reading Progress Bar along bottom edge
+                    if (totalParas > 0)
+                      LinearProgressIndicator(
+                        value: progressFactor,
+                        minHeight: 2.5,
+                        backgroundColor: const Color(0xFF1E293B),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF3B82F6),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             );
