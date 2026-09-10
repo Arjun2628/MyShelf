@@ -56,23 +56,80 @@ class ReaderContentView extends StatelessWidget {
               activeParagraphIndex == currentParaIdx;
 
           return GestureDetector(
-            onTap: currentParaIdx != null ? () => onParagraphTapped?.call(currentParaIdx) : null,
+            onTap: currentParaIdx != null
+                ? () => onParagraphTapped?.call(currentParaIdx)
+                : null,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
+              margin: isHighlight
+                  ? const EdgeInsets.symmetric(vertical: 6)
+                  : EdgeInsets.zero,
               padding: isHighlight
-                  ? const EdgeInsets.symmetric(horizontal: 10, vertical: 4)
+                  ? const EdgeInsets.fromLTRB(14, 10, 14, 10)
                   : EdgeInsets.zero,
               decoration: isHighlight
                   ? BoxDecoration(
-                      color: colors.accent.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border(
-                        left: BorderSide(color: colors.accent, width: 3.5),
+                      color: colors.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: colors.accent,
+                        width: 2.0,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.accent.withValues(alpha: 0.18),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     )
                   : null,
-              child: _buildBlockWidget(context, block, colors),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isHighlight)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.accent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.volume_up_rounded,
+                                  size: 13,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'PLAYING NOW',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  _buildBlockWidget(context, block, colors, isHighlight: isHighlight),
+                ],
+              ),
             ),
           );
         },
@@ -83,18 +140,19 @@ class ReaderContentView extends StatelessWidget {
   Widget _buildBlockWidget(
     BuildContext context,
     ContentBlockNode block,
-    ReaderThemeColors colors,
-  ) {
+    ReaderThemeColors colors, {
+    bool isHighlight = false,
+  }) {
     if (block is HeadingNode) {
-      return _buildHeading(block, colors);
+      return _buildHeading(block, colors, isHighlight: isHighlight);
     } else if (block is ParagraphNode) {
-      return _buildParagraph(block, colors);
+      return _buildParagraph(block, colors, isHighlight: isHighlight);
     } else if (block is BlockquoteNode) {
-      return _buildBlockquote(context, block, colors);
+      return _buildBlockquote(context, block, colors, isHighlight: isHighlight);
     } else if (block is ImageBlockNode) {
       return ImageBlockWidget(node: block, book: book, colors: colors);
     } else if (block is ListBlockNode) {
-      return _buildListBlock(block, colors);
+      return _buildListBlock(block, colors, isHighlight: isHighlight);
     } else if (block is DividerNode) {
       return Divider(color: colors.divider, height: 48, thickness: 1);
     } else if (block is CodeBlockNode) {
@@ -104,7 +162,11 @@ class ReaderContentView extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  Widget _buildHeading(HeadingNode heading, ReaderThemeColors colors) {
+  Widget _buildHeading(
+    HeadingNode heading,
+    ReaderThemeColors colors, {
+    bool isHighlight = false,
+  }) {
     double headingSize;
     FontWeight weight = FontWeight.w700;
     double topMargin = 28.0;
@@ -126,18 +188,25 @@ class ReaderContentView extends StatelessWidget {
         weight = FontWeight.w600;
     }
 
+    final textColor = isHighlight ? colors.accent : colors.text;
+
     return Container(
-      margin: EdgeInsets.only(top: topMargin, bottom: bottomMargin),
+      margin: EdgeInsets.only(top: isHighlight ? 4 : topMargin, bottom: bottomMargin),
       child: Text.rich(
         TextSpan(
           children: heading.spans
-              .map((s) => _buildInlineSpan(s, colors, baseFontSize: headingSize))
+              .map((s) => _buildInlineSpan(
+                    s,
+                    colors,
+                    baseFontSize: headingSize,
+                    customTextColor: isHighlight ? textColor : null,
+                  ))
               .toList(),
         ),
         style: TextStyle(
-          color: colors.text,
+          color: textColor,
           fontSize: headingSize,
-          fontWeight: weight,
+          fontWeight: isHighlight ? FontWeight.w900 : weight,
           fontFamily: _getFontFamily(),
           height: 1.3,
         ),
@@ -145,16 +214,29 @@ class ReaderContentView extends StatelessWidget {
     );
   }
 
-  Widget _buildParagraph(ParagraphNode paragraph, ReaderThemeColors colors) {
+  Widget _buildParagraph(
+    ParagraphNode paragraph,
+    ReaderThemeColors colors, {
+    bool isHighlight = false,
+  }) {
+    final textColor = isHighlight ? colors.accent : colors.text;
+
     return Container(
-      margin: EdgeInsets.only(bottom: preferences.fontSize * 0.8),
+      margin: EdgeInsets.only(bottom: isHighlight ? 4 : preferences.fontSize * 0.8),
       child: Text.rich(
         TextSpan(
-          children: paragraph.spans.map((s) => _buildInlineSpan(s, colors)).toList(),
+          children: paragraph.spans
+              .map((s) => _buildInlineSpan(
+                    s,
+                    colors,
+                    customTextColor: isHighlight ? textColor : null,
+                  ))
+              .toList(),
         ),
         style: TextStyle(
-          color: colors.text,
+          color: textColor,
           fontSize: preferences.fontSize,
+          fontWeight: isHighlight ? FontWeight.w700 : FontWeight.normal,
           height: preferences.lineHeight,
           fontFamily: _getFontFamily(),
           letterSpacing: 0.2,
@@ -166,8 +248,9 @@ class ReaderContentView extends StatelessWidget {
   Widget _buildBlockquote(
     BuildContext context,
     BlockquoteNode blockquote,
-    ReaderThemeColors colors,
-  ) {
+    ReaderThemeColors colors, {
+    bool isHighlight = false,
+  }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -184,13 +267,19 @@ class ReaderContentView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: blockquote.children
-            .map((b) => _buildBlockWidget(context, b, colors))
+            .map((b) => _buildBlockWidget(context, b, colors, isHighlight: isHighlight))
             .toList(),
       ),
     );
   }
 
-  Widget _buildListBlock(ListBlockNode listBlock, ReaderThemeColors colors) {
+  Widget _buildListBlock(
+    ListBlockNode listBlock,
+    ReaderThemeColors colors, {
+    bool isHighlight = false,
+  }) {
+    final textColor = isHighlight ? colors.accent : colors.text;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -217,11 +306,18 @@ class ReaderContentView extends StatelessWidget {
                 Expanded(
                   child: Text.rich(
                     TextSpan(
-                      children: item.spans.map((s) => _buildInlineSpan(s, colors)).toList(),
+                      children: item.spans
+                          .map((s) => _buildInlineSpan(
+                                s,
+                                colors,
+                                customTextColor: isHighlight ? textColor : null,
+                              ))
+                          .toList(),
                     ),
                     style: TextStyle(
-                      color: colors.text,
+                      color: textColor,
                       fontSize: preferences.fontSize,
+                      fontWeight: isHighlight ? FontWeight.w700 : FontWeight.normal,
                       height: preferences.lineHeight,
                       fontFamily: _getFontFamily(),
                     ),
@@ -264,16 +360,20 @@ class ReaderContentView extends StatelessWidget {
     InlineSpanNode span,
     ReaderThemeColors colors, {
     double? baseFontSize,
+    Color? customTextColor,
   }) {
     final effectiveSize = baseFontSize ?? preferences.fontSize;
+    final effectiveTextColor = customTextColor ?? colors.text;
 
     if (span is TextSpanNode) {
       TextStyle style = TextStyle(
-        color: colors.text,
+        color: effectiveTextColor,
         fontSize: span.isSuperscript || span.isSubscript
             ? effectiveSize * 0.75
             : effectiveSize,
-        fontWeight: span.isBold ? FontWeight.bold : FontWeight.normal,
+        fontWeight: customTextColor != null
+            ? (span.isBold ? FontWeight.w900 : FontWeight.w700)
+            : (span.isBold ? FontWeight.bold : FontWeight.normal),
         fontStyle: span.isItalic ? FontStyle.italic : FontStyle.normal,
         decoration: _getTextDecoration(span),
         fontFamily: span.isCode ? 'monospace' : _getFontFamily(),

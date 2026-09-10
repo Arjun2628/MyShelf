@@ -144,27 +144,74 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
 
               // 3. Current Live Spoken Paragraph Preview (Highlighted)
               Container(
-                constraints: const BoxConstraints(maxHeight: 90),
+                constraints: const BoxConstraints(maxHeight: 100),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: colors.cardBackground,
-                  borderRadius: BorderRadius.circular(14),
+                  color: audioState.isPlaying
+                      ? colors.accent.withValues(alpha: 0.12)
+                      : colors.cardBackground,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: colors.accent.withValues(alpha: 0.3),
-                    width: 1,
+                    color: audioState.isPlaying
+                        ? colors.accent
+                        : colors.accent.withValues(alpha: 0.3),
+                    width: audioState.isPlaying ? 2.0 : 1.0,
                   ),
+                  boxShadow: audioState.isPlaying
+                      ? [
+                          BoxShadow(
+                            color: colors.accent.withValues(alpha: 0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Center(
                   child: SingleChildScrollView(
-                    child: Text(
-                      '"$currentParagraph"',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colors.text,
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (audioState.isPlaying)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.graphic_eq_rounded,
+                                  size: 14,
+                                  color: colors.accent,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'NOW PLAYING',
+                                  style: TextStyle(
+                                    color: colors.accent,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Text(
+                          '"$currentParagraph"',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: audioState.isPlaying
+                                ? colors.accent
+                                : colors.text,
+                            fontSize: 14,
+                            fontWeight: audioState.isPlaying
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            fontStyle: FontStyle.italic,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -204,7 +251,7 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
                         setState(() {
                           _sliderDragIndex = null;
                         });
-                        _session.seekToParagraph(target);
+                        _session.seekToParagraph(target, autoPlay: true);
                       },
                     ),
                   ),

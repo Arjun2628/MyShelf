@@ -193,28 +193,35 @@ class BookSessionController extends ChangeNotifier {
   }
 
   /// Jumps to a specific paragraph within the current chapter (syncs both reader highlight and audio).
-  Future<void> seekToParagraph(int paragraphIndex) async {
+  Future<void> seekToParagraph(int paragraphIndex, {bool autoPlay = true}) async {
     if (_currentChapterParagraphs.isEmpty) {
       if (_currentChapterContent == null) {
-        await loadChapter(_currentPosition.chapterIndex);
+        await loadChapter(
+          _currentPosition.chapterIndex,
+          paragraphIndex: paragraphIndex,
+        );
       }
       if (_currentChapterParagraphs.isEmpty) return;
     }
 
-    final clampedIdx = paragraphIndex.clamp(0, _currentChapterParagraphs.length - 1);
+    final clampedIdx =
+        paragraphIndex.clamp(0, _currentChapterParagraphs.length - 1);
     _currentPosition = _currentPosition.copyWith(
       paragraphIndex: clampedIdx,
       timestamp: DateTime.now(),
     );
 
     final currentText = _currentChapterParagraphs[clampedIdx];
+    final shouldPlay = autoPlay || _audioState.isPlaying;
+
     _audioState = _audioState.copyWith(
       position: _currentPosition,
       currentText: currentText,
+      status: shouldPlay ? AudioPlaybackStatus.playing : _audioState.status,
     );
     notifyListeners();
 
-    if (_audioState.isPlaying) {
+    if (shouldPlay) {
       await _speakCurrentParagraph();
     }
   }
@@ -225,22 +232,37 @@ class BookSessionController extends ChangeNotifier {
   Future<void> playAudio() async {
     if (_currentChapterParagraphs.isEmpty) {
       if (_currentChapterContent == null) {
-        await loadChapter(_currentPosition.chapterIndex);
+        await loadChapter(
+          _currentPosition.chapterIndex,
+          paragraphIndex: _currentPosition.paragraphIndex,
+        );
       }
       if (_currentChapterParagraphs.isEmpty) return;
     }
 
-    _audioState = _audioState.copyWith(status: AudioPlaybackStatus.playing);
+    final pIdx = _currentPosition.paragraphIndex
+        .clamp(0, _currentChapterParagraphs.length - 1);
+    _currentPosition = _currentPosition.copyWith(paragraphIndex: pIdx);
+
+    _audioState = _audioState.copyWith(
+      status: AudioPlaybackStatus.playing,
+      position: _currentPosition,
+      currentText: _currentChapterParagraphs.isNotEmpty
+          ? _currentChapterParagraphs[pIdx]
+          : null,
+    );
     notifyListeners();
 
     await _speakCurrentParagraph();
   }
 
-  /// Pauses audio playback.
+  /// Pauses audio playback without losing the current paragraph position.
   Future<void> pauseAudio() async {
-    await _audioEngine.pause();
     await _audioEngine.stop();
-    _audioState = _audioState.copyWith(status: AudioPlaybackStatus.paused);
+    _audioState = _audioState.copyWith(
+      status: AudioPlaybackStatus.paused,
+      position: _currentPosition,
+    );
     notifyListeners();
   }
 
