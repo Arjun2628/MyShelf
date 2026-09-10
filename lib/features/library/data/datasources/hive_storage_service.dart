@@ -213,6 +213,14 @@ class HiveStorageService {
     return result;
   }
 
+  /// Retrieves all saved progress sorted by most recently updated.
+  List<BookProgress> getRecentProgressList() {
+    final map = getAllProgress();
+    final list = map.values.toList();
+    list.sort((a, b) => b.lastUpdated.compareTo(a.lastUpdated));
+    return list;
+  }
+
   // ----------------- HIGHLIGHTS PERSISTENCE -----------------
 
   /// Saves or updates a text highlight in Hive.

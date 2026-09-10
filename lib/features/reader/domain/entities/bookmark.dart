@@ -33,12 +33,14 @@ class Bookmark {
 
   factory Bookmark.fromJson(Map<String, dynamic> json) {
     return Bookmark(
-      id: json['id'] as String,
-      bookId: json['bookId'] as String,
-      chapterIndex: json['chapterIndex'] as int,
-      chapterTitle: json['chapterTitle'] as String,
-      snippet: json['snippet'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'] as String? ?? '',
+      bookId: json['bookId'] as String? ?? '',
+      chapterIndex: (json['chapterIndex'] as num?)?.toInt() ?? 0,
+      chapterTitle: json['chapterTitle'] as String? ?? '',
+      snippet: json['snippet'] as String? ?? '',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
       anchorId: json['anchorId'] as String?,
     );
   }
