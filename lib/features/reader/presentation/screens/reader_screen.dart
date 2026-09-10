@@ -1,4 +1,5 @@
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
+import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/reader/presentation/controllers/reader_controller.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/bookmarks_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/reader_content_view.dart';
@@ -103,7 +104,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  Widget _buildTopBar(colors) {
+  Widget _buildTopBar(ReaderThemeColors colors) {
     final currentTitle = _controller.currentChapterContent?.title ??
         _controller.book.metadata.title;
 
@@ -186,7 +187,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  Widget _buildBottomBar(colors) {
+  Widget _buildBottomBar(ReaderThemeColors colors) {
     final progress = (_controller.readingProgress * 100).round();
 
     return Container(
@@ -281,7 +282,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  Widget _buildErrorState(colors) {
+  Widget _buildErrorState(ReaderThemeColors colors) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),

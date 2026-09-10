@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:epub_audio/features/epub/data/repositories/epub_repository_impl.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
@@ -22,7 +21,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   final List<Book> _books = [];
   bool _isLoading = true;
-  String? _statusMessage;
 
   @override
   void initState() {
@@ -51,7 +49,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _statusMessage = 'Failed to load initial books: $e';
         });
       }
     }
@@ -121,8 +118,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
