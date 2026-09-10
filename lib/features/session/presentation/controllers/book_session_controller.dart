@@ -53,12 +53,33 @@ class BookSessionController extends ChangeNotifier {
           ),
         ) {
     _initAudioEngine();
-    loadChapter(initialChapterIndex, paragraphIndex: initialParagraphIndex);
+    _initInitialChapter(initialChapterIndex, initialParagraphIndex);
+  }
+
+  void _initInitialChapter(int chapterIndex, int paragraphIndex) {
+    if (book.chapterCount > 0 && chapterIndex >= 0 && chapterIndex < book.chapterCount) {
+      try {
+        final rawChapter = book.getChapter(chapterIndex);
+        _currentChapterContent = _parseChapterUseCase.execute(rawChapter);
+        _currentChapterParagraphs = _currentChapterContent!.paragraphsAsText;
+        _audioState = _audioState.copyWith(
+          position: _currentPosition,
+          totalParagraphsInChapter: _currentChapterParagraphs.length,
+          currentText: _currentChapterParagraphs.isNotEmpty &&
+                  paragraphIndex < _currentChapterParagraphs.length
+              ? _currentChapterParagraphs[paragraphIndex]
+              : null,
+        );
+      } catch (e) {
+        _errorMessage = 'Failed to load initial chapter: $e';
+      }
+    }
   }
 
   void _initAudioEngine() {
     _audioEngine.setOnCompletion(_onParagraphAudioFinished);
     _audioEngine.setOnError((msg) {
+      debugPrint('[SessionController] Audio error: $msg');
       _audioState = _audioState.copyWith(
         status: AudioPlaybackStatus.error,
         errorMessage: msg,
@@ -133,7 +154,7 @@ class BookSessionController extends ChangeNotifier {
       if (targetAnchor != null) {
         final anchorIdx =
             _currentChapterContent!.findBlockIndexByAnchor(targetAnchor);
-        if (anchorIdx != null) {
+        if (anchorIdx != null && _currentChapterParagraphs.isNotEmpty) {
           paragraphIndex = anchorIdx.clamp(0, _currentChapterParagraphs.length - 1);
           _currentPosition = _currentPosition.copyWith(paragraphIndex: paragraphIndex);
         }
@@ -173,7 +194,12 @@ class BookSessionController extends ChangeNotifier {
 
   /// Jumps to a specific paragraph within the current chapter (syncs both reader highlight and audio).
   Future<void> seekToParagraph(int paragraphIndex) async {
-    if (_currentChapterParagraphs.isEmpty) return;
+    if (_currentChapterParagraphs.isEmpty) {
+      if (_currentChapterContent == null) {
+        await loadChapter(_currentPosition.chapterIndex);
+      }
+      if (_currentChapterParagraphs.isEmpty) return;
+    }
 
     final clampedIdx = paragraphIndex.clamp(0, _currentChapterParagraphs.length - 1);
     _currentPosition = _currentPosition.copyWith(
@@ -239,7 +265,6 @@ class BookSessionController extends ChangeNotifier {
     if (_currentPosition.paragraphIndex < _currentChapterParagraphs.length - 1) {
       await seekToParagraph(_currentPosition.paragraphIndex + 1);
     } else if (hasNextChapter) {
-      // Advance to next chapter
       await loadChapter(_currentPosition.chapterIndex + 1, paragraphIndex: 0);
       if (_audioState.isPlaying) {
         await _speakCurrentParagraph();
@@ -318,17 +343,14 @@ class BookSessionController extends ChangeNotifier {
     if (!_audioState.isPlaying) return;
 
     if (_currentPosition.paragraphIndex < _currentChapterParagraphs.length - 1) {
-      // Advance to next paragraph
       seekToParagraph(_currentPosition.paragraphIndex + 1);
     } else if (hasNextChapter) {
-      // Auto-advance to next chapter
       loadChapter(_currentPosition.chapterIndex + 1, paragraphIndex: 0).then((_) {
         if (_audioState.isPlaying) {
           _speakCurrentParagraph();
         }
       });
     } else {
-      // Reached the very end of the book
       stopAudio();
     }
   }

@@ -3,7 +3,7 @@ import 'package:epub_audio/features/audio/domain/services/audio_source_engine.da
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
-/// Concrete [AudioSourceEngine] implementation utilizing [FlutterTts].
+/// Concrete [AudioSourceEngine] implementation utilizing [FlutterTts] with fallback support.
 class FlutterTtsAudioEngine implements AudioSourceEngine {
   final FlutterTts _flutterTts;
   VoidCallback? _onCompletion;
@@ -19,33 +19,42 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
     try {
       if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) {
-        await _flutterTts.setIosAudioCategory(
-          IosTextToSpeechAudioCategory.playback,
-          [
-            IosTextToSpeechAudioCategoryOptions.allowBluetooth,
-            IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
-            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-          ],
-        );
+        try {
+          await _flutterTts.setIosAudioCategory(
+            IosTextToSpeechAudioCategory.playback,
+            [
+              IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+              IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+              IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+            ],
+          );
+        } catch (_) {}
       }
 
-      await _flutterTts.awaitSpeakCompletion(true);
+      // Ensure speak() triggers handlers asynchronously without deadlocking
+      await _flutterTts.awaitSpeakCompletion(false);
+
+      _flutterTts.setStartHandler(() {
+        debugPrint('[TTS] Speech started');
+      });
 
       _flutterTts.setCompletionHandler(() {
+        debugPrint('[TTS] Paragraph completed');
         _onCompletion?.call();
       });
 
       _flutterTts.setErrorHandler((dynamic msg) {
+        debugPrint('[TTS] Error: $msg');
         _onError?.call(msg.toString());
       });
 
       _flutterTts.setCancelHandler(() {
-        // Cancelled or stopped
+        debugPrint('[TTS] Speech cancelled/stopped');
       });
 
       _isInitialized = true;
-    } catch (_) {
-      // Allow graceful fallback in test / unsupported platforms
+    } catch (e) {
+      debugPrint('[TTS] Init exception: $e');
       _isInitialized = true;
     }
   }
@@ -61,11 +70,26 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     try {
       if (language != null) {
         final normalizedLang = _normalizeLanguageTag(language);
-        await _flutterTts.setLanguage(normalizedLang);
+        try {
+          final isAvail = await _flutterTts.isLanguageAvailable(normalizedLang);
+          if (isAvail == true || isAvail == 1) {
+            await _flutterTts.setLanguage(normalizedLang);
+          } else {
+            debugPrint('[TTS] Language $normalizedLang unavailable, falling back to default voice');
+          }
+        } catch (_) {
+          // Some desktop platforms don't support isLanguageAvailable, attempt direct set
+          try {
+            await _flutterTts.setLanguage(normalizedLang);
+          } catch (_) {}
+        }
       }
 
-      await _flutterTts.speak(text);
+      await _flutterTts.setVolume(1.0);
+      final result = await _flutterTts.speak(text);
+      debugPrint('[TTS] speak result: $result for "${text.substring(0, text.length.clamp(0, 30))}..."');
     } catch (e) {
+      debugPrint('[TTS] Speak error: $e');
       _onError?.call('TTS speak error: $e');
     }
   }
@@ -79,9 +103,8 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
   @override
   Future<void> resume() async {
-    // Note: Some platforms don't support resume directly without re-speaking
     try {
-      // On Android/iOS, resume or re-speak is handled by the session controller
+      // Platform-specific resume
     } catch (_) {}
   }
 
@@ -95,7 +118,6 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   Future<void> setRate(double rate) async {
     try {
-      // FlutterTts rate ranges from 0.0 to 1.0 (0.5 is default 1.0x speed)
       final ttsRate = (rate * 0.5).clamp(0.1, 1.0);
       await _flutterTts.setSpeechRate(ttsRate);
     } catch (_) {}
@@ -134,13 +156,13 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
   String _normalizeLanguageTag(String lang) {
     final lower = lang.toLowerCase().trim();
-    if (lower.startsWith('ml')) return 'ml-IN'; // Malayalam
-    if (lower.startsWith('hi')) return 'hi-IN'; // Hindi
-    if (lower.startsWith('ta')) return 'ta-IN'; // Tamil
-    if (lower.startsWith('en')) return 'en-US'; // English
-    if (lower.startsWith('es')) return 'es-ES'; // Spanish
-    if (lower.startsWith('fr')) return 'fr-FR'; // French
-    if (lower.startsWith('de')) return 'de-DE'; // German
+    if (lower.startsWith('ml')) return 'ml-IN';
+    if (lower.startsWith('hi')) return 'hi-IN';
+    if (lower.startsWith('ta')) return 'ta-IN';
+    if (lower.startsWith('en')) return 'en-US';
+    if (lower.startsWith('es')) return 'es-ES';
+    if (lower.startsWith('fr')) return 'fr-FR';
+    if (lower.startsWith('de')) return 'de-DE';
     return lang;
   }
 }
