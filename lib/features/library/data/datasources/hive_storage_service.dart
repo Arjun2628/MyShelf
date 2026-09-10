@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
+import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/session/domain/entities/book_progress.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,7 @@ class HiveStorageService {
   static const String booksBoxName = 'imported_books_v1';
   static const String progressBoxName = 'reading_progress_v1';
   static const String highlightsBoxName = 'highlights_v1';
+  static const String bookmarksBoxName = 'bookmarks_v1';
 
   static final HiveStorageService _instance = HiveStorageService._internal();
   factory HiveStorageService() => _instance;
@@ -20,11 +22,19 @@ class HiveStorageService {
   Box<dynamic>? _booksBox;
   Box<dynamic>? _progressBox;
   Box<dynamic>? _highlightsBox;
+  Box<dynamic>? _bookmarksBox;
   bool _isInitialized = false;
 
   /// Initializes Hive and opens required boxes.
   Future<void> init([String? customPath]) async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      if (_booksBox != null && _booksBox!.isOpen &&
+          _progressBox != null && _progressBox!.isOpen &&
+          _highlightsBox != null && _highlightsBox!.isOpen &&
+          _bookmarksBox != null && _bookmarksBox!.isOpen) {
+        return;
+      }
+    }
 
     try {
       if (customPath != null) {
@@ -33,7 +43,6 @@ class HiveStorageService {
         try {
           await Hive.initFlutter();
         } catch (_) {
-          // Fallback for tests or environments without native platform channel
           final tempDir = Directory.systemTemp.createTempSync('epub_hive_');
           Hive.init(tempDir.path);
         }
@@ -41,6 +50,7 @@ class HiveStorageService {
       _booksBox = await Hive.openBox(booksBoxName);
       _progressBox = await Hive.openBox(progressBoxName);
       _highlightsBox = await Hive.openBox(highlightsBoxName);
+      _bookmarksBox = await Hive.openBox(bookmarksBoxName);
       _isInitialized = true;
       debugPrint('[HiveStorage] Initialized successfully. Stored books: ${_booksBox?.length}');
     } catch (e) {
@@ -237,9 +247,83 @@ class HiveStorageService {
     return result;
   }
 
+  /// Retrieves all highlights across all books.
+  List<TextHighlight> getAllHighlights() {
+    final List<TextHighlight> result = [];
+    if (_highlightsBox == null) return result;
+
+    for (final key in _highlightsBox!.keys) {
+      try {
+        final data = _highlightsBox!.get(key);
+        if (data is Map) {
+          final h = TextHighlight.fromMap(data);
+          result.add(h);
+        }
+      } catch (_) {}
+    }
+    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return result;
+  }
+
   /// Retrieves all highlights for a specific book and chapter.
   List<TextHighlight> getHighlightsForChapter(String bookId, int chapterIndex) {
     final all = getHighlightsForBook(bookId);
     return all.where((h) => h.chapterIndex == chapterIndex).toList();
+  }
+
+  // ----------------- BOOKMARKS PERSISTENCE -----------------
+
+  /// Saves or updates a bookmark in Hive.
+  Future<void> saveBookmark(Bookmark bookmark) async {
+    await init();
+    await _bookmarksBox?.put(bookmark.id, bookmark.toJson());
+  }
+
+  /// Deletes a bookmark by ID.
+  Future<void> deleteBookmark(String bookmarkId) async {
+    await init();
+    await _bookmarksBox?.delete(bookmarkId);
+  }
+
+  /// Retrieves all bookmarks for a specific book.
+  List<Bookmark> getBookmarksForBook(String bookId) {
+    final List<Bookmark> result = [];
+    if (_bookmarksBox == null) return result;
+
+    for (final key in _bookmarksBox!.keys) {
+      try {
+        final data = _bookmarksBox!.get(key);
+        if (data is Map) {
+          final bm = Bookmark.fromJson(Map<String, dynamic>.from(data));
+          if (bm.bookId == bookId) {
+            result.add(bm);
+          }
+        }
+      } catch (e) {
+        debugPrint('[HiveStorage] Error reading bookmark $key: $e');
+      }
+    }
+    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return result;
+  }
+
+  /// Retrieves all bookmarks across all books.
+  List<Bookmark> getAllBookmarks() {
+    final List<Bookmark> result = [];
+    if (_bookmarksBox == null) return result;
+
+    for (final key in _bookmarksBox!.keys) {
+      try {
+        final data = _bookmarksBox!.get(key);
+        if (data is Map) {
+          final bm = Bookmark.fromJson(Map<String, dynamic>.from(data));
+          result.add(bm);
+        }
+      } catch (e) {
+        debugPrint('[HiveStorage] Error reading bookmark $key: $e');
+      }
+    }
+    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return result;
   }
 }

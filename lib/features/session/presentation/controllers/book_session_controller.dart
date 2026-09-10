@@ -58,6 +58,12 @@ class BookSessionController extends ChangeNotifier {
         ) {
     _initAudioEngine();
     _initInitialChapter(_currentPosition.chapterIndex, _currentPosition.paragraphIndex);
+    _loadBookmarks();
+  }
+
+  void _loadBookmarks() {
+    _bookmarks.clear();
+    _bookmarks.addAll(HiveStorageService().getBookmarksForBook(book.id));
   }
 
   int _currentParagraphSpeakingOffset = 0;
@@ -494,6 +500,14 @@ class BookSessionController extends ChangeNotifier {
 
   void toggleBookmark() {
     if (isCurrentChapterBookmarked) {
+      final toRemove = _bookmarks.where(
+        (b) =>
+            b.bookId == book.id &&
+            b.chapterIndex == _currentPosition.chapterIndex,
+      ).toList();
+      for (final bm in toRemove) {
+        HiveStorageService().deleteBookmark(bm.id);
+      }
       _bookmarks.removeWhere(
         (b) =>
             b.bookId == book.id &&
@@ -514,12 +528,14 @@ class BookSessionController extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
       _bookmarks.add(bookmark);
+      HiveStorageService().saveBookmark(bookmark);
     }
     notifyListeners();
   }
 
   void deleteBookmark(Bookmark bookmark) {
     _bookmarks.removeWhere((b) => b.id == bookmark.id);
+    HiveStorageService().deleteBookmark(bookmark.id);
     notifyListeners();
   }
 
