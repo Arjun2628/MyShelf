@@ -66,6 +66,32 @@ void main() {
       expect(mockAudio.spokenParagraphs.last, contains('White Rabbit'));
     });
 
+    test('pausing and resuming continues from the exact paragraph where paused', () async {
+      final book = await provider.getMalayalamSampleBook();
+      final session = BookSessionController(
+        book: book,
+        audioEngine: mockAudio,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // Seek to paragraph 2 and play
+      await session.seekToParagraph(2);
+      expect(session.currentParagraphIndex, 2);
+      expect(session.audioState.isPlaying, isTrue);
+
+      // Pause audio
+      await session.pauseAudio();
+      expect(session.audioState.isPaused, isTrue);
+      expect(session.currentParagraphIndex, 2);
+
+      // Play audio again -> must still be on paragraph 2 and speak paragraph 2
+      await session.playAudio();
+      expect(session.audioState.isPlaying, isTrue);
+      expect(session.currentParagraphIndex, 2);
+      expect(mockAudio.spokenParagraphs.last, contains('തീരത്ത് വള്ളങ്ങൾ'));
+    });
+
     test('supports speed adjustment and sleep timer', () async {
       final book = await provider.getEnglishSampleBook();
       final session = BookSessionController(

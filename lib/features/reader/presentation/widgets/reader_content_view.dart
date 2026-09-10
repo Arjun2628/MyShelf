@@ -12,6 +12,7 @@ class ReaderContentView extends StatelessWidget {
   final Book book;
   final ReaderPreferences preferences;
   final int? activeParagraphIndex;
+  final bool isPlaying;
   final void Function(int paragraphIndex)? onParagraphTapped;
   final void Function(LinkSpanNode link)? onLinkTapped;
   final ScrollController? scrollController;
@@ -22,6 +23,7 @@ class ReaderContentView extends StatelessWidget {
     required this.book,
     required this.preferences,
     this.activeParagraphIndex,
+    this.isPlaying = false,
     this.onParagraphTapped,
     this.onLinkTapped,
     this.scrollController,
@@ -70,16 +72,20 @@ class ReaderContentView extends StatelessWidget {
                   : EdgeInsets.zero,
               decoration: isHighlight
                   ? BoxDecoration(
-                      color: colors.accent.withValues(alpha: 0.15),
+                      color: colors.accent.withValues(
+                          alpha: isPlaying ? 0.15 : 0.08),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: colors.accent,
-                        width: 2.0,
+                        color: isPlaying
+                            ? colors.accent
+                            : colors.accent.withValues(alpha: 0.6),
+                        width: isPlaying ? 2.0 : 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: colors.accent.withValues(alpha: 0.18),
-                          blurRadius: 12,
+                          color: colors.accent.withValues(
+                              alpha: isPlaying ? 0.18 : 0.06),
+                          blurRadius: isPlaying ? 12 : 6,
                           offset: const Offset(0, 3),
                         ),
                       ],
@@ -100,21 +106,25 @@ class ReaderContentView extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: colors.accent,
+                              color: isPlaying
+                                  ? colors.accent
+                                  : colors.accent.withValues(alpha: 0.8),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.volume_up_rounded,
+                                  isPlaying
+                                      ? Icons.volume_up_rounded
+                                      : Icons.pause_circle_filled_rounded,
                                   size: 13,
                                   color: Colors.white,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'PLAYING NOW',
-                                  style: TextStyle(
+                                  isPlaying ? 'PLAYING NOW' : 'PAUSED HERE',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 9,
                                     fontWeight: FontWeight.w800,
@@ -127,7 +137,8 @@ class ReaderContentView extends StatelessWidget {
                         ],
                       ),
                     ),
-                  _buildBlockWidget(context, block, colors, isHighlight: isHighlight),
+                  _buildBlockWidget(context, block, colors,
+                      isHighlight: isHighlight),
                 ],
               ),
             ),

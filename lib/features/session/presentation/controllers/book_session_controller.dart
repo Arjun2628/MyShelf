@@ -62,10 +62,10 @@ class BookSessionController extends ChangeNotifier {
     int? chapterIdx,
     int? paraIdx,
   ) {
-    if (chapterIdx != null && paraIdx != null) {
+    if (chapterIdx != null) {
       return BookPosition(
         chapterIndex: chapterIdx,
-        paragraphIndex: paraIdx,
+        paragraphIndex: paraIdx ?? 0,
         timestamp: DateTime.now(),
       );
     }
@@ -81,8 +81,8 @@ class BookSessionController extends ChangeNotifier {
       );
     }
     return BookPosition(
-      chapterIndex: chapterIdx ?? 0,
-      paragraphIndex: paraIdx ?? 0,
+      chapterIndex: 0,
+      paragraphIndex: 0,
       timestamp: DateTime.now(),
     );
   }
@@ -300,13 +300,14 @@ class BookSessionController extends ChangeNotifier {
 
   /// Pauses audio playback without losing the current paragraph position.
   Future<void> pauseAudio() async {
-    await _audioEngine.stop();
     _audioState = _audioState.copyWith(
       status: AudioPlaybackStatus.paused,
       position: _currentPosition,
     );
     _persistProgress();
     notifyListeners();
+
+    await _audioEngine.stop();
   }
 
   /// Toggles between Play and Pause.
@@ -318,12 +319,15 @@ class BookSessionController extends ChangeNotifier {
     }
   }
 
-  /// Stops audio playback and resets to start of chapter.
+  /// Stops audio playback.
   Future<void> stopAudio() async {
-    await _audioEngine.stop();
-    _audioState = _audioState.copyWith(status: AudioPlaybackStatus.stopped);
+    _audioState = _audioState.copyWith(
+      status: AudioPlaybackStatus.stopped,
+    );
     _persistProgress();
     notifyListeners();
+
+    await _audioEngine.stop();
   }
 
   /// Skips to next paragraph in audio playback.

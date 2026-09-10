@@ -12,14 +12,14 @@ import 'package:flutter/material.dart';
 /// Fullscreen Reading Screen providing comfortable reading, audio narration, and controls.
 class ReaderScreen extends StatefulWidget {
   final Book book;
-  final int initialChapterIndex;
-  final int initialParagraphIndex;
+  final int? initialChapterIndex;
+  final int? initialParagraphIndex;
 
   const ReaderScreen({
     super.key,
     required this.book,
-    this.initialChapterIndex = 0,
-    this.initialParagraphIndex = 0,
+    this.initialChapterIndex,
+    this.initialParagraphIndex,
   });
 
   @override
@@ -79,9 +79,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               content: currentContent,
                               book: _session.book,
                               preferences: _session.preferences,
-                              activeParagraphIndex: audioPlaying
-                                  ? _session.currentParagraphIndex
-                                  : null,
+                              activeParagraphIndex: _session.currentParagraphIndex,
+                              isPlaying: audioPlaying,
                               scrollController: _scrollController,
                               onParagraphTapped: (paraIdx) {
                                 _session.seekToParagraph(paraIdx);
