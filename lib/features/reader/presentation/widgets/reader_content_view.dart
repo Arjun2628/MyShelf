@@ -51,11 +51,17 @@ class ReaderContentView extends StatefulWidget {
 class _ReaderContentViewState extends State<ReaderContentView> {
   String _selectedText = '';
   late List<TextHighlight> _activeHighlights;
+  final Map<int, GlobalKey> _paragraphKeys = {};
 
   @override
   void initState() {
     super.initState();
     _activeHighlights = List.from(widget.highlights);
+    if (widget.activeParagraphIndex != null && widget.isPlaying) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveParagraph(animate: false);
+      });
+    }
   }
 
   @override
@@ -68,6 +74,47 @@ class _ReaderContentViewState extends State<ReaderContentView> {
       map[h.id] = h;
     }
     _activeHighlights = map.values.toList();
+
+    if (widget.chapterIndex != oldWidget.chapterIndex ||
+        widget.content != oldWidget.content) {
+      _paragraphKeys.clear();
+    }
+
+    if (widget.activeParagraphIndex != null) {
+      final paraChanged = widget.activeParagraphIndex != oldWidget.activeParagraphIndex;
+      final playStarted = widget.isPlaying && !oldWidget.isPlaying;
+      if (paraChanged || playStarted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToActiveParagraph(animate: true);
+        });
+      }
+    }
+  }
+
+  void _scrollToActiveParagraph({bool animate = true}) {
+    final activeIndex = widget.activeParagraphIndex;
+    if (activeIndex == null) return;
+
+    final key = _paragraphKeys[activeIndex];
+    final targetContext = key?.currentContext;
+    if (targetContext != null && targetContext.mounted) {
+      if (animate) {
+        Scrollable.ensureVisible(
+          targetContext,
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeInOutCubic,
+          alignment: 0.18,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+        );
+      } else {
+        Scrollable.ensureVisible(
+          targetContext,
+          duration: Duration.zero,
+          alignment: 0.18,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+        );
+      }
+    }
   }
 
   void _applyHighlight(TextHighlight hl) {
@@ -159,88 +206,89 @@ class _ReaderContentViewState extends State<ReaderContentView> {
                   currentParaIdx != null &&
                   widget.activeParagraphIndex == currentParaIdx;
 
-              return InkWell(
-                onTap: currentParaIdx != null
-                    ? () {
-                        widget.onParagraphTapped?.call(currentParaIdx);
-                      }
-                    : null,
-                borderRadius: BorderRadius.circular(10),
-                splashColor: colors.accent.withValues(alpha: 0.12),
-                highlightColor: colors.accent.withValues(alpha: 0.06),
-                child: Container(
-                  margin: isHighlight
-                      ? const EdgeInsets.symmetric(vertical: 4)
-                      : const EdgeInsets.symmetric(vertical: 2),
-                  padding: isHighlight
-                      ? const EdgeInsets.fromLTRB(12, 6, 12, 6)
-                      : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: isHighlight
-                      ? BoxDecoration(
-                          color: colors.accent.withValues(
-                              alpha: widget.isPlaying ? 0.12 : 0.06),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border(
-                            left: BorderSide(
-                              color: colors.accent,
-                              width: 4.0,
+              final itemKey = currentParaIdx != null
+                  ? _paragraphKeys.putIfAbsent(currentParaIdx, () => GlobalKey())
+                  : null;
+
+              return Container(
+                key: itemKey,
+                child: InkWell(
+                  onTap: currentParaIdx != null
+                      ? () {
+                          widget.onParagraphTapped?.call(currentParaIdx);
+                        }
+                      : null,
+                  borderRadius: BorderRadius.circular(10),
+                  splashColor: colors.accent.withValues(alpha: 0.12),
+                  highlightColor: colors.accent.withValues(alpha: 0.06),
+                  child: Container(
+                    margin: isHighlight
+                        ? const EdgeInsets.symmetric(vertical: 4)
+                        : const EdgeInsets.symmetric(vertical: 2),
+                    padding: isHighlight
+                        ? const EdgeInsets.fromLTRB(12, 6, 12, 6)
+                        : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: isHighlight
+                        ? BoxDecoration(
+                            color: colors.accent.withValues(
+                                alpha: widget.isPlaying ? 0.10 : 0.05),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border(
+                              left: BorderSide(
+                                color: colors.accent,
+                                width: 4.0,
+                              ),
+                            ),
+                          )
+                        : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isHighlight)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.accent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        widget.isPlaying
+                                            ? Icons.volume_up_rounded
+                                            : Icons.pause_rounded,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        widget.isPlaying ? 'READING' : 'PAUSED',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        )
-                      : null,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isHighlight)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.accent,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      widget.isPlaying
-                                          ? Icons.volume_up_rounded
-                                          : Icons.pause_rounded,
-                                      size: 12,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      widget.isPlaying
-                                          ? (widget.charOffset != null && widget.charOffset! > 0
-                                              ? 'PLAYING FROM WORD'
-                                              : 'PLAYING')
-                                          : (widget.charOffset != null && widget.charOffset! > 0
-                                              ? 'PAUSED AT WORD'
-                                              : 'PAUSED'),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      _buildBlockWidget(context, block, colors,
-                          isHighlight: isHighlight),
-                    ],
+                        _buildBlockWidget(context, block, colors,
+                            isHighlight: isHighlight),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -600,6 +648,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
             colors,
             baseFontSize: headingSize,
             customTextColor: isHighlight ? textColor : null,
+            isHighlight: isHighlight,
           ),
         ),
         style: TextStyle(
@@ -628,6 +677,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
             paragraph.spans,
             colors,
             customTextColor: isHighlight ? textColor : null,
+            isHighlight: isHighlight,
           ),
         ),
         style: TextStyle(
@@ -707,6 +757,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
                         item.spans,
                         colors,
                         customTextColor: isHighlight ? textColor : null,
+                        isHighlight: isHighlight,
                       ),
                     ),
                     style: TextStyle(
@@ -751,26 +802,16 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     );
   }
 
-  /// Builds inline spans with rich highlight background rendering that seamlessly spans across formatting boundaries.
+  /// Builds inline spans with rich highlight and real-time TTS word-by-word highlighting that seamlessly spans across formatting boundaries.
   List<InlineSpan> _buildSpansWithHighlights(
     List<InlineSpanNode> nodes,
     ReaderThemeColors colors, {
     double? baseFontSize,
     Color? customTextColor,
+    bool isHighlight = false,
   }) {
     final effectiveSize = baseFontSize ?? widget.preferences.fontSize;
     final effectiveTextColor = customTextColor ?? colors.text;
-
-    if (_activeHighlights.isEmpty) {
-      return nodes
-          .map((s) => _buildInlineSpan(
-                s,
-                colors,
-                baseFontSize: effectiveSize,
-                customTextColor: customTextColor,
-              ))
-          .toList();
-    }
 
     // 1. Calculate plain text for the block and character offsets for each child span
     final StringBuffer blockBuffer = StringBuffer();
@@ -781,13 +822,34 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     }
     final fullBlockText = blockBuffer.toString();
 
-    // 2. Identify all highlight ranges in fullBlockText
+    // 2. Identify active spoken word range if this block is currently playing/highlighted
+    int? activeWordStart;
+    int? activeWordEnd;
+    if (isHighlight && widget.charOffset != null && fullBlockText.isNotEmpty) {
+      int offset = widget.charOffset!.clamp(0, fullBlockText.length);
+      // Skip leading whitespaces if offset lands on a space
+      while (offset < fullBlockText.length && RegExp(r'\s').hasMatch(fullBlockText[offset])) {
+        offset++;
+      }
+      if (offset < fullBlockText.length) {
+        int end = offset;
+        while (end < fullBlockText.length && !RegExp(r'\s').hasMatch(fullBlockText[end])) {
+          end++;
+        }
+        if (end > offset) {
+          activeWordStart = offset;
+          activeWordEnd = end;
+        }
+      }
+    }
+
+    // 3. Identify all user highlight ranges in fullBlockText
     final List<_HighlightRange> ranges = [];
     for (final h in _activeHighlights) {
       final target = h.selectedText.trim();
       if (target.isEmpty) continue;
 
-      // 2a. Direct case-insensitive search
+      // 3a. Direct case-insensitive search
       final targetLower = target.toLowerCase();
       final fullLower = fullBlockText.toLowerCase();
       int startIdx = 0;
@@ -802,7 +864,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
         foundDirect = true;
       }
 
-      // 2b. Regex whitespace-tolerant fallback
+      // 3b. Regex whitespace-tolerant fallback
       if (!foundDirect) {
         final words = target.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
         if (words.isNotEmpty) {
@@ -821,7 +883,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
       }
     }
 
-    if (ranges.isEmpty) {
+    if (ranges.isEmpty && activeWordStart == null) {
       return nodes
           .map((s) => _buildInlineSpan(
                 s,
@@ -832,9 +894,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
           .toList();
     }
 
-    ranges.sort((a, b) => a.start.compareTo(b.start));
-
-    // 3. For each node, split according to overlapping ranges
+    // 4. For each node, split according to overlapping ranges and spoken word
     final List<InlineSpan> resultSpans = [];
 
     for (int i = 0; i < nodes.length; i++) {
@@ -844,7 +904,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
       final nodeEnd = nodeStart + nodeText.length;
 
       if (node is TextSpanNode) {
-        final TextStyle style = TextStyle(
+        final TextStyle baseStyle = TextStyle(
           color: effectiveTextColor,
           fontSize: node.isSuperscript || node.isSubscript
               ? effectiveSize * 0.75
@@ -857,51 +917,66 @@ class _ReaderContentViewState extends State<ReaderContentView> {
           fontFamily: node.isCode ? 'monospace' : _getFontFamily(),
         );
 
-        // Find ranges overlapping [nodeStart, nodeEnd]
-        final overlappingRanges = <_HighlightRange>[];
+        // Collect all cut points within [0, nodeText.length]
+        final Set<int> cutPoints = {0, nodeText.length};
+
         for (final r in ranges) {
           if (r.end > nodeStart && r.start < nodeEnd) {
-            final localStart = (r.start - nodeStart).clamp(0, nodeText.length);
-            final localEnd = (r.end - nodeStart).clamp(0, nodeText.length);
-            if (localEnd > localStart) {
-              overlappingRanges.add(_HighlightRange(
-                start: localStart,
-                end: localEnd,
-                highlight: r.highlight,
-              ));
-            }
+            cutPoints.add((r.start - nodeStart).clamp(0, nodeText.length));
+            cutPoints.add((r.end - nodeStart).clamp(0, nodeText.length));
           }
         }
 
-        if (overlappingRanges.isEmpty) {
-          resultSpans.add(TextSpan(text: node.text, style: style));
-        } else {
-          overlappingRanges.sort((a, b) => a.start.compareTo(b.start));
-          int cur = 0;
-          for (final r in overlappingRanges) {
-            if (r.start < cur) continue;
-            if (r.start > cur) {
-              resultSpans.add(TextSpan(
-                text: node.text.substring(cur, r.start),
-                style: style,
-              ));
-            }
-            if (r.start >= cur && r.end <= node.text.length) {
-              resultSpans.add(TextSpan(
-                text: node.text.substring(r.start, r.end),
-                style: style.copyWith(
-                  backgroundColor: r.highlight.color.withValues(alpha: 0.50),
-                ),
-              ));
-              cur = r.end;
+        if (activeWordStart != null && activeWordEnd != null) {
+          if (activeWordEnd > nodeStart && activeWordStart < nodeEnd) {
+            cutPoints.add((activeWordStart - nodeStart).clamp(0, nodeText.length));
+            cutPoints.add((activeWordEnd - nodeStart).clamp(0, nodeText.length));
+          }
+        }
+
+        final sortedCuts = cutPoints.toList()..sort();
+
+        for (int c = 0; c < sortedCuts.length - 1; c++) {
+          final segLocalStart = sortedCuts[c];
+          final segLocalEnd = sortedCuts[c + 1];
+          if (segLocalEnd <= segLocalStart) continue;
+
+          final segGlobalStart = nodeStart + segLocalStart;
+          final segGlobalEnd = nodeStart + segLocalEnd;
+          final segText = node.text.substring(segLocalStart, segLocalEnd);
+
+          // Check if this segment is in active spoken word
+          final isSpoken = activeWordStart != null &&
+              activeWordEnd != null &&
+              segGlobalEnd > activeWordStart &&
+              segGlobalStart < activeWordEnd;
+
+          // Check if this segment is in any user highlight
+          Color? userHighlightColor;
+          for (final r in ranges) {
+            if (segGlobalEnd > r.start && segGlobalStart < r.end) {
+              userHighlightColor = r.highlight.color;
+              break;
             }
           }
-          if (cur < node.text.length) {
-            resultSpans.add(TextSpan(
-              text: node.text.substring(cur),
-              style: style,
-            ));
+
+          TextStyle segStyle = baseStyle;
+
+          if (isSpoken) {
+            segStyle = segStyle.copyWith(
+              backgroundColor: userHighlightColor != null
+                  ? colors.accent.withValues(alpha: 0.55)
+                  : colors.accent.withValues(alpha: 0.38),
+              color: colors.accent,
+              fontWeight: FontWeight.w900,
+            );
+          } else if (userHighlightColor != null) {
+            segStyle = segStyle.copyWith(
+              backgroundColor: userHighlightColor.withValues(alpha: 0.50),
+            );
           }
+
+          resultSpans.add(TextSpan(text: segText, style: segStyle));
         }
       } else if (node is LinkSpanNode) {
         resultSpans.add(
@@ -911,6 +986,7 @@ class _ReaderContentViewState extends State<ReaderContentView> {
               colors,
               baseFontSize: effectiveSize,
               customTextColor: colors.accent,
+              isHighlight: isHighlight,
             ),
             style: TextStyle(
               color: colors.accent,
