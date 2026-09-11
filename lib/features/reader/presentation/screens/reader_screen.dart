@@ -1,5 +1,4 @@
 import 'package:epub_audio/features/audio/presentation/screens/audiobook_player_screen.dart';
-import 'package:epub_audio/features/audio/presentation/widgets/mini_audio_player.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
@@ -76,7 +75,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Widget build(BuildContext context) {
     final colors = _session.preferences.colors;
     final currentContent = _session.currentChapterContent;
-    final audioPlaying = _session.audioState.isPlaying;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -96,14 +94,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             book: _session.book,
                             chapterIndex: _session.currentChapterIndex,
                             preferences: _session.preferences,
-                            activeParagraphIndex: _session.currentParagraphIndex,
-                            charOffset: _session.currentPosition.charOffset,
-                            isPlaying: audioPlaying,
+                            activeParagraphIndex: null,
+                            charOffset: null,
+                            isPlaying: false,
                             highlights: List<TextHighlight>.from(_highlights),
                             scrollController: _scrollController,
-                            onParagraphTapped: (paraIdx) {
-                              _session.seekToParagraph(paraIdx, autoPlay: true);
-                            },
+                            onParagraphTapped: null,
                             onLinkTapped: _session.handleLink,
                             onHighlightCreated: _onHighlightCreated,
                             onTranslateRequested: _showTranslationModal,
@@ -122,25 +118,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
             child: _buildTopBar(colors),
           ),
 
-          // 3. Bottom Navigation & Mini Player (Overlay)
+          // 3. Bottom Navigation (Overlay) - Clean Chapter Controls
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             bottom: _session.showControls ? 0 : -200,
             left: 0,
             right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Docked Mini Audiobook Player
-                MiniAudioPlayer(
-                  session: _session,
-                  preferences: _session.preferences,
-                  onExpand: _openAudiobookPlayer,
-                ),
-                _buildBottomBar(colors),
-              ],
-            ),
+            child: _buildBottomBar(colors),
           ),
 
           // 4. Quick Controls Pill (when overlay is hidden)

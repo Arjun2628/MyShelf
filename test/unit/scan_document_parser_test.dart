@@ -115,6 +115,50 @@ void main() {
       expect(ch1.rawXhtml, contains('First paragraph.'));
       expect(ch1.rawXhtml, contains('Second paragraph.'));
     });
+
+    test('merges broken OCR line breaks without creating unwanted extra paragraphs', () {
+      // Line breaks in the middle of sentences should not create new <p> tags
+      final pages = [
+        const ScannedPageData(
+          pageNumber: 1,
+          rawText: 'This is a single continuous\nsentence that was split\n\nacross multiple lines\nby the camera OCR.\n\nHere is a second genuine paragraph.',
+        ),
+      ];
+
+      final book = parser.parse(
+        pages: pages,
+        bookId: 'scan_para_test',
+        title: 'Paragraph Test',
+      );
+
+      final chapter = book.getChapter(0);
+      final pMatches = RegExp(r'<p>(.*?)</p>').allMatches(chapter.rawXhtml).toList();
+
+      // Expect exactly 2 paragraphs: the first merged sentence and the second paragraph
+      expect(pMatches.length, equals(2));
+      expect(pMatches[0].group(1), equals('This is a single continuous sentence that was split across multiple lines by the camera OCR.'));
+      expect(pMatches[1].group(1), equals('Here is a second genuine paragraph.'));
+    });
+
+    test('merges OCR hyphenated words at line breaks', () {
+      final pages = [
+        const ScannedPageData(
+          pageNumber: 1,
+          rawText: 'The soft-\nware appli-\ncation was created successfully.',
+        ),
+      ];
+
+      final book = parser.parse(
+        pages: pages,
+        bookId: 'scan_hyphen_test',
+      );
+
+      final chapter = book.getChapter(0);
+      final pMatches = RegExp(r'<p>(.*?)</p>').allMatches(chapter.rawXhtml).toList();
+
+      expect(pMatches.length, equals(1));
+      expect(pMatches[0].group(1), equals('The software application was created successfully.'));
+    });
   });
 
   group('OcrService Mocked Tests', () {

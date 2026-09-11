@@ -218,76 +218,17 @@ class _ReaderContentViewState extends State<ReaderContentView> {
                           widget.onParagraphTapped?.call(currentParaIdx);
                         }
                       : null,
-                  borderRadius: BorderRadius.circular(10),
-                  splashColor: colors.accent.withValues(alpha: 0.12),
-                  highlightColor: colors.accent.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                  splashColor: colors.accent.withValues(alpha: 0.08),
+                  highlightColor: colors.accent.withValues(alpha: 0.04),
                   child: Container(
-                    margin: isHighlight
-                        ? const EdgeInsets.symmetric(vertical: 4)
-                        : const EdgeInsets.symmetric(vertical: 2),
-                    padding: isHighlight
-                        ? const EdgeInsets.fromLTRB(12, 6, 12, 6)
-                        : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: isHighlight
-                        ? BoxDecoration(
-                            color: colors.accent.withValues(
-                                alpha: widget.isPlaying ? 0.10 : 0.05),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border(
-                              left: BorderSide(
-                                color: colors.accent,
-                                width: 4.0,
-                              ),
-                            ),
-                          )
-                        : null,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isHighlight)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colors.accent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        widget.isPlaying
-                                            ? Icons.volume_up_rounded
-                                            : Icons.pause_rounded,
-                                        size: 12,
-                                        color: Colors.white,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        widget.isPlaying ? 'READING' : 'PAUSED',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 8.5,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        _buildBlockWidget(context, block, colors,
-                            isHighlight: isHighlight),
-                      ],
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: _buildBlockWidget(
+                      context,
+                      block,
+                      colors,
+                      isHighlight: isHighlight,
                     ),
                   ),
                 ),
@@ -416,64 +357,102 @@ class _ReaderContentViewState extends State<ReaderContentView> {
           Divider(height: 1, color: colors.divider.withValues(alpha: 0.6)),
           const SizedBox(height: 8),
 
-          // Row 2: Color Highlight Palette
+          // Row 2: Color Highlight Palette with smooth horizontal scroll & sleek chips
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Highlight:',
-                style: TextStyle(
-                  color: colors.secondaryText,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.palette_outlined, size: 14, color: colors.secondaryText),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Highlight:',
+                      style: TextStyle(
+                        color: colors.secondaryText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              ...TextHighlight.defaultColors.map((opt) {
-                return InkWell(
-                  onTap: () {
-                    final hl = TextHighlight(
-                      id: 'hl_${DateTime.now().millisecondsSinceEpoch}',
-                      bookId: widget.book.id,
-                      chapterIndex: widget.chapterIndex,
-                      selectedText: cleanText,
-                      colorValue: opt.color.toARGB32(),
-                      createdAt: DateTime.now(),
-                    );
-                    _applyHighlight(hl);
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: opt.color.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: opt.color, width: 1.5),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: opt.color,
-                            shape: BoxShape.circle,
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: TextHighlight.defaultColors.map((opt) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              final hl = TextHighlight(
+                                id: 'hl_${DateTime.now().millisecondsSinceEpoch}',
+                                bookId: widget.book.id,
+                                chapterIndex: widget.chapterIndex,
+                                selectedText: cleanText,
+                                colorValue: opt.color.toARGB32(),
+                                createdAt: DateTime.now(),
+                              );
+                              _applyHighlight(hl);
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: opt.color.withValues(alpha: 0.22),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: opt.color.withValues(alpha: 0.9),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: opt.color.withValues(alpha: 0.15),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: opt.color,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                        width: 1,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    opt.name,
+                                    style: TextStyle(
+                                      color: colors.text,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          opt.name,
-                          style: TextStyle(
-                            color: colors.text,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    }).toList(),
                   ),
-                );
-              }),
+                ),
+              ),
             ],
           ),
         ],
@@ -535,50 +514,63 @@ class _ReaderContentViewState extends State<ReaderContentView> {
                 ),
               ),
               const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: TextHighlight.defaultColors.map((opt) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      final hl = TextHighlight(
-                        id: 'hl_${DateTime.now().millisecondsSinceEpoch}',
-                        bookId: widget.book.id,
-                        chapterIndex: widget.chapterIndex,
-                        selectedText: selectedText,
-                        colorValue: opt.color.toARGB32(),
-                        createdAt: DateTime.now(),
-                      );
-                      _applyHighlight(hl);
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: opt.color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              width: 2,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: TextHighlight.defaultColors.map((opt) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          final hl = TextHighlight(
+                            id: 'hl_${DateTime.now().millisecondsSinceEpoch}',
+                            bookId: widget.book.id,
+                            chapterIndex: widget.chapterIndex,
+                            selectedText: selectedText,
+                            colorValue: opt.color.toARGB32(),
+                            createdAt: DateTime.now(),
+                          );
+                          _applyHighlight(hl);
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: opt.color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: opt.color.withValues(alpha: 0.35),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 6),
+                            Text(
+                              opt.name,
+                              style: TextStyle(
+                                color: colors.text,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          opt.name,
-                          style: TextStyle(
-                            color: colors.text,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ],
           ),

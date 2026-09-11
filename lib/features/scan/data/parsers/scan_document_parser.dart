@@ -30,6 +30,7 @@ class ScanDocumentParser {
     required List<ScannedPageData> pages,
     required String bookId,
     String? title,
+    String? language,
     Uint8List? coverBytes,
   }) {
     final effectiveTitle = (title != null && title.trim().isNotEmpty)
@@ -86,11 +87,17 @@ class ScanDocumentParser {
 
     final archive = EpubArchive(archiveFiles);
 
+    // Auto-detect script language if auto or missing
+    final combinedText = pageList.map((p) => p.rawText).join(' ');
+    final effectiveLanguage = (language != null && language != 'auto' && language.isNotEmpty)
+        ? language
+        : detectLanguageFromText(combinedText, defaultLang: 'en');
+
     final metadata = EpubMetadata(
       title: effectiveTitle,
       creators: const ['Photo Scan'],
       description: 'Document digitized via on-device OCR scan.',
-      language: 'en',
+      language: effectiveLanguage,
     );
 
     return Book(
@@ -106,7 +113,45 @@ class ScanDocumentParser {
     );
   }
 
-  /// Converts raw OCR recognized text into clean, structured XHTML.
+  /// Automatically identifies language from character scripts.
+  static String detectLanguageFromText(String text, {String? defaultLang}) {
+    if (text.isEmpty) return defaultLang ?? 'en';
+
+    final malCount = RegExp(r'[\u0D00-\u0D7F]').allMatches(text).length;
+    if (malCount > 0) return 'ml';
+
+    final hiCount = RegExp(r'[\u0900-\u097F]').allMatches(text).length;
+    if (hiCount > 0) return 'hi';
+
+    final tamCount = RegExp(r'[\u0B80-\u0BFF]').allMatches(text).length;
+    if (tamCount > 0) return 'ta';
+
+    final telCount = RegExp(r'[\u0C00-\u0C7F]').allMatches(text).length;
+    if (telCount > 0) return 'te';
+
+    final kanCount = RegExp(r'[\u0C80-\u0CFF]').allMatches(text).length;
+    if (kanCount > 0) return 'kn';
+
+    final benCount = RegExp(r'[\u0980-\u09FF]').allMatches(text).length;
+    if (benCount > 0) return 'bn';
+
+    final araCount = RegExp(r'[\u0600-\u06FF]').allMatches(text).length;
+    if (araCount > 0) return 'ar';
+
+    final zhCount = RegExp(r'[\u4E00-\u9FFF]').allMatches(text).length;
+    if (zhCount > 0) return 'zh';
+
+    final jaCount = RegExp(r'[\u3040-\u309F\u30A0-\u30FF]').allMatches(text).length;
+    if (jaCount > 0) return 'ja';
+
+    final koCount = RegExp(r'[\uAC00-\uD7AF]').allMatches(text).length;
+    if (koCount > 0) return 'ko';
+
+    return defaultLang ?? 'en';
+  }
+
+  /// Converts raw OCR recognized text into clean, structured XHTML
+  /// with smart paragraph reconstruction (no artificial heading paragraphs or unwanted paragraph splits).
   String _buildPageXhtml({
     required String pageTitle,
     required String rawText,
@@ -117,26 +162,78 @@ class ScanDocumentParser {
     buffer.writeln('<html xmlns="http://www.w3.org/1999/xhtml">');
     buffer.writeln('<head><title>${_escapeHtml(pageTitle)}</title></head>');
     buffer.writeln('<body>');
-    buffer.writeln('<h2>${_escapeHtml(pageTitle)}</h2>');
 
-    final trimmed = rawText.trim();
-    if (trimmed.isEmpty) {
-      buffer.writeln('<p><em>[No recognized text in this photo]</em></p>');
-    } else {
-      // Split on empty lines or paragraph breaks
-      final rawParagraphs = trimmed.split(RegExp(r'\n\s*\n+'));
-      for (final p in rawParagraphs) {
-        // Normalize intra-paragraph newlines into spaces
-        final cleanP = p.replaceAll(RegExp(r'\r\n|\r|\n'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-        if (cleanP.isNotEmpty) {
-          buffer.writeln('<p>${_escapeHtml(cleanP)}</p>');
-        }
-      }
+    final paragraphs = _segmentParagraphs(rawText);
+    for (final p in paragraphs) {
+      buffer.writeln('<p>${_escapeHtml(p)}</p>');
     }
 
     buffer.writeln('</body>');
     buffer.writeln('</html>');
     return buffer.toString();
+  }
+
+  /// Intelligently segments raw OCR output into genuine paragraphs.
+  /// Merges accidental line breaks, wraps, and OCR bounding box splits, only splitting when actual paragraph breaks exist.
+  List<String> _segmentParagraphs(String rawText) {
+    final trimmed = rawText.trim();
+    if (trimmed.isEmpty) return const [];
+
+    // Normalize all newlines
+    var normalized = trimmed.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+    // Fix OCR hyphenation at line breaks: e.g. "com-\nputer" -> "computer"
+    normalized = normalized.replaceAllMapped(
+      RegExp(r'(\w+)-\n+(\w+)'),
+      (match) => '${match[1]}${match[2]}',
+    );
+
+    // Split on multiple newlines
+    final rawBlocks = normalized.split(RegExp(r'\n\s*\n+'));
+
+    final paragraphs = <String>[];
+    StringBuffer? currentPara;
+
+    // Terminal punctuation check: . ! ? । ॥ : ; " ” ' ’ »
+    final terminalPunctuationRegex = RegExp(r'[\.!\?।॥:;"”’»\x27]$');
+
+    for (final rawBlock in rawBlocks) {
+      // Join single line-breaks inside a block with spaces
+      final cleanBlock = rawBlock
+          .replaceAll(RegExp(r'\s*\n\s*'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+
+      if (cleanBlock.isEmpty) continue;
+
+      if (currentPara == null) {
+        currentPara = StringBuffer(cleanBlock);
+        continue;
+      }
+
+      final currentText = currentPara.toString().trim();
+      final endsWithTerminal = terminalPunctuationRegex.hasMatch(currentText);
+
+      // Only create a new paragraph if the previous block finished with terminal punctuation
+      // and this block is a distinct sentence/paragraph, otherwise merge OCR wrapped text
+      if (endsWithTerminal && cleanBlock.length > 3) {
+        paragraphs.add(currentText);
+        currentPara = StringBuffer(cleanBlock);
+      } else {
+        // Merge mid-sentence line break or continuation
+        currentPara.write(' ');
+        currentPara.write(cleanBlock);
+      }
+    }
+
+    if (currentPara != null && currentPara.isNotEmpty) {
+      final finalPara = currentPara.toString().trim();
+      if (finalPara.isNotEmpty) {
+        paragraphs.add(finalPara);
+      }
+    }
+
+    return paragraphs;
   }
 
   /// Serializes a scanned book into a JSON structure for disk persistence.

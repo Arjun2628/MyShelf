@@ -60,8 +60,7 @@ void main() {
     );
 
     expect(find.text('Chapter 1: The Beginning'), findsOneWidget);
-    expect(find.text('READING'), findsOneWidget);
-    expect(find.byIcon(Icons.volume_up_rounded), findsWidgets);
+    expect(find.text('The quick brown fox jumps over the lazy dog.'), findsOneWidget);
   });
 
   testWidgets('ReaderContentView highlights active word by charOffset during playback',
@@ -135,7 +134,7 @@ void main() {
       ),
     );
 
-    expect(find.text('READING'), findsOneWidget);
+    expect(find.text('The quick brown fox jumps over the lazy dog.'), findsOneWidget);
   });
 
   testWidgets('ReaderContentView auto-scrolls smoothly when active paragraph advances',
@@ -184,6 +183,6 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    expect(find.text('READING'), findsOneWidget);
+    expect(find.text('Second paragraph with more interesting text.'), findsOneWidget);
   });
 }

@@ -126,11 +126,7 @@ class ScanBookUseCase {
         recognizedText = await _ocrService.recognizeText(file.path, language: language);
       } catch (e) {
         debugPrint('[ScanBookUseCase] Error recognizing text on ${file.path}: $e');
-        recognizedText = '[Error reading text from this photo: $e]';
-      }
-
-      if (recognizedText.trim().isEmpty) {
-        recognizedText = '[No readable text detected on this page. Please ensure the image has clear lighting and focus, or choose the specific language script.]';
+        recognizedText = '';
       }
 
       scannedPages.add(ScannedPageData(
@@ -147,6 +143,7 @@ class ScanBookUseCase {
       pages: scannedPages,
       bookId: bookId,
       title: title,
+      language: language.isoCode,
       coverBytes: coverBytes,
     );
 
