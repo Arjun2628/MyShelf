@@ -247,6 +247,13 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     if (lower.startsWith('ml')) return 'ml-IN';
     if (lower.startsWith('hi')) return 'hi-IN';
     if (lower.startsWith('ta')) return 'ta-IN';
+    if (lower.startsWith('te')) return 'te-IN';
+    if (lower.startsWith('kn')) return 'kn-IN';
+    if (lower.startsWith('bn') || lower.startsWith('ben')) return 'bn-IN';
+    if (lower.startsWith('ar')) return 'ar-SA';
+    if (lower.startsWith('zh') || lower.startsWith('cn') || lower.startsWith('chs')) return 'zh-CN';
+    if (lower.startsWith('ja') || lower.startsWith('jp')) return 'ja-JP';
+    if (lower.startsWith('ko') || lower.startsWith('kr')) return 'ko-KR';
     if (lower.startsWith('en')) return 'en-US';
     if (lower.startsWith('es')) return 'es-ES';
     if (lower.startsWith('fr')) return 'fr-FR';

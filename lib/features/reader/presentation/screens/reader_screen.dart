@@ -4,6 +4,7 @@ import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
+import 'package:epub_audio/features/reader/presentation/widgets/book_translation_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/bookmarks_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/highlights_modal.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/reader_content_view.dart';
@@ -240,8 +241,61 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     fontSize: 12,
                   ),
                 ),
+                if (_session.isTranslated)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFF3B82F6).withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${_session.activeTranslationLanguageFlag} ${_session.activeTranslationLanguageName.split('(').first.trim()}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              InkWell(
+                                onTap: () => _session.revertToOriginalLanguage(),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 11,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
+          ),
+
+          // Full Chapter / Entire Book Translation
+          IconButton(
+            icon: Icon(
+              Icons.translate_rounded,
+              color: _session.isTranslated ? const Color(0xFF3B82F6) : colors.text,
+            ),
+            tooltip: _session.isTranslated
+                ? 'Translated: ${_session.activeTranslationLanguageName}'
+                : 'Translate Book & Audio',
+            onPressed: _showBookTranslationModal,
           ),
 
           // Switch to Fullscreen Audiobook Mode
@@ -561,6 +615,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
           },
         ),
       ),
+    );
+  }
+
+  void _showBookTranslationModal() {
+    BookTranslationModal.show(
+      context,
+      session: _session,
+      preferences: _session.preferences,
     );
   }
 }

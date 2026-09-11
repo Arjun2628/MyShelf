@@ -1,15 +1,17 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
 import 'package:epub_audio/features/pdf/domain/usecases/open_pdf_usecase.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
+import 'package:epub_audio/features/scan/data/parsers/scan_document_parser.dart';
 import 'package:epub_audio/features/session/domain/entities/book_progress.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Manages local storage of imported EPUB files and reading/audiobook progress using Hive.
+/// Manages local storage of imported EPUB files, PDFs, Scans, and reading/audiobook progress using Hive.
 class HiveStorageService {
   static const String booksBoxName = 'imported_books_v1';
   static const String progressBoxName = 'reading_progress_v1';
@@ -66,6 +68,7 @@ class HiveStorageService {
     required Uint8List bytes,
     required Book book,
     bool isPdf = false,
+    bool isScan = false,
   }) async {
     await init();
 
@@ -83,11 +86,20 @@ class HiveStorageService {
         booksDir.createSync(recursive: true);
       }
 
-      final ext = isPdf ? 'pdf' : 'epub';
+      final isScannedDoc = isScan || book.isScan;
+      final ext = isScannedDoc ? 'scan.json' : (isPdf || book.isPdf ? 'pdf' : 'epub');
       final sanitizedId = book.id.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
       final filePath = '${booksDir.path}/$sanitizedId.$ext';
       final file = File(filePath);
-      await file.writeAsBytes(bytes);
+
+      if (isScannedDoc) {
+        final parser = ScanDocumentParser();
+        final jsonMap = parser.toJson(book);
+        final jsonStr = jsonEncode(jsonMap);
+        await file.writeAsString(jsonStr);
+      } else {
+        await file.writeAsBytes(bytes);
+      }
 
       final bookRecord = {
         'id': book.id,
@@ -98,7 +110,8 @@ class HiveStorageService {
         'filePath': filePath,
         'coverBytes': book.coverImageBytes,
         'chapterCount': book.chapterCount,
-        'isPdf': isPdf,
+        'isPdf': isPdf || book.isPdf,
+        'isScan': isScannedDoc,
         'dateAdded': DateTime.now().toIso8601String(),
       };
 
@@ -111,6 +124,15 @@ class HiveStorageService {
     }
   }
 
+  /// Saves a scanned photo document book directly to storage.
+  Future<Book> saveScannedBook(Book book) {
+    return saveImportedBook(
+      bytes: Uint8List(0),
+      book: book,
+      isScan: true,
+    );
+  }
+
   /// Backward-compatible alias for saveImportedBook with EPUB files.
   Future<Book> saveImportedEpub({
     required Uint8List bytes,
@@ -119,37 +141,48 @@ class HiveStorageService {
     return saveImportedBook(bytes: bytes, book: book, isPdf: false);
   }
 
-  /// Loads all stored imported EPUB and PDF books from disk.
+  /// Loads all stored imported EPUB, PDF, and Scanned books from disk.
   Future<List<Book>> loadAllImportedBooks(
     OpenEpubUseCase openUseCase, [
     OpenPdfUseCase? pdfUseCase,
+    ScanDocumentParser? scanParser,
   ]) async {
     await init();
     final List<Book> loadedBooks = [];
     if (_booksBox == null) return loadedBooks;
 
     final actualPdfUseCase = pdfUseCase ?? OpenPdfUseCase();
+    final actualScanParser = scanParser ?? ScanDocumentParser();
 
     for (final key in _booksBox!.keys) {
       try {
         final data = _booksBox!.get(key);
         if (data is Map) {
           final filePath = data['filePath'] as String?;
+          final isScan = (data['isScan'] == true) ||
+              (filePath != null && filePath.toLowerCase().endsWith('.scan.json'));
           final isPdf = (data['isPdf'] == true) ||
               (filePath != null && filePath.toLowerCase().endsWith('.pdf'));
 
           if (filePath != null) {
             final file = File(filePath);
             if (await file.exists()) {
-              final bytes = await file.readAsBytes();
+              final Uint8List? coverBytes = data['coverBytes'] as Uint8List?;
               final Book book;
-              if (isPdf) {
+
+              if (isScan) {
+                final jsonStr = await file.readAsString();
+                final jsonMap = jsonDecode(jsonStr) as Map<String, dynamic>;
+                book = actualScanParser.fromJson(jsonMap, coverBytes: coverBytes);
+              } else if (isPdf) {
+                final bytes = await file.readAsBytes();
                 book = await actualPdfUseCase.fromBytes(
                   bytes,
                   bookId: key.toString(),
                   fallbackTitle: data['title'] as String?,
                 );
               } else {
+                final bytes = await file.readAsBytes();
                 book = await openUseCase.fromBytes(bytes, bookId: key.toString());
               }
               loadedBooks.add(book);

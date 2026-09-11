@@ -9,6 +9,7 @@ import 'package:epub_audio/features/epub/domain/entities/chapter_content.dart';
 import 'package:epub_audio/features/epub/domain/entities/content_nodes.dart';
 import 'package:epub_audio/features/epub/domain/usecases/parse_chapter_content_usecase.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
+import 'package:epub_audio/features/reader/data/services/translation_service.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/session/domain/entities/book_position.dart';
@@ -37,6 +38,12 @@ class BookSessionController extends ChangeNotifier {
   AudioPlaybackState _audioState;
   final List<Bookmark> _bookmarks = [];
   Timer? _sleepTimer;
+
+  // Translation state and caching
+  String? _activeTranslationLanguage;
+  final Map<int, ChapterContent> _originalChapters = {};
+  final Map<String, Map<int, ChapterContent>> _translatedChaptersCache = {};
+  final TranslationService _translationService = TranslationService();
 
   BookSessionController({
     required this.book,
@@ -233,6 +240,17 @@ class BookSessionController extends ChangeNotifier {
             b.chapterIndex == _currentPosition.chapterIndex,
       );
 
+  String? get activeTranslationLanguage => _activeTranslationLanguage;
+  bool get isTranslated => _activeTranslationLanguage != null;
+  String get activeTranslationLanguageName =>
+      _activeTranslationLanguage != null
+          ? _translationService.getLanguageName(_activeTranslationLanguage!)
+          : '';
+  String get activeTranslationLanguageFlag =>
+      _activeTranslationLanguage != null
+          ? _translationService.getLanguageFlag(_activeTranslationLanguage!)
+          : '';
+
   // ----------------- CHAPTER & POSITION -----------------
 
   /// Loads chapter content and sets initial paragraph index.
@@ -266,8 +284,29 @@ class BookSessionController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final rawChapter = book.getChapter(index);
-      _currentChapterContent = _parseChapterUseCase.execute(rawChapter);
+      ChapterContent loadedContent;
+      if (!_originalChapters.containsKey(index)) {
+        final rawChapter = book.getChapter(index);
+        _originalChapters[index] = _parseChapterUseCase.execute(rawChapter);
+      }
+      final original = _originalChapters[index]!;
+
+      if (_activeTranslationLanguage != null) {
+        final cached = _translatedChaptersCache[_activeTranslationLanguage!]?[index];
+        if (cached != null) {
+          loadedContent = cached;
+        } else {
+          loadedContent = await _translationService.translateChapter(
+            original,
+            targetLanguage: _activeTranslationLanguage!,
+          );
+          _translatedChaptersCache.putIfAbsent(_activeTranslationLanguage!, () => {})[index] = loadedContent;
+        }
+      } else {
+        loadedContent = original;
+      }
+
+      _currentChapterContent = loadedContent;
       _currentChapterParagraphs = _currentChapterContent!.paragraphsAsText;
 
       // If a target anchor is specified, find its block index
@@ -520,7 +559,10 @@ class BookSessionController extends ChangeNotifier {
     notifyListeners();
     _syncNotification();
 
-    await _audioEngine.speakParagraph(textToSpeak, language: book.metadata.language);
+    await _audioEngine.speakParagraph(
+      textToSpeak,
+      language: _activeTranslationLanguage ?? book.metadata.language,
+    );
   }
 
   void _onParagraphAudioFinished() {
@@ -609,7 +651,182 @@ class BookSessionController extends ChangeNotifier {
 
   /// Speaks ad-hoc custom text snippet (e.g. for translation or pronunciation)
   Future<void> speakCustomText(String text, {String? language}) async {
-    await _audioEngine.speakParagraph(text, language: language ?? book.metadata.language);
+    await _audioEngine.speakParagraph(
+      text,
+      language: language ?? _activeTranslationLanguage ?? book.metadata.language,
+    );
+  }
+
+  // ----------------- TRANSLATION CONTROLS -----------------
+
+  /// Translates the currently active chapter into [targetLanguage], updates reader view,
+  /// and automatically routes TTS narration voice to the target language.
+  Future<void> translateCurrentChapter(
+    String targetLanguage, {
+    void Function(double progress, String status)? onProgress,
+  }) async {
+    final chapterIdx = _currentPosition.chapterIndex;
+    if (chapterIdx < 0 || chapterIdx >= book.chapterCount) return;
+
+    final wasPlaying = _audioState.isPlaying;
+    if (wasPlaying) {
+      await _audioEngine.stop();
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (!_originalChapters.containsKey(chapterIdx)) {
+        final rawChapter = book.getChapter(chapterIdx);
+        _originalChapters[chapterIdx] = _parseChapterUseCase.execute(rawChapter);
+      }
+      final original = _originalChapters[chapterIdx]!;
+
+      onProgress?.call(
+        0.1,
+        'Translating chapter to ${_translationService.getLanguageName(targetLanguage)}...',
+      );
+
+      final translated = await _translationService.translateChapter(
+        original,
+        targetLanguage: targetLanguage,
+        onProgress: onProgress,
+      );
+
+      _translatedChaptersCache.putIfAbsent(targetLanguage, () => {})[chapterIdx] = translated;
+      _activeTranslationLanguage = targetLanguage;
+      _currentChapterContent = translated;
+      _currentChapterParagraphs = translated.paragraphsAsText;
+
+      final pIdx = _currentPosition.paragraphIndex.clamp(
+        0,
+        _currentChapterParagraphs.isNotEmpty ? _currentChapterParagraphs.length - 1 : 0,
+      );
+      _currentPosition = _currentPosition.copyWith(
+        paragraphIndex: pIdx,
+        charOffset: 0,
+      );
+
+      _audioState = _audioState.copyWith(
+        position: _currentPosition,
+        totalParagraphsInChapter: _currentChapterParagraphs.length,
+        currentText: _currentChapterParagraphs.isNotEmpty ? _currentChapterParagraphs[pIdx] : null,
+        status: wasPlaying ? AudioPlaybackStatus.playing : AudioPlaybackStatus.stopped,
+      );
+
+      if (wasPlaying && _currentChapterParagraphs.isNotEmpty) {
+        await _speakCurrentParagraph(fromCharOffset: false);
+      }
+    } catch (e) {
+      debugPrint('[SessionController] Error translating chapter: $e');
+      _errorMessage = 'Failed to translate chapter: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Translates all chapters in the book sequentially with progress reporting.
+  Future<void> translateEntireBook(
+    String targetLanguage, {
+    void Function(double progress, String status)? onProgress,
+  }) async {
+    final total = book.chapterCount;
+    if (total == 0) return;
+
+    final wasPlaying = _audioState.isPlaying;
+    if (wasPlaying) {
+      await _audioEngine.stop();
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      for (int i = 0; i < total; i++) {
+        final overallProg = i / total;
+        onProgress?.call(
+          overallProg,
+          'Translating chapter ${i + 1} of $total to ${_translationService.getLanguageName(targetLanguage)}...',
+        );
+
+        if (!_originalChapters.containsKey(i)) {
+          final rawChapter = book.getChapter(i);
+          _originalChapters[i] = _parseChapterUseCase.execute(rawChapter);
+        }
+        final original = _originalChapters[i]!;
+
+        final translated = await _translationService.translateChapter(
+          original,
+          targetLanguage: targetLanguage,
+        );
+        _translatedChaptersCache.putIfAbsent(targetLanguage, () => {})[i] = translated;
+      }
+
+      _activeTranslationLanguage = targetLanguage;
+      final curIdx = _currentPosition.chapterIndex;
+      final currentTranslated = _translatedChaptersCache[targetLanguage]?[curIdx];
+      if (currentTranslated != null) {
+        _currentChapterContent = currentTranslated;
+        _currentChapterParagraphs = currentTranslated.paragraphsAsText;
+      }
+
+      onProgress?.call(1.0, 'Book translated successfully!');
+      if (wasPlaying && _currentChapterParagraphs.isNotEmpty) {
+        await _speakCurrentParagraph(fromCharOffset: false);
+      }
+    } catch (e) {
+      debugPrint('[SessionController] Error translating entire book: $e');
+      _errorMessage = 'Failed to translate book: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Reverts the reader and audio voice back to the original book language.
+  Future<void> revertToOriginalLanguage() async {
+    if (_activeTranslationLanguage == null) return;
+
+    final wasPlaying = _audioState.isPlaying;
+    if (wasPlaying) {
+      await _audioEngine.stop();
+    }
+
+    _activeTranslationLanguage = null;
+    final curIdx = _currentPosition.chapterIndex;
+    if (_originalChapters.containsKey(curIdx)) {
+      _currentChapterContent = _originalChapters[curIdx];
+    } else {
+      final rawChapter = book.getChapter(curIdx);
+      _currentChapterContent = _parseChapterUseCase.execute(rawChapter);
+      _originalChapters[curIdx] = _currentChapterContent!;
+    }
+    _currentChapterParagraphs = _currentChapterContent!.paragraphsAsText;
+
+    final pIdx = _currentPosition.paragraphIndex.clamp(
+      0,
+      _currentChapterParagraphs.isNotEmpty ? _currentChapterParagraphs.length - 1 : 0,
+    );
+    _currentPosition = _currentPosition.copyWith(
+      paragraphIndex: pIdx,
+      charOffset: 0,
+    );
+
+    _audioState = _audioState.copyWith(
+      position: _currentPosition,
+      totalParagraphsInChapter: _currentChapterParagraphs.length,
+      currentText: _currentChapterParagraphs.isNotEmpty ? _currentChapterParagraphs[pIdx] : null,
+      status: wasPlaying ? AudioPlaybackStatus.playing : AudioPlaybackStatus.stopped,
+    );
+    notifyListeners();
+
+    if (wasPlaying && _currentChapterParagraphs.isNotEmpty) {
+      await _speakCurrentParagraph(fromCharOffset: false);
+    }
   }
 
   @override

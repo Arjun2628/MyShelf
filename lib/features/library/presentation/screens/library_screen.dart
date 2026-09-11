@@ -9,6 +9,9 @@ import 'package:epub_audio/features/pdf/domain/usecases/open_pdf_usecase.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/reader/presentation/screens/reader_screen.dart';
+import 'package:epub_audio/features/scan/data/parsers/scan_document_parser.dart';
+import 'package:epub_audio/features/scan/data/services/ocr_service.dart';
+import 'package:epub_audio/features/scan/domain/usecases/scan_book_usecase.dart';
 import 'package:epub_audio/features/session/domain/entities/book_progress.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
 import 'package:file_picker/file_picker.dart';
@@ -29,6 +32,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   final OpenEpubUseCase _openEpubUseCase =
       const OpenEpubUseCase(EpubRepositoryImpl());
   final OpenPdfUseCase _openPdfUseCase = OpenPdfUseCase();
+  final ScanBookUseCase _scanBookUseCase = ScanBookUseCase();
+  final ScanDocumentParser _scanParser = ScanDocumentParser();
   late final SampleBooksProvider _sampleProvider;
 
   final TextEditingController _searchController = TextEditingController();
@@ -66,7 +71,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
     try {
       final importedBooks = await HiveStorageService()
-          .loadAllImportedBooks(_openEpubUseCase, _openPdfUseCase);
+          .loadAllImportedBooks(_openEpubUseCase, _openPdfUseCase, _scanParser);
       final mlBook = await _sampleProvider.getMalayalamSampleBook();
       final enBook = await _sampleProvider.getEnglishSampleBook();
       final allProgress = HiveStorageService().getAllProgress();
@@ -183,6 +188,392 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to import book: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Opens the Scan & OCR action sheet to capture from camera or pick photos.
+  Future<void> _showScanOptionsModal() async {
+    OcrLanguage selectedLanguage = OcrLanguage.auto;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 32,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Scan & Read (Multi-Language OCR)',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Digitize books in Malayalam, Hindi, English & global languages',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Language Selection Header & Chips
+                Row(
+                  children: [
+                    const Icon(Icons.translate_rounded, size: 16, color: Color(0xFF475569)),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Document Language / Script:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF334155),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${selectedLanguage.flag} ${selectedLanguage.displayName.split('(').first.trim()}',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFB45309),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: OcrLanguage.values.map((lang) {
+                      final isSelected = selectedLanguage == lang;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: ChoiceChip(
+                          avatar: Text(lang.flag, style: const TextStyle(fontSize: 13)),
+                          label: Text(lang.displayName),
+                          selected: isSelected,
+                          onSelected: (val) {
+                            setModalState(() {
+                              selectedLanguage = lang;
+                            });
+                          },
+                          selectedColor: const Color(0xFFF59E0B),
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : const Color(0xFF334155),
+                            fontSize: 11.5,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          ),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          side: BorderSide(
+                            color: isSelected
+                                ? const Color(0xFFD97706)
+                                : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                _buildScanOptionTile(
+                  icon: Icons.camera_alt_rounded,
+                  title: 'Take Photo with Camera',
+                  subtitle: 'Digitize physical page in ${selectedLanguage.displayName}',
+                  gradientColors: [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _runScan(
+                      scanAction: (onProgress) => _scanBookUseCase.scanFromCamera(
+                        language: selectedLanguage,
+                        onProgress: onProgress,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildScanOptionTile(
+                  icon: Icons.photo_library_rounded,
+                  title: 'Choose from Gallery',
+                  subtitle: 'Select a photo in ${selectedLanguage.displayName}',
+                  gradientColors: [const Color(0xFF10B981), const Color(0xFF059669)],
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _runScan(
+                      scanAction: (onProgress) => _scanBookUseCase.scanFromGallery(
+                        language: selectedLanguage,
+                        onProgress: onProgress,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildScanOptionTile(
+                  icon: Icons.collections_bookmark_rounded,
+                  title: 'Batch Photo Scan',
+                  subtitle: 'Select multiple photos to create a multi-page book',
+                  gradientColors: [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)],
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _runScan(
+                      scanAction: (onProgress) => _scanBookUseCase.scanMultipleFromGallery(
+                        language: selectedLanguage,
+                        onProgress: onProgress,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScanOptionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required List<Color> gradientColors,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF94A3B8)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Executes OCR scan action and displays synchronized progress dialog.
+  Future<void> _runScan({
+    required Future<Book?> Function(ScanProgressCallback onProgress) scanAction,
+  }) async {
+    double progressValue = 0.0;
+    String statusMessage = 'Initializing OCR scanner...';
+    StateSetter? dialogSetState;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            dialogSetState = setModalState;
+            return PopScope(
+              canPop: false,
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                content: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFEF3C7),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.document_scanner_rounded,
+                          color: Color(0xFFD97706),
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Processing Document',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        statusMessage,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: progressValue > 0 ? progressValue : null,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    try {
+      final Book? scannedBook = await scanAction((prog, status) {
+        if (dialogSetState != null) {
+          dialogSetState!(() {
+            progressValue = prog;
+            statusMessage = status;
+          });
+        }
+      });
+
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context); // Close progress dialog
+      }
+
+      if (scannedBook != null) {
+        await HiveStorageService().saveScannedBook(scannedBook);
+        setState(() {
+          _books.removeWhere((b) => b.id == scannedBook.id);
+          _books.insert(0, scannedBook);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Scanned "${scannedBook.metadata.title}" ready!'),
+              backgroundColor: const Color(0xFF10B981),
+            ),
+          );
+          _openReader(scannedBook);
+        }
+      }
+    } catch (e) {
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context); // Close progress dialog
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Scan failed: $e'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -310,9 +701,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
       // 2. Category Tag Filter
       if (_selectedFilterTag == 'EPUB') {
-        return !book.isPdf;
+        return !book.isPdf && !book.isScan;
       } else if (_selectedFilterTag == 'PDF') {
-        return book.isPdf;
+        return book.isPdf && !book.isScan;
+      } else if (_selectedFilterTag == 'Scans') {
+        return book.isScan;
       } else if (_selectedFilterTag == 'In Progress') {
         return _progressMap.containsKey(book.id);
       } else if (_selectedFilterTag == 'Malayalam') {
@@ -330,15 +723,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }).toList();
   }
 
-  /// Builds a visual badge distinguishing EPUB from PDF books.
+  /// Builds a visual badge distinguishing EPUB, PDF, and Scanned Photo books.
   Widget _buildFormatBadge(Book book, {bool isMini = false}) {
+    final isScan = book.isScan;
     final isPdf = book.isPdf;
-    final bgColors = isPdf
-        ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
-        : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)];
-    final icon =
-        isPdf ? Icons.picture_as_pdf_rounded : Icons.auto_stories_rounded;
-    final label = isPdf ? 'PDF' : 'EPUB';
+    final bgColors = isScan
+        ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+        : (isPdf
+            ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+            : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)]);
+    final icon = isScan
+        ? Icons.document_scanner_rounded
+        : (isPdf ? Icons.picture_as_pdf_rounded : Icons.auto_stories_rounded);
+    final label = isScan ? 'SCAN' : (isPdf ? 'PDF' : 'EPUB');
+    final shadowColor = isScan
+        ? Colors.amber
+        : (isPdf ? Colors.red : Colors.blue);
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -354,7 +754,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: (isPdf ? Colors.red : Colors.blue).withValues(alpha: 0.35),
+            color: shadowColor.withValues(alpha: 0.35),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -414,6 +814,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
         elevation: 0,
         actions: [
           if (_selectedTabIndex == 0) ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: FilledButton.icon(
+                onPressed: _showScanOptionsModal,
+                icon: const Icon(Icons.document_scanner_rounded, size: 16),
+                label: const Text(
+                  'Scan Photo',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFD97706),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 0),
+                  minimumSize: const Size(0, 36),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: FilledButton.icon(
@@ -814,8 +1238,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importedBooks = _books
         .where((b) => b.id != 'sample_chemmeen' && b.id != 'sample_alice')
         .toList();
-    final importedEpubs = importedBooks.where((b) => !b.isPdf).toList();
-    final importedPdfs = importedBooks.where((b) => b.isPdf).toList();
+    final importedScans = importedBooks.where((b) => b.isScan).toList();
+    final importedPdfs = importedBooks.where((b) => b.isPdf && !b.isScan).toList();
+    final importedEpubs = importedBooks.where((b) => !b.isPdf && !b.isScan).toList();
 
     final malayalamBooks = _books
         .where((b) =>
@@ -898,6 +1323,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             SliverToBoxAdapter(
               child: _buildHistoryShelf(historyBooks),
+            ),
+          ],
+
+          // 4. Row 2: Scanned Documents Shelf (if any scanned)
+          if (importedScans.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: _buildShelfHeader(
+                title: 'Your Scanned Documents',
+                subtitle: 'Photo & OCR digitizations with synchronized TTS audio',
+                icon: Icons.document_scanner_rounded,
+                iconColor: const Color(0xFFD97706),
+                count: importedScans.length,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildHorizontalShelf(
+                books: importedScans,
+                tagColor: const Color(0xFFD97706),
+                shelfTag: 'SCAN',
+              ),
             ),
           ],
 
@@ -1051,6 +1496,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       'All',
       'EPUB',
       'PDF',
+      'Scans',
       'In Progress',
       'Malayalam',
       'English',
@@ -1067,9 +1513,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
           if (tag == 'All') {
             count = _books.length;
           } else if (tag == 'EPUB') {
-            count = _books.where((b) => !b.isPdf).length;
+            count = _books.where((b) => !b.isPdf && !b.isScan).length;
           } else if (tag == 'PDF') {
-            count = _books.where((b) => b.isPdf).length;
+            count = _books.where((b) => b.isPdf && !b.isScan).length;
+          } else if (tag == 'Scans') {
+            count = _books.where((b) => b.isScan).length;
           } else if (tag == 'In Progress') {
             count = _recentProgressList.length;
           } else if (tag == 'Malayalam') {
@@ -1961,17 +2409,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildDefaultCover(Book book, {bool isMini = false}) {
+    final isScan = book.isScan;
     final isPdf = book.isPdf;
     final hash = book.metadata.title.hashCode;
-    final color1 = isPdf
-        ? const Color(0xFF991B1B)
-        : HSLColor.fromAHSL(1.0, (hash.abs() % 360).toDouble(), 0.65, 0.45)
-            .toColor();
-    final color2 = isPdf
-        ? const Color(0xFF7F1D1D)
-        : HSLColor.fromAHSL(
-                1.0, ((hash.abs() + 40) % 360).toDouble(), 0.75, 0.35)
-            .toColor();
+    final color1 = isScan
+        ? const Color(0xFFD97706)
+        : (isPdf
+            ? const Color(0xFF991B1B)
+            : HSLColor.fromAHSL(1.0, (hash.abs() % 360).toDouble(), 0.65, 0.45)
+                .toColor());
+    final color2 = isScan
+        ? const Color(0xFFB45309)
+        : (isPdf
+            ? const Color(0xFF7F1D1D)
+            : HSLColor.fromAHSL(
+                    1.0, ((hash.abs() + 40) % 360).toDouble(), 0.75, 0.35)
+                .toColor());
+
+    final icon = isScan
+        ? Icons.document_scanner_rounded
+        : (isPdf ? Icons.picture_as_pdf_rounded : Icons.menu_book_rounded);
 
     return Container(
       width: double.infinity,
@@ -1988,7 +2445,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(
-            isPdf ? Icons.picture_as_pdf_rounded : Icons.menu_book_rounded,
+            icon,
             color: Colors.white.withValues(alpha: 0.85),
             size: isMini ? 18 : 32,
           ),

@@ -8,6 +8,7 @@ class MockAudioSourceEngine implements AudioSourceEngine {
   void Function(String text, int startOffset, int endOffset, String word)? _onProgress;
 
   final List<String> spokenParagraphs = [];
+  final List<String?> spokenLanguages = [];
   bool isPlaying = false;
   double speechRate = 1.0;
   double pitch = 1.0;
@@ -19,6 +20,7 @@ class MockAudioSourceEngine implements AudioSourceEngine {
   @override
   Future<void> speakParagraph(String text, {String? language}) async {
     spokenParagraphs.add(text);
+    spokenLanguages.add(language);
     isPlaying = true;
   }
 

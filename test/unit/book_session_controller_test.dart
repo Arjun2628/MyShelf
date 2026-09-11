@@ -172,5 +172,39 @@ void main() {
       expect(session.currentParagraphIndex, 2);
       expect(mockAudio.spokenParagraphs.last, contains('White Rabbit'));
     });
+
+    test('translateCurrentChapter translates text and switches audio narration voice', () async {
+      final book = await provider.getEnglishSampleBook();
+      final session = BookSessionController(
+        book: book,
+        audioEngine: mockAudio,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(session.isTranslated, isFalse);
+      expect(session.activeTranslationLanguage, isNull);
+
+      // Translate Chapter to Malayalam
+      await session.translateCurrentChapter('ml');
+
+      expect(session.isTranslated, isTrue);
+      expect(session.activeTranslationLanguage, equals('ml'));
+      expect(session.activeTranslationLanguageName, contains('Malayalam'));
+      expect(session.currentChapterParagraphs.isNotEmpty, isTrue);
+
+      // Play audio -> should speak in Malayalam voice
+      await session.playAudio();
+      expect(session.audioState.isPlaying, isTrue);
+      expect(mockAudio.spokenLanguages.last, equals('ml'));
+
+      // Revert back to original
+      await session.revertToOriginalLanguage();
+      expect(session.isTranslated, isFalse);
+      expect(session.activeTranslationLanguage, isNull);
+
+      await session.playAudio();
+      expect(mockAudio.spokenLanguages.last, equals('en'));
+    });
   });
 }
