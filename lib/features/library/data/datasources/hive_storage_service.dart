@@ -17,6 +17,7 @@ class HiveStorageService {
   static const String progressBoxName = 'reading_progress_v1';
   static const String highlightsBoxName = 'highlights_v1';
   static const String bookmarksBoxName = 'bookmarks_v1';
+  static const String settingsBoxName = 'settings_v1';
 
   static final HiveStorageService _instance = HiveStorageService._internal();
   factory HiveStorageService() => _instance;
@@ -26,6 +27,7 @@ class HiveStorageService {
   Box<dynamic>? _progressBox;
   Box<dynamic>? _highlightsBox;
   Box<dynamic>? _bookmarksBox;
+  Box<dynamic>? _settingsBox;
   bool _isInitialized = false;
 
   /// Initializes Hive and opens required boxes.
@@ -34,7 +36,8 @@ class HiveStorageService {
       if (_booksBox != null && _booksBox!.isOpen &&
           _progressBox != null && _progressBox!.isOpen &&
           _highlightsBox != null && _highlightsBox!.isOpen &&
-          _bookmarksBox != null && _bookmarksBox!.isOpen) {
+          _bookmarksBox != null && _bookmarksBox!.isOpen &&
+          _settingsBox != null && _settingsBox!.isOpen) {
         return;
       }
     }
@@ -54,11 +57,26 @@ class HiveStorageService {
       _progressBox = await Hive.openBox(progressBoxName);
       _highlightsBox = await Hive.openBox(highlightsBoxName);
       _bookmarksBox = await Hive.openBox(bookmarksBoxName);
+      _settingsBox = await Hive.openBox(settingsBoxName);
       _isInitialized = true;
       debugPrint('[HiveStorage] Initialized successfully. Stored books: ${_booksBox?.length}');
     } catch (e) {
       debugPrint('[HiveStorage] Initialization error: $e');
     }
+  }
+
+  // ----------------- APP ONBOARDING / SETTINGS -----------------
+
+  /// Checks whether the user has completed the first-launch onboarding/splash guide.
+  bool hasSeenOnboarding() {
+    if (_settingsBox == null || !_settingsBox!.isOpen) return false;
+    return (_settingsBox?.get('has_seen_onboarding', defaultValue: false) as bool?) ?? false;
+  }
+
+  /// Sets whether the user has completed the first-launch onboarding/splash guide.
+  Future<void> setHasSeenOnboarding([bool value = true]) async {
+    await init();
+    await _settingsBox?.put('has_seen_onboarding', value);
   }
 
   // ----------------- IMPORTED BOOKS PERSISTENCE -----------------
