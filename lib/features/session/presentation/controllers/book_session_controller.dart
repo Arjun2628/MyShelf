@@ -13,6 +13,11 @@ import 'package:epub_audio/features/reader/data/services/translation_service.dar
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/session/domain/entities/book_position.dart';
+import 'package:epub_audio/features/voice/data/detection/rule_based_speaker_detector.dart';
+import 'package:epub_audio/features/voice/data/providers/device_tts_provider.dart';
+import 'package:epub_audio/features/voice/domain/entities/content_block.dart';
+import 'package:epub_audio/features/voice/domain/services/speaker_detection_engine.dart';
+import 'package:epub_audio/features/voice/domain/services/voice_engine.dart';
 import 'package:flutter/foundation.dart';
 
 /// Unified session controller managing shared reading position, audio narration,
@@ -25,7 +30,10 @@ class BookSessionController extends ChangeNotifier {
 
   final Book book;
   final AudioSourceEngine _audioEngine;
+  final VoiceEngine _voiceEngine;
+  final SpeakerDetectionEngine _speakerDetector;
   final ParseChapterContentUseCase _parseChapterUseCase;
+  bool _isMultiVoiceEnabled = true;
 
   BookPosition _currentPosition;
   ChapterContent? _currentChapterContent;
@@ -48,12 +56,16 @@ class BookSessionController extends ChangeNotifier {
   BookSessionController({
     required this.book,
     AudioSourceEngine? audioEngine,
+    VoiceEngine? voiceEngine,
+    SpeakerDetectionEngine? speakerDetector,
     ParseChapterContentUseCase parseChapterUseCase =
         const ParseChapterContentUseCase(),
     int? initialChapterIndex,
     int? initialParagraphIndex,
     int? initialCharOffset,
   })  : _audioEngine = audioEngine ?? FlutterTtsAudioEngine(),
+        _voiceEngine = voiceEngine ?? VoiceEngine(ttsProvider: DeviceTtsProvider()),
+        _speakerDetector = speakerDetector ?? RuleBasedSpeakerDetector(),
         _parseChapterUseCase = parseChapterUseCase,
         _currentPosition = _computeInitialPosition(
           book,
@@ -75,6 +87,14 @@ class BookSessionController extends ChangeNotifier {
     _initAudioEngine();
     _initInitialChapter(_currentPosition.chapterIndex, _currentPosition.paragraphIndex);
     _loadBookmarks();
+  }
+
+  VoiceEngine get voiceEngine => _voiceEngine;
+  SpeakerDetectionEngine get speakerDetector => _speakerDetector;
+  bool get isMultiVoiceEnabled => _isMultiVoiceEnabled;
+  void setMultiVoiceEnabled(bool enabled) {
+    _isMultiVoiceEnabled = enabled;
+    notifyListeners();
   }
 
   void _setupNotificationHandlers() {
@@ -191,6 +211,8 @@ class BookSessionController extends ChangeNotifier {
     }
   }
 
+  final Map<int, List<ContentBlock>> _chapterSpeakerBlocksCache = {};
+
   void _initAudioEngine() {
     _audioEngine.setOnCompletion(_onParagraphAudioFinished);
     _audioEngine.setOnProgress(_onAudioProgress);
@@ -202,10 +224,32 @@ class BookSessionController extends ChangeNotifier {
       );
       notifyListeners();
     });
+    _voiceEngine.autoDiscoverAndAssignVoices(
+      targetLanguage: _activeTranslationLanguage ?? book.metadata.language ?? 'en-US',
+    );
   }
+
+  Future<void> _preAnalyzeChapterSpeakers(int chapterIdx) async {
+    if (_chapterSpeakerBlocksCache.containsKey(chapterIdx)) return;
+    if (_currentChapterParagraphs.isEmpty) return;
+    try {
+      final fullText = _currentChapterParagraphs.join('\n\n');
+      final blocks = await _speakerDetector.detect(
+        rawText: fullText,
+        knownCharacters: _voiceEngine.getCharacters(),
+        chapterId: 'ch_$chapterIdx',
+      );
+      _chapterSpeakerBlocksCache[chapterIdx] = blocks;
+    } catch (_) {}
+  }
+
+  bool _hasNativeWordProgress = false;
 
   void _onAudioProgress(String text, int startOffset, int endOffset, String word) {
     if (!_audioState.isPlaying) return;
+
+    _hasNativeWordProgress = true;
+    _cancelWordProgressSimulation();
 
     final absoluteCharOffset = _currentParagraphSpeakingOffset + startOffset;
     _currentPosition = _currentPosition.copyWith(charOffset: absoluteCharOffset);
@@ -377,7 +421,7 @@ class BookSessionController extends ChangeNotifier {
     );
 
     final currentText = _currentChapterParagraphs[clampedIdx];
-    final shouldPlay = autoPlay || _audioState.isPlaying;
+    final shouldPlay = autoPlay;
 
     _audioState = _audioState.copyWith(
       position: _currentPosition,
@@ -389,6 +433,8 @@ class BookSessionController extends ChangeNotifier {
 
     if (shouldPlay) {
       await _speakCurrentParagraph(fromCharOffset: false);
+    } else {
+      await _audioEngine.stop();
     }
   }
 
@@ -425,6 +471,7 @@ class BookSessionController extends ChangeNotifier {
 
   /// Pauses audio playback without losing the current paragraph or word position.
   Future<void> pauseAudio() async {
+    _cancelWordProgressSimulation();
     _audioState = _audioState.copyWith(
       status: AudioPlaybackStatus.paused,
       position: _currentPosition,
@@ -447,6 +494,7 @@ class BookSessionController extends ChangeNotifier {
 
   /// Stops audio playback.
   Future<void> stopAudio() async {
+    _cancelWordProgressSimulation();
     _currentPosition = _currentPosition.copyWith(charOffset: 0);
     _currentParagraphSpeakingOffset = 0;
     _audioState = _audioState.copyWith(
@@ -520,6 +568,62 @@ class BookSessionController extends ChangeNotifier {
     });
   }
 
+  Timer? _wordProgressTimer;
+  int _wordSimulationStep = 0;
+
+  void _startWordProgressSimulation(String textToSpeak, int baseOffset, double speechRate) {
+    _wordProgressTimer?.cancel();
+    _wordProgressTimer = null;
+    _hasNativeWordProgress = false;
+
+    final matches = RegExp(r'\S+').allMatches(textToSpeak).toList();
+    if (matches.isEmpty) return;
+
+    final currentStep = ++_wordSimulationStep;
+
+    void scheduleWord(int index) {
+      if (!_audioState.isPlaying || _hasNativeWordProgress || currentStep != _wordSimulationStep) {
+        return;
+      }
+      if (index >= matches.length) return;
+
+      final match = matches[index];
+      final offset = baseOffset + match.start;
+      final word = match.group(0) ?? '';
+
+      _currentPosition = _currentPosition.copyWith(charOffset: offset);
+      _audioState = _audioState.copyWith(position: _currentPosition);
+      notifyListeners();
+
+      // Compute word duration based on character length and punctuation for natural 0.45 base TTS speed
+      double durationMs = 180.0 + (word.length * 44.0);
+      final trimmed = word.trim();
+      if (trimmed.endsWith(',') || trimmed.endsWith(';') || trimmed.endsWith(':')) {
+        durationMs += 200.0;
+      } else if (trimmed.endsWith('.') || trimmed.endsWith('?') || trimmed.endsWith('!') ||
+                 trimmed.endsWith('."') || trimmed.endsWith('?"') || trimmed.endsWith('!"') ||
+                 trimmed.endsWith('—') || trimmed.endsWith('..."')) {
+        durationMs += 360.0;
+      }
+
+      final int adjustedDurationMs = (durationMs / speechRate.clamp(0.5, 2.5)).round().clamp(140, 1600);
+
+      _wordProgressTimer = Timer(Duration(milliseconds: adjustedDurationMs), () {
+        if (currentStep == _wordSimulationStep) {
+          scheduleWord(index + 1);
+        }
+      });
+    }
+
+    scheduleWord(0);
+  }
+
+  void _cancelWordProgressSimulation() {
+    _wordSimulationStep++;
+    _wordProgressTimer?.cancel();
+    _wordProgressTimer = null;
+  }
+
   Future<void> _speakCurrentParagraph({bool fromCharOffset = false}) async {
     if (_currentChapterParagraphs.isEmpty) return;
 
@@ -546,7 +650,7 @@ class BookSessionController extends ChangeNotifier {
         : fullText;
 
     if (textToSpeak.trim().isEmpty) {
-      _onParagraphAudioFinished();
+      _advanceToNextParagraph();
       return;
     }
 
@@ -559,20 +663,92 @@ class BookSessionController extends ChangeNotifier {
     notifyListeners();
     _syncNotification();
 
+    _startWordProgressSimulation(textToSpeak, startOffset, _audioState.speechRate);
+
+    if (_isMultiVoiceEnabled) {
+      final chIdx = _currentPosition.chapterIndex;
+      if (!_chapterSpeakerBlocksCache.containsKey(chIdx)) {
+        await _preAnalyzeChapterSpeakers(chIdx);
+      }
+      final blocks = _chapterSpeakerBlocksCache[chIdx] ?? [];
+
+      ContentBlock? matchingBlock;
+      final cleanText = textToSpeak.trim();
+
+      // 1. Look for a dialogue block matching this paragraph text
+      for (final b in blocks) {
+        if (b.type == ContentBlockType.dialogue) {
+          final bText = b.text.trim();
+          if (cleanText.contains(bText) || bText.contains(cleanText)) {
+            matchingBlock = b;
+            break;
+          }
+        }
+      }
+
+      // 2. Fallback to any matching block
+      matchingBlock ??= blocks.firstWhere(
+        (b) =>
+            b.text.trim() == cleanText ||
+            cleanText.contains(b.text.trim()) ||
+            b.text.trim().contains(cleanText),
+        orElse: () => ContentBlock(
+          id: 'temp',
+          type: ContentBlockType.narration,
+          text: textToSpeak,
+          speakerId: 'narrator',
+          order: 0,
+        ),
+      );
+
+      final profile = _voiceEngine.getVoiceProfile(matchingBlock.speakerId);
+      await _audioEngine.setVoice(
+        profile.providerVoiceId,
+        locale: _activeTranslationLanguage ?? profile.language,
+      );
+      await _audioEngine.setPitch(1.0);
+      await _audioEngine.setRate(_audioState.speechRate);
+    } else {
+      final narratorProfile = _voiceEngine.getVoiceProfile('narrator');
+      await _audioEngine.setVoice(
+        narratorProfile.providerVoiceId,
+        locale: _activeTranslationLanguage ?? narratorProfile.language,
+      );
+      await _audioEngine.setPitch(1.0);
+      await _audioEngine.setRate(_audioState.speechRate);
+    }
+
     await _audioEngine.speakParagraph(
       textToSpeak,
       language: _activeTranslationLanguage ?? book.metadata.language,
     );
   }
 
-  void _onParagraphAudioFinished() {
+  DateTime? _lastAdvanceTime;
+
+  void _advanceToNextParagraph() {
     if (!_audioState.isPlaying) return;
 
+    final now = DateTime.now();
+    if (_lastAdvanceTime != null &&
+        now.difference(_lastAdvanceTime!).inMilliseconds < 120) {
+      return; // Ignore duplicate trigger within 120ms
+    }
+    _lastAdvanceTime = now;
+
+    _cancelWordProgressSimulation();
     _currentPosition = _currentPosition.copyWith(charOffset: 0);
     _currentParagraphSpeakingOffset = 0;
 
-    if (_currentPosition.paragraphIndex < _currentChapterParagraphs.length - 1) {
-      seekToParagraph(_currentPosition.paragraphIndex + 1);
+    // Scan forward to find the next non-empty paragraph in this chapter
+    int nextIdx = _currentPosition.paragraphIndex + 1;
+    while (nextIdx < _currentChapterParagraphs.length &&
+        _currentChapterParagraphs[nextIdx].trim().isEmpty) {
+      nextIdx++;
+    }
+
+    if (nextIdx < _currentChapterParagraphs.length) {
+      seekToParagraph(nextIdx, autoPlay: true);
     } else if (hasNextChapter) {
       loadChapter(_currentPosition.chapterIndex + 1, paragraphIndex: 0).then((_) {
         if (_audioState.isPlaying) {
@@ -582,6 +758,11 @@ class BookSessionController extends ChangeNotifier {
     } else {
       stopAudio();
     }
+  }
+
+  void _onParagraphAudioFinished() {
+    if (!_audioState.isPlaying) return;
+    _advanceToNextParagraph();
   }
 
   // ----------------- READER CONTROLS -----------------
@@ -845,6 +1026,7 @@ class BookSessionController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _cancelWordProgressSimulation();
     _persistProgress();
     _sleepTimer?.cancel();
     _audioEngine.dispose();

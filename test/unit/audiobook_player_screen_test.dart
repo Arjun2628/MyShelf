@@ -48,5 +48,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(session.audioState.isPlaying, isTrue);
+
+    await session.stopAudio();
+    session.dispose();
   });
 }
