@@ -2,7 +2,7 @@ import 'package:epub_audio/features/library/data/datasources/hive_storage_servic
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
 import 'package:flutter/material.dart';
 
-/// Interactive feature guide and onboarding walkthrough for ScribbleVerse.
+/// Interactive feature guide and onboarding walkthrough.
 /// Explains the 4 core pillars: Reader, Audiobooks, OCR Scanner, and Translation.
 class FeatureGuideScreen extends StatefulWidget {
   final VoidCallback? onCompleted;
