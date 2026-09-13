@@ -64,6 +64,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    _session.syncWithAppBrightness(isDark);
+  }
+
+  @override
   void dispose() {
     _session.removeListener(_onSessionUpdate);
     _session.dispose();
@@ -81,32 +88,32 @@ class _ReaderScreenState extends State<ReaderScreen> {
       body: Stack(
         children: [
           // 1. Main Reading Canvas
-          SafeArea(
-            child: _session.isLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: colors.accent),
-                  )
-                : _session.errorMessage != null
-                    ? _buildErrorState(colors)
-                    : currentContent != null
-                        ? ReaderContentView(
-                            content: currentContent,
-                            book: _session.book,
-                            chapterIndex: _session.currentChapterIndex,
-                            preferences: _session.preferences,
-                            activeParagraphIndex: null,
-                            charOffset: null,
-                            isPlaying: false,
-                            highlights: List<TextHighlight>.from(_highlights),
-                            scrollController: _scrollController,
-                            onParagraphTapped: null,
-                            onLinkTapped: _session.handleLink,
-                            onHighlightCreated: _onHighlightCreated,
-                            onTranslateRequested: _showTranslationModal,
-                            onSpeakTextRequested: (text) => _session.speakCustomText(text),
-                          )
-                        : const SizedBox.shrink(),
-          ),
+          _session.isLoading
+              ? Center(
+                  child: CircularProgressIndicator(color: colors.accent),
+                )
+              : _session.errorMessage != null
+                  ? _buildErrorState(colors)
+                  : currentContent != null
+                      ? ReaderContentView(
+                          content: currentContent,
+                          book: _session.book,
+                          chapterIndex: _session.currentChapterIndex,
+                          preferences: _session.preferences,
+                          activeParagraphIndex: null,
+                          charOffset: null,
+                          isPlaying: false,
+                          highlights: List<TextHighlight>.from(_highlights),
+                          scrollController: _scrollController,
+                          topPadding: MediaQuery.of(context).padding.top + 76,
+                          bottomPadding: MediaQuery.of(context).padding.bottom + 140,
+                          onParagraphTapped: null,
+                          onLinkTapped: _session.handleLink,
+                          onHighlightCreated: _onHighlightCreated,
+                          onTranslateRequested: _showTranslationModal,
+                          onSpeakTextRequested: (text) => _session.speakCustomText(text),
+                        )
+                      : const SizedBox.shrink(),
 
           // 2. Top Navigation Bar (Overlay)
           AnimatedPositioned(

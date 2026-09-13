@@ -25,6 +25,8 @@ class ReaderContentView extends StatefulWidget {
   final void Function(String selectedText)? onTranslateRequested;
   final void Function(String selectedText)? onSpeakTextRequested;
   final ScrollController? scrollController;
+  final double topPadding;
+  final double bottomPadding;
 
   const ReaderContentView({
     super.key,
@@ -42,6 +44,8 @@ class ReaderContentView extends StatefulWidget {
     this.onTranslateRequested,
     this.onSpeakTextRequested,
     this.scrollController,
+    this.topPadding = 84.0,
+    this.bottomPadding = 140.0,
   });
 
   @override
@@ -194,9 +198,11 @@ class _ReaderContentViewState extends State<ReaderContentView> {
           },
           child: ListView.builder(
             controller: widget.scrollController,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.preferences.horizontalPadding,
-              vertical: 32,
+            padding: EdgeInsets.only(
+              left: widget.preferences.horizontalPadding,
+              right: widget.preferences.horizontalPadding,
+              top: widget.topPadding,
+              bottom: widget.bottomPadding,
             ),
             itemCount: widget.content.blocks.length,
             itemBuilder: (context, index) {
