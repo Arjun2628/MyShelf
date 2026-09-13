@@ -35,10 +35,10 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
         } catch (_) {}
       }
 
-      await _flutterTts.setSpeechRate(0.38);
+      await _flutterTts.setSpeechRate(0.45);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
-      await _flutterTts.awaitSpeakCompletion(false);
+      await _flutterTts.awaitSpeakCompletion(true);
 
       // Print engine diagnostics for troubleshooting
       try {
@@ -66,7 +66,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
       });
 
       _flutterTts.setCompletionHandler(() {
-        debugPrint('[TTS] Paragraph completed');
+        debugPrint('[TTS] Paragraph completed via handler');
         _fallbackAttempted = false;
         _onCompletion?.call();
       });
@@ -145,6 +145,12 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     }
   }
 
+  final Map<String, String> _voiceLocalesCache = {};
+  String? _currentVoiceName;
+  String? _currentVoiceLocale;
+  double? _currentPitch;
+  double? _currentRate;
+
   @override
   Future<void> speakParagraph(String text, {String? language}) async {
     await init();
@@ -157,8 +163,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     _fallbackAttempted = false;
 
     try {
-      await _flutterTts.stop();
-      if (language != null) {
+      if (language != null && _currentVoiceName == null) {
         final normalized = _normalizeLanguageTag(language);
         if (_currentConfiguredLanguage != normalized) {
           await _configureLanguage(language);
@@ -167,7 +172,8 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
 
       final result = await _flutterTts.speak(text);
       debugPrint(
-          '[TTS] speak result: $result for "${text.substring(0, text.length.clamp(0, 30))}..."');
+          '[TTS] speak completed: result=$result for "${text.substring(0, text.length.clamp(0, 30))}..."');
+      _onCompletion?.call();
     } catch (e) {
       debugPrint('[TTS] Speak error: $e');
       _onError?.call('TTS speak error: $e');
@@ -177,7 +183,7 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   Future<void> pause() async {
     try {
-      await _flutterTts.pause();
+      await _flutterTts.stop();
     } catch (_) {}
   }
 
@@ -198,8 +204,11 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   Future<void> setRate(double rate) async {
     try {
-      // In flutter_tts, 0.38 gives a pleasant, comfortable reading pace for 1.0x
-      final ttsRate = (rate * 0.38).clamp(0.10, 1.0);
+      final ttsRate = (rate * 0.45).clamp(0.15, 1.0);
+      if (_currentRate != null && (_currentRate! - ttsRate).abs() < 0.01) {
+        return;
+      }
+      _currentRate = ttsRate;
       await _flutterTts.setSpeechRate(ttsRate);
     } catch (_) {}
   }
@@ -207,7 +216,12 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
   @override
   Future<void> setPitch(double pitch) async {
     try {
-      await _flutterTts.setPitch(pitch.clamp(0.5, 2.0));
+      final clampedPitch = pitch.clamp(0.5, 2.0);
+      if (_currentPitch != null && (_currentPitch! - clampedPitch).abs() < 0.01) {
+        return;
+      }
+      _currentPitch = clampedPitch;
+      await _flutterTts.setPitch(clampedPitch);
     } catch (_) {}
   }
 
@@ -216,6 +230,84 @@ class FlutterTtsAudioEngine implements AudioSourceEngine {
     try {
       await _flutterTts.setVolume(volume.clamp(0.0, 1.0));
     } catch (_) {}
+  }
+
+  @override
+  Future<void> setVoice(String voiceName, {String? locale}) async {
+    await init();
+    if (voiceName.isEmpty || voiceName == 'default') return;
+
+    try {
+      // Find matching locale from cache or voice name prefix
+      var loc = locale ?? _voiceLocalesCache[voiceName];
+      if (loc == null || loc.isEmpty) {
+        final lower = voiceName.toLowerCase();
+        if (lower.startsWith('en-gb') || lower.contains('en_gb')) {
+          loc = 'en-GB';
+        } else if (lower.startsWith('en-au') || lower.contains('en_au')) {
+          loc = 'en-AU';
+        } else if (lower.startsWith('en-in') || lower.contains('en_in')) {
+          loc = 'en-IN';
+        } else if (lower.startsWith('en')) {
+          loc = 'en-US';
+        } else {
+          loc = _currentConfiguredLanguage ?? 'en-US';
+        }
+      }
+
+      if (_currentVoiceName == voiceName && _currentVoiceLocale == loc) {
+        return; // Voice already configured, zero IPC latency
+      }
+
+      await _flutterTts.setVoice({
+        'name': voiceName,
+        'locale': loc,
+      });
+      _currentVoiceName = voiceName;
+      _currentVoiceLocale = loc;
+      _currentConfiguredLanguage = loc;
+      debugPrint('[FlutterTtsAudioEngine] Voice set to: $voiceName (locale: $loc)');
+    } catch (e) {
+      debugPrint('[FlutterTtsAudioEngine] Could not set voice $voiceName: $e');
+    }
+  }
+
+  @override
+  Future<List<Map<String, String>>> getAvailableVoices() async {
+    await init();
+    final List<Map<String, String>> result = [];
+    try {
+      final voices = await _flutterTts.getVoices;
+      if (voices is List) {
+        for (final v in voices) {
+          if (v is Map) {
+            final name = v['name']?.toString() ?? '';
+            final locale = v['locale']?.toString() ?? '';
+            if (name.isNotEmpty) {
+              _voiceLocalesCache[name] = locale;
+              result.add({
+                'id': name,
+                'name': name,
+                'locale': locale,
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[FlutterTtsAudioEngine] Error querying voices: $e');
+    }
+
+    if (result.isEmpty) {
+      // Standard fallback voice models across Android/iOS
+      result.addAll([
+        {'id': 'en-us-x-sfg#female_1-local', 'name': 'en-us-x-sfg#female_1-local', 'locale': 'en-US'},
+        {'id': 'en-us-x-iom-local', 'name': 'en-us-x-iom-local (Male 1)', 'locale': 'en-US'},
+        {'id': 'en-us-x-iol-local', 'name': 'en-us-x-iol-local (Female 1)', 'locale': 'en-US'},
+        {'id': 'en-gb-x-rjs-local', 'name': 'en-gb-x-rjs-local (British Accent)', 'locale': 'en-GB'},
+      ]);
+    }
+    return result;
   }
 
   @override

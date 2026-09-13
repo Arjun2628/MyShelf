@@ -54,6 +54,27 @@ class MockAudioSourceEngine implements AudioSourceEngine {
     volume = v;
   }
 
+  String? currentVoice;
+  String? currentVoiceLocale;
+  final List<String> setVoicesHistory = [];
+
+  @override
+  Future<void> setVoice(String voiceName, {String? locale}) async {
+    currentVoice = voiceName;
+    currentVoiceLocale = locale;
+    setVoicesHistory.add(voiceName);
+  }
+
+  @override
+  Future<List<Map<String, String>>> getAvailableVoices() async {
+    return [
+      {'id': 'en-us-x-sfg#female_1-local', 'name': 'English Female 1 (Narrator Voice A)', 'locale': 'en-US'},
+      {'id': 'en-us-x-iom-local', 'name': 'English Male 1 (Arjun Voice B)', 'locale': 'en-US'},
+      {'id': 'en-us-x-iol-local', 'name': 'English Female 2 (Maya Voice C)', 'locale': 'en-US'},
+      {'id': 'en-gb-x-rjs-local', 'name': 'English GB Male (Stranger Voice D)', 'locale': 'en-GB'},
+    ];
+  }
+
   @override
   void setOnCompletion(VoidCallback callback) {
     _onCompletion = callback;

@@ -26,6 +26,12 @@ abstract class AudioSourceEngine {
   /// Sets volume (0.0 to 1.0).
   Future<void> setVolume(double volume);
 
+  /// Sets the TTS voice model / voice identity name (e.g. 'en-us-x-iom-local', 'Samantha', 'Alex').
+  Future<void> setVoice(String voiceName, {String? locale});
+
+  /// Returns available TTS voices on the device or provider.
+  Future<List<Map<String, String>>> getAvailableVoices();
+
   /// Sets completion callback for when the current paragraph finishes playing.
   void setOnCompletion(VoidCallback callback);
 
