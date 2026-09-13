@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
+import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -75,6 +76,37 @@ void main() {
       await storage.deleteHighlight('hl_test_1');
       expect(storage.getAllHighlights().length, equals(1));
       expect(storage.getAllHighlights().first.id, equals('hl_test_2'));
+    });
+
+    test('persists and retrieves app theme mode setting', () async {
+      // Default should be system
+      expect(storage.getAppThemeMode(), equals(ThemeMode.system));
+
+      await storage.setAppThemeMode(ThemeMode.dark);
+      expect(storage.getAppThemeMode(), equals(ThemeMode.dark));
+
+      await storage.setAppThemeMode(ThemeMode.light);
+      expect(storage.getAppThemeMode(), equals(ThemeMode.light));
+
+      await storage.setAppThemeMode(ThemeMode.system);
+      expect(storage.getAppThemeMode(), equals(ThemeMode.system));
+    });
+
+    test('persists and retrieves reader preferences with theme synchronization', () async {
+      const customPrefs = ReaderPreferences(
+        fontSize: 22.0,
+        lineHeight: 1.8,
+        fontFamily: 'Serif',
+        themeMode: ReaderThemeMode.night,
+      );
+
+      await storage.saveReaderPreferences(customPrefs);
+      final loaded = storage.getReaderPreferences();
+
+      expect(loaded.fontSize, equals(22.0));
+      expect(loaded.lineHeight, equals(1.8));
+      expect(loaded.fontFamily, equals('Serif'));
+      expect(loaded.themeMode, equals(ReaderThemeMode.night));
     });
   });
 }

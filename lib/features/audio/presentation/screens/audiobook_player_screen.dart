@@ -51,6 +51,13 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    _session.syncWithAppBrightness(isDark);
+  }
+
+  @override
   void dispose() {
     _session.removeListener(_onSessionUpdate);
     _transcriptScrollController.dispose();

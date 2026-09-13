@@ -34,7 +34,7 @@ class BookSessionController extends ChangeNotifier {
   String? _errorMessage;
   bool _showControls = true;
 
-  ReaderPreferences _preferences = const ReaderPreferences();
+  ReaderPreferences _preferences = HiveStorageService().getReaderPreferences();
   AudioPlaybackState _audioState;
   final List<Bookmark> _bookmarks = [];
   Timer? _sleepTimer;
@@ -593,7 +593,21 @@ class BookSessionController extends ChangeNotifier {
 
   void updatePreferences(ReaderPreferences newPrefs) {
     _preferences = newPrefs;
+    HiveStorageService().saveReaderPreferences(newPrefs);
     notifyListeners();
+  }
+
+  /// Synchronizes reader appearance mode with application theme brightness.
+  void syncWithAppBrightness(bool isDark) {
+    if (isDark && _preferences.themeMode == ReaderThemeMode.light) {
+      _preferences = _preferences.copyWith(themeMode: ReaderThemeMode.night);
+      HiveStorageService().saveReaderPreferences(_preferences);
+      notifyListeners();
+    } else if (!isDark && _preferences.themeMode == ReaderThemeMode.night) {
+      _preferences = _preferences.copyWith(themeMode: ReaderThemeMode.light);
+      HiveStorageService().saveReaderPreferences(_preferences);
+      notifyListeners();
+    }
   }
 
   void toggleBookmark() {

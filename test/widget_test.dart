@@ -161,4 +161,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
   });
+
+  testWidgets('LibraryScreen opens Theme Selection modal and switches theme mode', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
+    for (int i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Find and tap theme mode button in AppBar
+    final themeButton = find.byTooltip('App Theme');
+    expect(themeButton, findsOneWidget);
+    await tester.tap(themeButton);
+    await tester.pumpAndSettle();
+
+    // Verify modal options are shown
+    expect(find.text('Choose App Theme'), findsOneWidget);
+    expect(find.text('System Default'), findsOneWidget);
+    expect(find.text('Light Theme'), findsOneWidget);
+    expect(find.text('Dark Theme'), findsOneWidget);
+
+    // Tap Dark Theme
+    await tester.tap(find.text('Dark Theme'));
+    await tester.pumpAndSettle();
+
+    // Verify theme state persisted in Hive
+    expect(HiveStorageService().getAppThemeMode(), equals(ThemeMode.dark));
+  });
 }
