@@ -107,16 +107,55 @@ class _ReaderContentViewState extends State<ReaderContentView> {
           targetContext,
           duration: const Duration(milliseconds: 380),
           curve: Curves.easeInOutCubic,
-          alignment: 0.18,
-          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+          alignment: 0.22,
         );
       } else {
         Scrollable.ensureVisible(
           targetContext,
           duration: Duration.zero,
-          alignment: 0.18,
-          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+          alignment: 0.22,
         );
+      }
+    } else if (widget.scrollController != null && widget.scrollController!.hasClients) {
+      // Estimate target scroll offset for off-screen blocks
+      final totalBlocks = widget.content.blocks.length;
+      if (totalBlocks > 0) {
+        int targetBlockIndex = 0;
+        int textParaCount = 0;
+        for (int i = 0; i < widget.content.blocks.length; i++) {
+          final b = widget.content.blocks[i];
+          if (b is ParagraphNode || b is HeadingNode) {
+            if (textParaCount == activeIndex) {
+              targetBlockIndex = i;
+              break;
+            }
+            textParaCount++;
+          }
+        }
+        final maxScroll = widget.scrollController!.position.maxScrollExtent;
+        final targetOffset = ((targetBlockIndex / totalBlocks) * maxScroll).clamp(0.0, maxScroll);
+        if (animate) {
+          widget.scrollController!.animateTo(
+            targetOffset,
+            duration: const Duration(milliseconds: 380),
+            curve: Curves.easeInOutCubic,
+          ).then((_) {
+            if (mounted) {
+              final newKey = _paragraphKeys[activeIndex];
+              final newContext = newKey?.currentContext;
+              if (newContext != null && newContext.mounted) {
+                Scrollable.ensureVisible(
+                  newContext,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  alignment: 0.22,
+                );
+              }
+            }
+          });
+        } else {
+          widget.scrollController!.jumpTo(targetOffset);
+        }
       }
     }
   }
@@ -137,7 +176,8 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     int textParaCount = 0;
     for (int i = 0; i < widget.content.blocks.length; i++) {
       final b = widget.content.blocks[i];
-      if (b is ParagraphNode || b is HeadingNode) {
+      if ((b is ParagraphNode || b is HeadingNode || b is BlockquoteNode) &&
+          b.toPlainText().trim().isNotEmpty) {
         blockIndexToParaIndex[i] = textParaCount++;
       }
     }
@@ -824,18 +864,22 @@ class _ReaderContentViewState extends State<ReaderContentView> {
     int? activeWordStart;
     int? activeWordEnd;
     if (isHighlight && widget.charOffset != null && fullBlockText.isNotEmpty) {
-      int offset = widget.charOffset!.clamp(0, fullBlockText.length);
+      int offset = widget.charOffset!.clamp(0, fullBlockText.length - 1);
       // Skip leading whitespaces if offset lands on a space
       while (offset < fullBlockText.length && RegExp(r'\s').hasMatch(fullBlockText[offset])) {
         offset++;
       }
       if (offset < fullBlockText.length) {
+        int start = offset;
+        while (start > 0 && !RegExp(r'\s').hasMatch(fullBlockText[start - 1])) {
+          start--;
+        }
         int end = offset;
         while (end < fullBlockText.length && !RegExp(r'\s').hasMatch(fullBlockText[end])) {
           end++;
         }
-        if (end > offset) {
-          activeWordStart = offset;
+        if (end > start) {
+          activeWordStart = start;
           activeWordEnd = end;
         }
       }

@@ -11,6 +11,8 @@ import 'package:epub_audio/features/reader/presentation/widgets/reader_settings_
 import 'package:epub_audio/features/reader/presentation/widgets/toc_drawer.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/translation_modal.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
+import 'package:epub_audio/features/voice/presentation/controllers/multi_voice_session_controller.dart';
+import 'package:epub_audio/features/voice/presentation/widgets/character_voice_settings_modal.dart';
 import 'package:flutter/material.dart';
 
 /// Fullscreen Reading Screen providing comfortable reading, audio narration, and controls.
@@ -32,6 +34,7 @@ class ReaderScreen extends StatefulWidget {
 
 class _ReaderScreenState extends State<ReaderScreen> {
   late final BookSessionController _session;
+  late final MultiVoiceSessionController _multiVoiceController;
   final ScrollController _scrollController = ScrollController();
   List<TextHighlight> _highlights = [];
   int _lastLoadedChapter = -1;
@@ -43,6 +46,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
       book: widget.book,
       initialChapterIndex: widget.initialChapterIndex,
       initialParagraphIndex: widget.initialParagraphIndex,
+    );
+    _multiVoiceController = MultiVoiceSessionController(
+      voiceEngine: _session.voiceEngine,
+      speakerDetector: _session.speakerDetector,
     );
     _session.addListener(_onSessionUpdate);
     _loadHighlights();
@@ -74,6 +81,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   void dispose() {
     _session.removeListener(_onSessionUpdate);
     _session.dispose();
+    _multiVoiceController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -100,14 +108,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           book: _session.book,
                           chapterIndex: _session.currentChapterIndex,
                           preferences: _session.preferences,
-                          activeParagraphIndex: null,
-                          charOffset: null,
-                          isPlaying: false,
+                          activeParagraphIndex: _session.audioState.isPlaying
+                              ? _session.currentParagraphIndex
+                              : null,
+                          charOffset: _session.audioState.isPlaying
+                              ? _session.currentPosition.charOffset
+                              : null,
+                          isPlaying: _session.audioState.isPlaying,
                           highlights: List<TextHighlight>.from(_highlights),
                           scrollController: _scrollController,
                           topPadding: MediaQuery.of(context).padding.top + 76,
                           bottomPadding: MediaQuery.of(context).padding.bottom + 140,
-                          onParagraphTapped: null,
+                          onParagraphTapped: (idx) {
+                            _session.seekToParagraph(idx, autoPlay: false);
+                            _session.toggleControls();
+                          },
                           onLinkTapped: _session.handleLink,
                           onHighlightCreated: _onHighlightCreated,
                           onTranslateRequested: _showTranslationModal,
@@ -335,6 +350,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
             icon: Icon(Icons.text_format_rounded, color: colors.text),
             tooltip: 'Appearance',
             onPressed: _showSettingsModal,
+          ),
+
+          // Multi-Voice / Character Voice Settings
+          IconButton(
+            icon: Icon(Icons.record_voice_over_rounded, color: colors.text),
+            tooltip: 'Character Voices',
+            onPressed: _showCharacterVoicesModal,
           ),
         ],
       ),
@@ -615,6 +637,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
       context,
       session: _session,
       preferences: _session.preferences,
+    );
+  }
+
+  void _showCharacterVoicesModal() {
+    CharacterVoiceSettingsModal.show(
+      context,
+      controller: _multiVoiceController,
     );
   }
 }
