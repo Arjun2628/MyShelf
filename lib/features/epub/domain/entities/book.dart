@@ -18,6 +18,7 @@ class Book {
   final EpubArchive archive;
   final bool isPdf;
   final bool isScan;
+  final bool isText;
 
   const Book({
     required this.id,
@@ -29,6 +30,7 @@ class Book {
     this.coverImageBytes,
     this.isPdf = false,
     this.isScan = false,
+    this.isText = false,
   });
 
   /// Total number of linear chapters/spine items.

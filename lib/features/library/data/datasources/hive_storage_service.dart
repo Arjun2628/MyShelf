@@ -1,23 +1,28 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
 import 'package:epub_audio/features/pdf/domain/usecases/open_pdf_usecase.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
+import 'package:epub_audio/features/reader/domain/entities/reader_preferences.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/scan/data/parsers/scan_document_parser.dart';
 import 'package:epub_audio/features/session/domain/entities/book_progress.dart';
-import 'package:flutter/foundation.dart';
+import 'package:epub_audio/features/text_content/data/parsers/text_document_parser.dart';
+import 'package:epub_audio/features/text_content/domain/entities/text_document.dart';
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Manages local storage of imported EPUB files, PDFs, Scans, and reading/audiobook progress using Hive.
+/// Manages local storage of imported EPUB files, PDFs, Scans, Text Documents, and reading/audiobook progress using Hive.
 class HiveStorageService {
   static const String booksBoxName = 'imported_books_v1';
   static const String progressBoxName = 'reading_progress_v1';
   static const String highlightsBoxName = 'highlights_v1';
   static const String bookmarksBoxName = 'bookmarks_v1';
   static const String settingsBoxName = 'settings_v1';
+  static const String textDocsBoxName = 'text_documents_v1';
 
   static final HiveStorageService _instance = HiveStorageService._internal();
   factory HiveStorageService() => _instance;
@@ -28,6 +33,7 @@ class HiveStorageService {
   Box<dynamic>? _highlightsBox;
   Box<dynamic>? _bookmarksBox;
   Box<dynamic>? _settingsBox;
+  Box<dynamic>? _textDocsBox;
   bool _isInitialized = false;
 
   /// Initializes Hive and opens required boxes.
@@ -37,7 +43,8 @@ class HiveStorageService {
           _progressBox != null && _progressBox!.isOpen &&
           _highlightsBox != null && _highlightsBox!.isOpen &&
           _bookmarksBox != null && _bookmarksBox!.isOpen &&
-          _settingsBox != null && _settingsBox!.isOpen) {
+          _settingsBox != null && _settingsBox!.isOpen &&
+          _textDocsBox != null && _textDocsBox!.isOpen) {
         return;
       }
     }
@@ -58,8 +65,9 @@ class HiveStorageService {
       _highlightsBox = await Hive.openBox(highlightsBoxName);
       _bookmarksBox = await Hive.openBox(bookmarksBoxName);
       _settingsBox = await Hive.openBox(settingsBoxName);
+      _textDocsBox = await Hive.openBox(textDocsBoxName);
       _isInitialized = true;
-      debugPrint('[HiveStorage] Initialized successfully. Stored books: ${_booksBox?.length}');
+      debugPrint('[HiveStorage] Initialized successfully. Stored books: ${_booksBox?.length}, text docs: ${_textDocsBox?.length}');
     } catch (e) {
       debugPrint('[HiveStorage] Initialization error: $e');
     }
@@ -77,6 +85,85 @@ class HiveStorageService {
   Future<void> setHasSeenOnboarding([bool value = true]) async {
     await init();
     await _settingsBox?.put('has_seen_onboarding', value);
+  }
+
+  /// Retrieves the saved app theme mode ('system', 'light', 'dark').
+  ThemeMode getAppThemeMode() {
+    if (_settingsBox == null || !_settingsBox!.isOpen) return ThemeMode.system;
+    final val = _settingsBox?.get('app_theme_mode', defaultValue: 'system') as String?;
+    if (val == 'light') return ThemeMode.light;
+    if (val == 'dark') return ThemeMode.dark;
+    return ThemeMode.system;
+  }
+
+  /// Persists the selected app theme mode and synchronizes default reading appearance.
+  Future<void> setAppThemeMode(ThemeMode mode) async {
+    await init();
+    final str = mode == ThemeMode.light
+        ? 'light'
+        : (mode == ThemeMode.dark ? 'dark' : 'system');
+    await _settingsBox?.put('app_theme_mode', str);
+
+    // Synchronize default reading & audio appearance
+    final currentReaderTheme = _settingsBox?.get('reader_theme_mode') as String?;
+    if (mode == ThemeMode.dark && (currentReaderTheme == null || currentReaderTheme == 'light')) {
+      await _settingsBox?.put('reader_theme_mode', 'night');
+    } else if (mode == ThemeMode.light && currentReaderTheme == 'night') {
+      await _settingsBox?.put('reader_theme_mode', 'light');
+    }
+  }
+
+  /// Retrieves saved reader preferences, automatically matching app theme mode.
+  ReaderPreferences getReaderPreferences() {
+    final isAppDark = getAppThemeMode() == ThemeMode.dark;
+    if (_settingsBox == null || !_settingsBox!.isOpen) {
+      return ReaderPreferences(
+        themeMode: isAppDark ? ReaderThemeMode.night : ReaderThemeMode.light,
+      );
+    }
+
+    final fontSize = (_settingsBox?.get('reader_font_size', defaultValue: 18.0) as num?)?.toDouble() ?? 18.0;
+    final lineHeight = (_settingsBox?.get('reader_line_height', defaultValue: 1.6) as num?)?.toDouble() ?? 1.6;
+    final fontFamily = (_settingsBox?.get('reader_font_family', defaultValue: 'Default') as String?) ?? 'Default';
+    final themeStr = _settingsBox?.get('reader_theme_mode') as String?;
+
+    final ReaderThemeMode mode;
+    if (themeStr != null) {
+      switch (themeStr) {
+        case 'sepia':
+          mode = ReaderThemeMode.sepia;
+          break;
+        case 'night':
+          mode = ReaderThemeMode.night;
+          break;
+        case 'oledBlack':
+          mode = ReaderThemeMode.oledBlack;
+          break;
+        case 'light':
+          mode = ReaderThemeMode.light;
+          break;
+        default:
+          mode = isAppDark ? ReaderThemeMode.night : ReaderThemeMode.light;
+      }
+    } else {
+      mode = isAppDark ? ReaderThemeMode.night : ReaderThemeMode.light;
+    }
+
+    return ReaderPreferences(
+      fontSize: fontSize,
+      lineHeight: lineHeight,
+      fontFamily: fontFamily,
+      themeMode: mode,
+    );
+  }
+
+  /// Persists updated reader preferences to Hive.
+  Future<void> saveReaderPreferences(ReaderPreferences prefs) async {
+    await init();
+    await _settingsBox?.put('reader_font_size', prefs.fontSize);
+    await _settingsBox?.put('reader_line_height', prefs.lineHeight);
+    await _settingsBox?.put('reader_font_family', prefs.fontFamily);
+    await _settingsBox?.put('reader_theme_mode', prefs.themeMode.name);
   }
 
   // ----------------- IMPORTED BOOKS PERSISTENCE -----------------
@@ -151,6 +238,49 @@ class HiveStorageService {
     );
   }
 
+  // ----------------- TEXT DOCUMENTS STORAGE -----------------
+
+  /// Persists a user text document (from direct writing, clipboard, shared text, or import).
+  Future<void> saveTextDocument(TextDocument doc) async {
+    await init();
+    await _textDocsBox?.put(doc.id, doc.toJson());
+    debugPrint('[HiveStorage] Saved text document "${doc.title}" (${doc.id})');
+  }
+
+  /// Retrieves a specific text document by its ID.
+  TextDocument? getTextDocument(String id) {
+    if (_textDocsBox == null || !_textDocsBox!.isOpen) return null;
+    final data = _textDocsBox?.get(id);
+    if (data is Map) {
+      return TextDocument.fromJson(data);
+    }
+    return null;
+  }
+
+  /// Retrieves all saved text documents, sorted newest first.
+  List<TextDocument> getAllTextDocuments() {
+    if (_textDocsBox == null || !_textDocsBox!.isOpen) return [];
+    final List<TextDocument> docs = [];
+    for (final key in _textDocsBox!.keys) {
+      final data = _textDocsBox!.get(key);
+      if (data is Map) {
+        try {
+          docs.add(TextDocument.fromJson(data));
+        } catch (_) {}
+      }
+    }
+    docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return docs;
+  }
+
+  /// Deletes a text document and its reading progress.
+  Future<void> deleteTextDocument(String id) async {
+    await init();
+    await _textDocsBox?.delete(id);
+    await _progressBox?.delete(id);
+    debugPrint('[HiveStorage] Deleted text document $id');
+  }
+
   /// Backward-compatible alias for saveImportedBook with EPUB files.
   Future<Book> saveImportedEpub({
     required Uint8List bytes,
@@ -159,14 +289,28 @@ class HiveStorageService {
     return saveImportedBook(bytes: bytes, book: book, isPdf: false);
   }
 
-  /// Loads all stored imported EPUB, PDF, and Scanned books from disk.
+  /// Loads all stored imported EPUB, PDF, Scanned, and Custom Text books.
   Future<List<Book>> loadAllImportedBooks(
     OpenEpubUseCase openUseCase, [
     OpenPdfUseCase? pdfUseCase,
     ScanDocumentParser? scanParser,
+    TextDocumentParser? textParser,
   ]) async {
     await init();
     final List<Book> loadedBooks = [];
+
+    // 1. Load custom text documents
+    final actualTextParser = textParser ?? TextDocumentParser();
+    final allTextDocs = getAllTextDocuments();
+    for (final doc in allTextDocs) {
+      try {
+        loadedBooks.add(actualTextParser.parseDocument(doc));
+      } catch (e) {
+        debugPrint('[HiveStorage] Failed to convert text document ${doc.id}: $e');
+      }
+    }
+
+    // 2. Load imported EPUB, PDF, and Scanned Books
     if (_booksBox == null) return loadedBooks;
 
     final actualPdfUseCase = pdfUseCase ?? OpenPdfUseCase();
@@ -215,10 +359,14 @@ class HiveStorageService {
     return loadedBooks;
   }
 
-  /// Deletes an imported book and its progress from storage.
+  /// Deletes an imported book/text document and its progress from storage.
   Future<void> deleteBook(String bookId) async {
     await init();
     try {
+      if (_textDocsBox != null && _textDocsBox!.containsKey(bookId)) {
+        await _textDocsBox!.delete(bookId);
+      }
+
       final data = _booksBox?.get(bookId);
       if (data is Map) {
         final filePath = data['filePath'] as String?;
