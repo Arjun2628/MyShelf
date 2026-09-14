@@ -22,7 +22,7 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('catalog_sync_test_');
     storageService = HiveStorageService();
     await storageService.init(tempDir.path);
-    catalogRepo = RemoteCatalogRepositoryImpl(storageService: storageService);
+    catalogRepo = RemoteCatalogRepositoryImpl(storageService: storageService, simulatedDelayMs: 0);
     syncService = CatalogSyncService(repository: catalogRepo);
   });
 
@@ -236,7 +236,7 @@ void main() {
             ),
           ),
         );
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 50));
       });
       await tester.pump();
 
@@ -249,13 +249,13 @@ void main() {
       // Switch to Catalog Books tab
       await tester.tap(find.text('Catalog Books'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Chemmeen (ചെമ്മീൻ)'), findsOneWidget);
 
       // Switch to Cloud & Sync tab
       await tester.tap(find.text('Cloud & Sync'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Remote Catalog Status'), findsOneWidget);
       expect(find.text('Create Cloud Backup Snapshot'), findsOneWidget);
     });

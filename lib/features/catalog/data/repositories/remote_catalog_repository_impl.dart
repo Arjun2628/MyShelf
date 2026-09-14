@@ -14,9 +14,12 @@ class RemoteCatalogRepositoryImpl implements RemoteCatalogRepository {
   static const String _cloudBackupPrefix = 'cloud_backup_user_';
 
   bool _isSyncing = false;
+  final int simulatedDelayMs;
 
-  RemoteCatalogRepositoryImpl({HiveStorageService? storageService})
-      : _storageService = storageService ?? HiveStorageService();
+  RemoteCatalogRepositoryImpl({
+    HiveStorageService? storageService,
+    this.simulatedDelayMs = 150,
+  }) : _storageService = storageService ?? HiveStorageService();
 
   @override
   bool get isSyncing => _isSyncing;
@@ -91,8 +94,9 @@ class RemoteCatalogRepositoryImpl implements RemoteCatalogRepository {
   Future<RemoteCatalogManifest> fetchRemoteCatalog() async {
     _setSyncing(true);
     try {
-      // Simulate remote network fetch latency
-      await Future<void>.delayed(const Duration(milliseconds: 150));
+      if (simulatedDelayMs > 0) {
+        await Future<void>.delayed(Duration(milliseconds: simulatedDelayMs));
+      }
 
       final cached = _storageService.getCustomSetting<String>(_cachedManifestKey);
       if (cached != null && cached.isNotEmpty) {
@@ -117,6 +121,9 @@ class RemoteCatalogRepositoryImpl implements RemoteCatalogRepository {
   Future<void> publishCatalogChanges(RemoteCatalogManifest manifest) async {
     _setSyncing(true);
     try {
+      if (simulatedDelayMs > 0) {
+        await Future<void>.delayed(Duration(milliseconds: simulatedDelayMs));
+      }
       final updated = manifest.copyWith(
         lastUpdated: DateTime.now(),
       );
@@ -147,7 +154,9 @@ class RemoteCatalogRepositoryImpl implements RemoteCatalogRepository {
   }) async {
     _setSyncing(true);
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      if (simulatedDelayMs > 0) {
+        await Future<void>.delayed(Duration(milliseconds: simulatedDelayMs));
+      }
       final key = '$_cloudBackupPrefix$userId';
       final payload = {
         'userId': userId,
@@ -167,7 +176,9 @@ class RemoteCatalogRepositoryImpl implements RemoteCatalogRepository {
   Future<Map<String, dynamic>?> restoreUserData(String userId) async {
     _setSyncing(true);
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      if (simulatedDelayMs > 0) {
+        await Future<void>.delayed(Duration(milliseconds: simulatedDelayMs));
+      }
       final key = '$_cloudBackupPrefix$userId';
       final raw = _storageService.getCustomSetting<String>(key);
       if (raw != null && raw.isNotEmpty) {
