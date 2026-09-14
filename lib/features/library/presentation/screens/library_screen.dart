@@ -2298,249 +2298,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
   // ----------------- ROW-BY-ROW HORIZONTAL SHELVES -----------------
 
   Widget _buildHistoryShelf(List<MapEntry<Book, BookProgress>> historyItems) {
-    return SizedBox(
-      height: 195,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        itemCount: historyItems.length,
-        itemBuilder: (context, index) {
-          final item = historyItems[index];
-          final book = item.key;
-          final progress = item.value;
-          return _buildHistoryCard(book, progress);
-        },
-      ),
-    );
-  }
-
-  Widget _buildHistoryCard(Book book, BookProgress progress) {
-    final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
-    final progressFraction =
-        ((progress.chapterIndex + 1) / chapterCount).clamp(0.0, 1.0);
-    final percent = (progressFraction * 100).toInt();
-    final timeStr = _formatRelativeTime(progress.lastUpdated);
-
-    return Container(
-      width: 250,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: _cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _cardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top: Cover Thumbnail + Title & Author
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Mini Cover with glowing aura
-                _TappableScale(
-                  onTap: () => _openReader(book, chapterIndex: progress.chapterIndex),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
-                    child: Container(
-                      width: 42,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF241E16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _goldAccent.withValues(alpha: 0.2),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: book.coverImageBytes != null
-                          ? Image.memory(
-                              book.coverImageBytes!,
-                              fit: BoxFit.cover,
-                            )
-                          : _buildDefaultCover(book, isMini: true),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        book.metadata.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'serif',
-                          color: _textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        book.metadata.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          color: _textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          _buildFormatBadge(book, isMini: true),
-                          const SizedBox(width: 4),
-                          Icon(Icons.access_time_rounded,
-                              size: 10, color: _textSecondary),
-                          const SizedBox(width: 2),
-                          Text(
-                            timeStr,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: _textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const Spacer(),
-
-            // Progress Bar & Stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Chapter ${progress.chapterIndex + 1} of $chapterCount',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: _textSecondary,
-                  ),
-                ),
-                Text(
-                  '$percent%',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: _goldAccent,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 3.5,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: _cardBorder,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: progressFraction,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _goldAccent,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Resume Actions: Read & Audio
-            Row(
-              children: [
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => _openReader(
-                      book,
-                      chapterIndex: progress.chapterIndex,
-                      paragraphIndex: progress.paragraphIndex,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _isDark ? const Color(0xFF2C241B) : const Color(0xFF2B2620),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.menu_book_rounded, size: 12, color: Color(0xFFF3ECE0)),
-                          SizedBox(width: 4),
-                          Text(
-                            'Read',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF3ECE0),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => _openAudiobook(book),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: _goldAccent.withValues(alpha: 0.6),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.headphones_rounded, size: 12, color: _goldAccent),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Audio',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: _goldAccent,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return _AnimatedHistoryShelf(
+      historyItems: historyItems,
+      onOpenReader: _openReader,
+      onOpenAudiobook: _openAudiobook,
+      buildDefaultCover: _buildDefaultCover,
+      buildFormatBadge: _buildFormatBadge,
+      formatRelativeTime: _formatRelativeTime,
+      cardBg: _cardBg,
+      cardBorder: _cardBorder,
+      textPrimary: _textPrimary,
+      textSecondary: _textSecondary,
+      goldAccent: _goldAccent,
+      isDark: _isDark,
     );
   }
 
@@ -2549,170 +2319,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
     required Color tagColor,
     required String shelfTag,
   }) {
-    return SizedBox(
-      height: 232,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        itemCount: books.length,
-        itemBuilder: (context, index) {
-          final book = books[index];
-          return _buildShelfBookCard(book, tagColor: tagColor, shelfTag: shelfTag);
-        },
-      ),
-    );
-  }
-
-  Widget _buildShelfBookCard(
-    Book book, {
-    required Color tagColor,
-    required String shelfTag,
-  }) {
-    return Container(
-      width: 125,
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        color: _cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _cardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(7),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cover Thumbnail with glowing border/shadow
-            _TappableScale(
-              onTap: () => _openReader(book),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  height: 106,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF241E16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: tagColor.withValues(alpha: 0.2),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      book.coverImageBytes != null
-                          ? Image.memory(
-                              book.coverImageBytes!,
-                              fit: BoxFit.cover,
-                            )
-                          : _buildDefaultCover(book, isMini: true),
-                      // Top-right format badge
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: _buildFormatBadge(book, isMini: true),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 5),
-            // Title
-            _TappableScale(
-              onTap: () => _openReader(book),
-              child: Text(
-                book.metadata.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'serif',
-                  color: _textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 1),
-            // Author
-            Text(
-              book.metadata.author,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
-                color: _textSecondary,
-              ),
-            ),
-            const Spacer(),
-            // Quick Action Buttons: Read & Listen
-            Row(
-              children: [
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => _openReader(book),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 3.5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _chipBg,
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: _cardBorder.withValues(alpha: 0.5)),
-                      ),
-                      child: Text(
-                        'Read',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: _textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => _openAudiobook(book),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 3.5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _isDark
-                            ? _goldAccent.withValues(alpha: 0.18)
-                            : const Color(0xFFFBF4E4),
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(
-                          color: _goldAccent.withValues(alpha: 0.5),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        'Listen',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: _goldAccent,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return _AnimatedHorizontalShelf(
+      books: books,
+      tagColor: tagColor,
+      shelfTag: shelfTag,
+      onOpenReader: _openReader,
+      onOpenAudiobook: _openAudiobook,
+      buildDefaultCover: _buildDefaultCover,
+      buildFormatBadge: _buildFormatBadge,
+      cardBg: _cardBg,
+      cardBorder: _cardBorder,
+      textPrimary: _textPrimary,
+      textSecondary: _textSecondary,
+      chipBg: _chipBg,
+      goldAccent: _goldAccent,
+      isDark: _isDark,
     );
   }
 
@@ -3782,4 +3403,612 @@ class _TappableScaleState extends State<_TappableScale> {
     );
   }
 }
+
+/// An animated horizontal history shelf with dynamic scroll focal scaling
+class _AnimatedHistoryShelf extends StatefulWidget {
+  final List<MapEntry<Book, BookProgress>> historyItems;
+  final Function(Book, {int? chapterIndex, int? paragraphIndex}) onOpenReader;
+  final Function(Book) onOpenAudiobook;
+  final Widget Function(Book, {bool isMini}) buildDefaultCover;
+  final Widget Function(Book, {bool isMini}) buildFormatBadge;
+  final String Function(DateTime) formatRelativeTime;
+  final Color cardBg;
+  final Color cardBorder;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color goldAccent;
+  final bool isDark;
+
+  const _AnimatedHistoryShelf({
+    required this.historyItems,
+    required this.onOpenReader,
+    required this.onOpenAudiobook,
+    required this.buildDefaultCover,
+    required this.buildFormatBadge,
+    required this.formatRelativeTime,
+    required this.cardBg,
+    required this.cardBorder,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.goldAccent,
+    required this.isDark,
+  });
+
+  @override
+  State<_AnimatedHistoryShelf> createState() => _AnimatedHistoryShelfState();
+}
+
+class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 204,
+      child: AnimatedBuilder(
+        animation: _scrollController,
+        builder: (context, _) {
+          final scrollOffset =
+              _scrollController.hasClients ? _scrollController.offset : 0.0;
+
+          return ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            itemCount: widget.historyItems.length,
+            itemBuilder: (context, index) {
+              final item = widget.historyItems[index];
+              final book = item.key;
+              final progress = item.value;
+
+              const cardWidth = 250.0;
+              const cardSpacing = 12.0;
+              final itemPos = index * (cardWidth + cardSpacing);
+              final dist = (itemPos - scrollOffset).abs();
+              final normDist = (dist / 280.0).clamp(0.0, 1.0);
+              final scale = 1.0 - (normDist * 0.07);
+              final opacity = 1.0 - (normDist * 0.1);
+              final isFocused = normDist < 0.3;
+
+              return Transform.scale(
+                scale: scale,
+                child: Opacity(
+                  opacity: opacity,
+                  child: _buildHistoryCard(book, progress, isFocused: isFocused),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(Book book, BookProgress progress, {required bool isFocused}) {
+    final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
+    final progressFraction =
+        ((progress.chapterIndex + 1) / chapterCount).clamp(0.0, 1.0);
+    final percent = (progressFraction * 100).toInt();
+    final timeStr = widget.formatRelativeTime(progress.lastUpdated);
+
+    return Container(
+      width: 250,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: widget.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isFocused
+              ? widget.goldAccent.withValues(alpha: 0.65)
+              : widget.cardBorder,
+          width: isFocused ? 1.3 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isFocused
+                ? widget.goldAccent.withValues(alpha: widget.isDark ? 0.3 : 0.15)
+                : Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.04),
+            blurRadius: isFocused ? 10 : 6,
+            offset: Offset(0, isFocused ? 3 : 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top: Cover Thumbnail + Title & Author
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Mini Cover with glowing aura
+                _TappableScale(
+                  onTap: () => widget.onOpenReader(book, chapterIndex: progress.chapterIndex),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: Container(
+                      width: 42,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF241E16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.goldAccent.withValues(alpha: isFocused ? 0.35 : 0.2),
+                            blurRadius: isFocused ? 7 : 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: book.coverImageBytes != null
+                          ? Image.memory(
+                              book.coverImageBytes!,
+                              fit: BoxFit.cover,
+                            )
+                          : widget.buildDefaultCover(book, isMini: true),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        book.metadata.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'serif',
+                          color: widget.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        book.metadata.author,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: widget.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          widget.buildFormatBadge(book, isMini: true),
+                          const SizedBox(width: 4),
+                          Icon(Icons.access_time_rounded,
+                              size: 10, color: widget.textSecondary),
+                          const SizedBox(width: 2),
+                          Text(
+                            timeStr,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: widget.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Progress Bar & Stats
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Chapter ${progress.chapterIndex + 1} of $chapterCount',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: widget.textSecondary,
+                  ),
+                ),
+                Text(
+                  '$percent%',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: widget.goldAccent,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Container(
+              height: 3.5,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: widget.cardBorder,
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: progressFraction,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: widget.goldAccent,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Resume Actions: Read & Audio
+            Row(
+              children: [
+                Expanded(
+                  child: _TappableScale(
+                    onTap: () => widget.onOpenReader(
+                      book,
+                      chapterIndex: progress.chapterIndex,
+                      paragraphIndex: progress.paragraphIndex,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: widget.isDark
+                            ? const Color(0xFF2C241B)
+                            : const Color(0xFF2B2620),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.menu_book_rounded,
+                              size: 12, color: Color(0xFFF3ECE0)),
+                          SizedBox(width: 4),
+                          Text(
+                            'Read',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF3ECE0),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _TappableScale(
+                    onTap: () => widget.onOpenAudiobook(book),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: widget.goldAccent.withValues(alpha: 0.6),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.headphones_rounded,
+                              size: 12, color: widget.goldAccent),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Audio',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: widget.goldAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// An animated horizontal shelf with dynamic scroll focal scaling and 3D spine depth
+class _AnimatedHorizontalShelf extends StatefulWidget {
+  final List<Book> books;
+  final Color tagColor;
+  final String shelfTag;
+  final Function(Book) onOpenReader;
+  final Function(Book) onOpenAudiobook;
+  final Widget Function(Book, {bool isMini}) buildDefaultCover;
+  final Widget Function(Book, {bool isMini}) buildFormatBadge;
+  final Color cardBg;
+  final Color cardBorder;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color chipBg;
+  final Color goldAccent;
+  final bool isDark;
+
+  const _AnimatedHorizontalShelf({
+    required this.books,
+    required this.tagColor,
+    required this.shelfTag,
+    required this.onOpenReader,
+    required this.onOpenAudiobook,
+    required this.buildDefaultCover,
+    required this.buildFormatBadge,
+    required this.cardBg,
+    required this.cardBorder,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.chipBg,
+    required this.goldAccent,
+    required this.isDark,
+  });
+
+  @override
+  State<_AnimatedHorizontalShelf> createState() =>
+      _AnimatedHorizontalShelfState();
+}
+
+class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 238,
+      child: AnimatedBuilder(
+        animation: _scrollController,
+        builder: (context, _) {
+          final scrollOffset =
+              _scrollController.hasClients ? _scrollController.offset : 0.0;
+
+          return ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            itemCount: widget.books.length,
+            itemBuilder: (context, index) {
+              final book = widget.books[index];
+              const cardWidth = 126.0;
+              const cardSpacing = 10.0;
+              final itemPos = index * (cardWidth + cardSpacing);
+              final dist = (itemPos - scrollOffset).abs();
+              final normDist = (dist / 240.0).clamp(0.0, 1.0);
+              final scale = 1.0 - (normDist * 0.09);
+              final opacity = 1.0 - (normDist * 0.12);
+              final isFocused = normDist < 0.3;
+              final tilt = ((itemPos - scrollOffset) / 900.0).clamp(-0.06, 0.06);
+
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.0008)
+                  ..rotateY(tilt)
+                  ..scaleByDouble(scale, scale, 1.0, 1.0),
+                child: Opacity(
+                  opacity: opacity,
+                  child: _buildShelfBookCard(
+                    book,
+                    tagColor: widget.tagColor,
+                    isFocused: isFocused,
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildShelfBookCard(
+    Book book, {
+    required Color tagColor,
+    required bool isFocused,
+  }) {
+    return Container(
+      width: 126,
+      margin: const EdgeInsets.only(right: 10),
+      decoration: BoxDecoration(
+        color: widget.cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isFocused
+              ? widget.goldAccent.withValues(alpha: 0.7)
+              : widget.cardBorder,
+          width: isFocused ? 1.3 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isFocused
+                ? widget.goldAccent.withValues(alpha: widget.isDark ? 0.35 : 0.16)
+                : Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.04),
+            blurRadius: isFocused ? 10 : 6,
+            offset: Offset(0, isFocused ? 3 : 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(7),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Cover Thumbnail with glowing border/shadow & 3D spine depth
+            _TappableScale(
+              onTap: () => widget.onOpenReader(book),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  height: 106,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF241E16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: tagColor.withValues(alpha: isFocused ? 0.35 : 0.2),
+                        blurRadius: isFocused ? 8 : 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      book.coverImageBytes != null
+                          ? Image.memory(
+                              book.coverImageBytes!,
+                              fit: BoxFit.cover,
+                            )
+                          : widget.buildDefaultCover(book, isMini: true),
+                      // Left spine shadow for authentic physical book feel
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: 7,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.38),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Top-right format badge
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: widget.buildFormatBadge(book, isMini: true),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 5),
+            // Title
+            _TappableScale(
+              onTap: () => widget.onOpenReader(book),
+              child: Text(
+                book.metadata.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'serif',
+                  color: widget.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 1),
+            // Author
+            Text(
+              book.metadata.author,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9.5,
+                color: widget.textSecondary,
+              ),
+            ),
+            const Spacer(),
+            // Quick Action Buttons: Read & Listen
+            Row(
+              children: [
+                Expanded(
+                  child: _TappableScale(
+                    onTap: () => widget.onOpenReader(book),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 3.5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: widget.chipBg,
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(
+                          color: widget.cardBorder.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        'Read',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: widget.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: _TappableScale(
+                    onTap: () => widget.onOpenAudiobook(book),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 3.5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: widget.isDark
+                            ? widget.goldAccent.withValues(alpha: 0.18)
+                            : const Color(0xFFFBF4E4),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(
+                          color: widget.goldAccent.withValues(alpha: 0.5),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        'Listen',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: widget.goldAccent,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
