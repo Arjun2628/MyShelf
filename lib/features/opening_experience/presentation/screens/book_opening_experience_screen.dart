@@ -7,6 +7,9 @@ import 'package:epub_audio/features/opening_experience/presentation/widgets/atmo
 import 'package:epub_audio/features/opening_experience/presentation/widgets/book_cover_3d_stage.dart';
 import 'package:epub_audio/features/reader/presentation/screens/reader_screen.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
+import 'package:epub_audio/features/voice/data/providers/device_tts_provider.dart';
+import 'package:epub_audio/features/voice/domain/services/voice_engine.dart';
+import 'package:epub_audio/features/voice/presentation/widgets/book_voice_audition_modal.dart';
 import 'package:flutter/material.dart';
 
 /// Immersive Book Opening Experience screen before launching into Reader or Audio engines.
@@ -34,6 +37,7 @@ class BookOpeningExperienceScreen extends StatefulWidget {
 
 class _BookOpeningExperienceScreenState extends State<BookOpeningExperienceScreen> {
   late final BookOpeningRepository _repository;
+  late final VoiceEngine _voiceEngine;
   BookOpeningConfig _config = BookOpeningConfig.defaultConfig;
   bool _isLoading = true;
   bool _isAmbientAudioActive = true;
@@ -42,6 +46,7 @@ class _BookOpeningExperienceScreenState extends State<BookOpeningExperienceScree
   void initState() {
     super.initState();
     _repository = widget.repository ?? BookOpeningRepositoryImpl();
+    _voiceEngine = VoiceEngine(ttsProvider: DeviceTtsProvider());
     _loadConfig();
   }
 
@@ -57,6 +62,16 @@ class _BookOpeningExperienceScreenState extends State<BookOpeningExperienceScree
         _isLoading = false;
       });
     }
+  }
+
+  void _showVoiceAuditionModal() {
+    BookVoiceAuditionModal.show(
+      context,
+      book: widget.book,
+      voiceEngine: _voiceEngine,
+      characterVoiceNames: _config.characterVoiceNames,
+      accentColor: _parseColor(_config.accentColorHex, const Color(0xFFD4A373)),
+    );
   }
 
   void _handleRead() {
@@ -292,45 +307,68 @@ class _BookOpeningExperienceScreenState extends State<BookOpeningExperienceScree
 
                               const SizedBox(height: 18),
 
-                              // Character Cast Chips
+                              // Character Cast Chips & Audition Trigger
                               if (_config.characterVoiceNames.isNotEmpty) ...[
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Voice & Narrator Cast',
-                                    style: TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: titleColor,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Voice & Narrator Cast',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: titleColor,
+                                      ),
                                     ),
-                                  ),
+                                    GestureDetector(
+                                      onTap: _showVoiceAuditionModal,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.tune_rounded, size: 14, color: accentColor),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Audition Cast',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: accentColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 8),
                                 Wrap(
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: _config.characterVoiceNames.map((voice) {
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF261D15) : const Color(0xFFEFE2D2),
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.record_voice_over_rounded, size: 12, color: accentColor),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            voice,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: isDark ? Colors.white70 : const Color(0xFF3B2E21),
+                                    return GestureDetector(
+                                      onTap: _showVoiceAuditionModal,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? const Color(0xFF261D15) : const Color(0xFFEFE2D2),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.record_voice_over_rounded, size: 12, color: accentColor),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              voice,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark ? Colors.white70 : const Color(0xFF3B2E21),
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     );
                                   }).toList(),

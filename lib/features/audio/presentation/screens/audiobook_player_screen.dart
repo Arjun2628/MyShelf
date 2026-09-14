@@ -7,6 +7,7 @@ import 'package:epub_audio/features/reader/presentation/widgets/reader_content_v
 import 'package:epub_audio/features/reader/presentation/widgets/toc_drawer.dart';
 import 'package:epub_audio/features/reader/presentation/widgets/translation_modal.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
+import 'package:epub_audio/features/voice/presentation/widgets/book_voice_audition_modal.dart';
 import 'package:flutter/material.dart';
 
 /// Dedicated Fullscreen Audiobook Player Screen with Live Synchronized Reader & Word Highlighting.
@@ -196,6 +197,12 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
         ),
         centerTitle: true,
         actions: [
+          // Voice Cast & Character Audio Customizer
+          IconButton(
+            icon: Icon(Icons.record_voice_over_rounded, color: colors.text),
+            tooltip: 'Voice Cast & Settings',
+            onPressed: _showVoiceCastModal,
+          ),
           // Translate Audiobook Button
           IconButton(
             icon: Icon(
@@ -766,6 +773,15 @@ class _AudiobookPlayerScreenState extends State<AudiobookPlayerScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showVoiceCastModal() {
+    BookVoiceAuditionModal.show(
+      context,
+      book: _session.book,
+      voiceEngine: _session.voiceEngine,
+      accentColor: _session.preferences.colors.accent,
     );
   }
 
