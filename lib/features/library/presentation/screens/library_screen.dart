@@ -1894,17 +1894,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF221A12) : const Color(0xFFEAE0CF),
+        color: _isDark ? const Color(0xFF1D1711) : const Color(0xFF2B2620),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: _isDark ? const Color(0xFF3E3123) : const Color(0xFFD6C8AE),
-          width: 1.2,
+          color: _isDark ? const Color(0xFF382F24) : const Color(0xFF3D352B),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: _isDark ? 0.28 : 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2.5),
+            color: Colors.black.withValues(alpha: _isDark ? 0.38 : 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 3.5),
           ),
         ],
       ),
@@ -1926,8 +1926,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
             height: 28,
             width: 1,
             color: _isDark
-                ? const Color(0xFF382C1E)
-                : const Color(0xFFD3C4A7).withValues(alpha: 0.8),
+                ? const Color(0xFF382F24)
+                : const Color(0xFF3D352B),
           ),
           Expanded(
             child: _buildTrioActionItem(
@@ -1944,8 +1944,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
             height: 28,
             width: 1,
             color: _isDark
-                ? const Color(0xFF382C1E)
-                : const Color(0xFFD3C4A7).withValues(alpha: 0.8),
+                ? const Color(0xFF382F24)
+                : const Color(0xFF3D352B),
           ),
           Expanded(
             child: _buildTrioActionItem(
@@ -1979,25 +1979,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: _isDark
-                    ? const Color(0xFF2E241A)
-                    : const Color(0xFFDFD2BC),
+                    ? const Color(0xFF2C231B)
+                    : const Color(0xFF382F25),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
                 size: 20,
-                color: _textPrimary,
+                color: _goldAccent,
               ),
             ),
             const SizedBox(height: 5),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'serif',
                 fontSize: 11.5,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.8,
-                color: _textPrimary,
+                color: Color(0xFFF3ECE0),
               ),
             ),
           ],
