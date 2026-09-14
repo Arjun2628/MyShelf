@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
+import 'package:epub_audio/features/navigation/presentation/main_navigation_shell.dart';
 import 'package:epub_audio/features/splash/presentation/screens/feature_guide_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -79,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     final hasSeenGuide = HiveStorageService().hasSeenOnboarding();
     final Widget targetScreen = hasSeenGuide
-        ? const LibraryScreen()
+        ? const MainNavigationShell()
         : const FeatureGuideScreen();
 
     if (!mounted) return;

@@ -29,8 +29,13 @@ import 'package:flutter/material.dart';
 /// interactive search, and a dedicated Saved & Bookmarks section.
 class LibraryScreen extends StatefulWidget {
   final int initialTabIndex;
+  final bool hideInternalNavBar;
 
-  const LibraryScreen({super.key, this.initialTabIndex = 0});
+  const LibraryScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.hideInternalNavBar = false,
+  });
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
@@ -1260,7 +1265,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ],
             ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: widget.hideInternalNavBar
+          ? null
+          : Container(
         color: _canvasBg,
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
         child: Container(
