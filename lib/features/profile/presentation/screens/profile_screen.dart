@@ -1,3 +1,6 @@
+import 'package:epub_audio/features/auth/domain/entities/auth_user.dart';
+import 'package:epub_audio/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:epub_audio/features/auth/presentation/widgets/auth_modal.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:epub_audio/features/profile/domain/entities/reading_stats.dart';
@@ -7,11 +10,12 @@ import 'package:epub_audio/features/profile/presentation/widgets/avatar_picker_m
 import 'package:epub_audio/main.dart';
 import 'package:flutter/material.dart';
 
-/// Full-featured Profile & Reading Identity Screen.
+/// Full-featured Profile & Reading Identity Screen with Auth & Role Management.
 class ProfileScreen extends StatefulWidget {
   final ProfileRepository? repository;
+  final AuthController? authController;
 
-  const ProfileScreen({super.key, this.repository});
+  const ProfileScreen({super.key, this.repository, this.authController});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -19,6 +23,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileRepository _repository;
+  late final AuthController _auth;
   UserProfile _profile = const UserProfile();
   ReadingStats _stats = const ReadingStats();
   bool _isLoading = true;
@@ -29,7 +34,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _repository = widget.repository ?? ProfileRepositoryImpl();
+    _auth = widget.authController ?? AuthController.instance;
+    _auth.addListener(_handleAuthChanged);
     _loadProfileData();
+  }
+
+  @override
+  void dispose() {
+    _auth.removeListener(_handleAuthChanged);
+    super.dispose();
+  }
+
+  void _handleAuthChanged() {
+    if (mounted) {
+      final authUser = _auth.currentUser;
+      _updateProfile(
+        _profile.copyWith(
+          displayName: authUser.displayName,
+          email: authUser.email ?? 'guest@scribbleverse.io',
+          avatarEmoji: authUser.avatarEmoji,
+          readerTier: authUser.isAdmin
+              ? 'CURATOR • ADMIN TIER'
+              : authUser.isGuest
+                  ? 'GUEST • ANONYMOUS'
+                  : 'READER • TIER 1',
+        ),
+      );
+    }
   }
 
   Future<void> _loadProfileData() async {
@@ -206,20 +237,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-                          ),
-                          child: Text(
-                            _profile.readerTier,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: accentColor,
-                              letterSpacing: 0.8,
+                        GestureDetector(
+                          onTap: () => AuthModal.show(context, authController: _auth),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _auth.isAdmin
+                                  ? const Color(0xFF8B5CF6).withValues(alpha: 0.2)
+                                  : _auth.isGuest
+                                      ? Colors.grey.withValues(alpha: 0.2)
+                                      : accentColor.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _auth.isAdmin
+                                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.4)
+                                    : _auth.isGuest
+                                        ? Colors.grey.withValues(alpha: 0.3)
+                                        : accentColor.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _auth.currentUser.roleBadge,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: _auth.isAdmin
+                                        ? const Color(0xFF8B5CF6)
+                                        : _auth.isGuest
+                                            ? Colors.grey
+                                            : accentColor,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.swap_horiz_rounded,
+                                  size: 13,
+                                  color: _auth.isAdmin
+                                      ? const Color(0xFF8B5CF6)
+                                      : _auth.isGuest
+                                          ? Colors.grey
+                                          : accentColor,
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -544,22 +607,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Divider(height: 1, color: borderColor),
                         ListTile(
-                          leading: Icon(Icons.admin_panel_settings_rounded, color: accentColor),
+                          onTap: () => AuthModal.show(context, authController: _auth),
+                          leading: Icon(
+                            _auth.isAdmin
+                                ? Icons.admin_panel_settings_rounded
+                                : _auth.isGuest
+                                    ? Icons.person_outline_rounded
+                                    : Icons.verified_user_rounded,
+                            color: _auth.isAdmin
+                                ? const Color(0xFF8B5CF6)
+                                : _auth.isGuest
+                                    ? Colors.grey
+                                    : accentColor,
+                          ),
                           title: Text(
                             'Account & Authentication',
                             style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor),
                           ),
                           subtitle: Text(
-                            'Phase 5: Guest, User & Admin management',
+                            '${_auth.currentUser.roleLabel} • ${_auth.currentUser.email ?? "Offline Guest"}',
                             style: TextStyle(fontSize: 12, color: subColor),
                           ),
-                          trailing: const Icon(Icons.lock_outline_rounded, size: 16),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _auth.isAdmin
+                                  ? const Color(0xFF8B5CF6).withValues(alpha: 0.15)
+                                  : cardBg,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _auth.isAdmin
+                                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.4)
+                                    : borderColor,
+                              ),
+                            ),
+                            child: Text(
+                              'Switch',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: _auth.isAdmin ? const Color(0xFF8B5CF6) : accentColor,
+                              ),
+                            ),
+                          ),
                         ),
+                        if (_auth.isAdmin) ...[
+                          Divider(height: 1, color: borderColor),
+                          ListTile(
+                            leading: const Icon(Icons.auto_stories_rounded, color: Color(0xFF8B5CF6)),
+                            title: const Text(
+                              'Curator & Catalog Tools',
+                              style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: Color(0xFF8B5CF6)),
+                            ),
+                            subtitle: Text(
+                              'Curate shelves, edit categories & manage remote books',
+                              style: TextStyle(fontSize: 12, color: subColor),
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF8B5CF6)),
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('👑 Curator mode active: Shelves & Catalog management unlocked.'),
+                                  backgroundColor: Color(0xFF8B5CF6),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 14),
+
+                  // Sign Out / Switch Session Button
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => AuthModal.show(context, authController: _auth),
+                      icon: Icon(
+                        _auth.isGuest ? Icons.login_rounded : Icons.logout_rounded,
+                        size: 16,
+                        color: subColor,
+                      ),
+                      label: Text(
+                        _auth.isGuest ? 'Sign In / Register Cloud Account' : 'Switch Persona or Sign Out',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: subColor),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 60),
                 ],
               ),
             ),
