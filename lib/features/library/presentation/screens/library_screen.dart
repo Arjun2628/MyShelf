@@ -1571,10 +1571,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importedBooks = _books
         .where((b) => b.id != 'sample_chemmeen' && b.id != 'sample_alice')
         .toList();
-    final textDocuments = importedBooks.where((b) => b.isText).toList();
-    final importedScans = importedBooks.where((b) => b.isScan).toList();
-    final importedPdfs = importedBooks.where((b) => b.isPdf && !b.isScan).toList();
-    final importedEpubs = importedBooks.where((b) => !b.isPdf && !b.isScan && !b.isText).toList();
 
     final malayalamBooks = _books
         .where((b) =>
@@ -1670,160 +1666,90 @@ class _LibraryScreenState extends State<LibraryScreen> {
           // 5. Editorial Tagline
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
               child: _buildEditorialTagline(),
             ),
           ),
 
-          // 6. Row 1: Continue Reading / History Shelf
-          if (historyBooks.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Continue Reading & Listening',
-                subtitle: 'Pick up right where you paused',
-                icon: Icons.history_rounded,
-                iconColor: _goldAccent,
-                count: historyBooks.length,
+          if (_isGridView) ...[
+            _buildGridSliver(_books),
+          ] else ...[
+            // 6. Continue Reading / History Shelf
+            if (historyBooks.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: _buildShelfHeader(
+                  title: 'Continue Reading & Listening',
+                  subtitle: 'Pick up right where you paused',
+                  icon: Icons.history_rounded,
+                  iconColor: _goldAccent,
+                  count: historyBooks.length,
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHistoryShelf(historyBooks),
-            ),
-          ],
+              SliverToBoxAdapter(
+                child: _buildHistoryShelf(historyBooks),
+              ),
+            ],
 
-          // 7. Text Notes & Documents Shelf
-          if (textDocuments.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Text Notes & Documents',
-                subtitle: 'Your written & pasted text with synchronized audio',
-                icon: Icons.edit_note_rounded,
-                iconColor: const Color(0xFF059669),
-                count: textDocuments.length,
+            // 7. Malayalam Literature Shelf
+            if (malayalamBooks.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: _buildShelfHeader(
+                  title: 'Malayalam Literature & Classics',
+                  subtitle: 'മലയാള സാഹിത്യം • Audio & Sync',
+                  icon: Icons.local_fire_department_rounded,
+                  iconColor: const Color(0xFFEA580C),
+                  count: malayalamBooks.length,
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHorizontalShelf(
-                books: textDocuments,
-                tagColor: const Color(0xFF059669),
-                shelfTag: 'Text & Notes',
+              SliverToBoxAdapter(
+                child: _buildHorizontalShelf(
+                  books: malayalamBooks,
+                  tagColor: const Color(0xFFEA580C),
+                  shelfTag: 'Malayalam',
+                ),
               ),
-            ),
-          ],
+            ],
 
-          // 8. Row 2: Scanned Documents Shelf
-          if (importedScans.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Your Scanned Documents',
-                subtitle: 'Photo & OCR digitizations with synchronized TTS audio',
-                icon: Icons.document_scanner_rounded,
-                iconColor: const Color(0xFFD97706),
-                count: importedScans.length,
+            // 8. English & Global Classics Shelf
+            if (englishBooks.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: _buildShelfHeader(
+                  title: 'World Classics & Novels',
+                  subtitle: 'Timeless literary masterpieces',
+                  icon: Icons.public_rounded,
+                  iconColor: const Color(0xFF7C3AED),
+                  count: englishBooks.length,
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHorizontalShelf(
-                books: importedScans,
-                tagColor: const Color(0xFFD97706),
-                shelfTag: 'SCAN',
+              SliverToBoxAdapter(
+                child: _buildHorizontalShelf(
+                  books: englishBooks,
+                  tagColor: const Color(0xFF7C3AED),
+                  shelfTag: 'Classics',
+                ),
               ),
-            ),
-          ],
+            ],
 
-          // 9. Row 2: Imported PDFs Shelf
-          if (importedPdfs.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Your Imported PDFs',
-                subtitle: 'PDF documents & e-books with TTS audio',
-                icon: Icons.picture_as_pdf_rounded,
-                iconColor: const Color(0xFFDC2626),
-                count: importedPdfs.length,
+            // 9. Combined Imported Books & Notes Shelf
+            if (importedBooks.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: _buildShelfHeader(
+                  title: 'Your Documents & Imports',
+                  subtitle: 'Custom EPUBs, PDFs, OCR scans & text notes',
+                  icon: Icons.folder_special_rounded,
+                  iconColor: const Color(0xFF0284C7),
+                  count: importedBooks.length,
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHorizontalShelf(
-                books: importedPdfs,
-                tagColor: const Color(0xFFDC2626),
-                shelfTag: 'PDF',
+              SliverToBoxAdapter(
+                child: _buildHorizontalShelf(
+                  books: importedBooks,
+                  tagColor: const Color(0xFF0284C7),
+                  shelfTag: 'Imported',
+                ),
               ),
-            ),
+            ],
           ],
-
-          // 10. Row 3: Imported EPUBs Shelf
-          if (importedEpubs.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Your Imported EPUBs',
-                subtitle: 'Custom EPUB books on your device',
-                icon: Icons.folder_special_rounded,
-                iconColor: const Color(0xFF0284C7),
-                count: importedEpubs.length,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHorizontalShelf(
-                books: importedEpubs,
-                tagColor: const Color(0xFF0284C7),
-                shelfTag: 'EPUB',
-              ),
-            ),
-          ],
-
-          // 11. Row 3: Malayalam Literature Shelf
-          if (malayalamBooks.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Malayalam Literature & Classics',
-                subtitle: 'മലയാള സാഹിത്യം • Audio & Sync',
-                icon: Icons.local_fire_department_rounded,
-                iconColor: const Color(0xFFEA580C),
-                count: malayalamBooks.length,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHorizontalShelf(
-                books: malayalamBooks,
-                tagColor: const Color(0xFFEA580C),
-                shelfTag: 'Malayalam',
-              ),
-            ),
-          ],
-
-          // 12. Row 4: English & Global Classics Shelf
-          if (englishBooks.isNotEmpty) ...[
-            SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'World Classics & Novels',
-                subtitle: 'Timeless literary masterpieces',
-                icon: Icons.public_rounded,
-                iconColor: const Color(0xFF7C3AED),
-                count: englishBooks.length,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _buildHorizontalShelf(
-                books: englishBooks,
-                tagColor: const Color(0xFF7C3AED),
-                shelfTag: 'Classics',
-              ),
-            ),
-          ],
-
-          // 13. Row 5: Explore All Books (Complete Library)
-          SliverToBoxAdapter(
-            child: _buildShelfHeader(
-              title: 'Explore All Books',
-              subtitle: 'Full collection in your library',
-              icon: Icons.auto_awesome_mosaic_rounded,
-              iconColor: _goldAccent,
-              count: _books.length,
-            ),
-          ),
-          _isGridView
-              ? _buildGridSliver(_books)
-              : _buildListSliver(_books),
         ],
 
         const SliverToBoxAdapter(child: SizedBox(height: 90)),
@@ -2373,11 +2299,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Widget _buildHistoryShelf(List<MapEntry<Book, BookProgress>> historyItems) {
     return SizedBox(
-      height: 220,
+      height: 195,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         itemCount: historyItems.length,
         itemBuilder: (context, index) {
           final item = historyItems[index];
@@ -2397,22 +2323,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final timeStr = _formatRelativeTime(progress.lastUpdated);
 
     return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 14),
+      width: 250,
+      margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _cardBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2424,16 +2350,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 _TappableScale(
                   onTap: () => _openReader(book, chapterIndex: progress.chapterIndex),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(7),
                     child: Container(
-                      width: 48,
-                      height: 68,
+                      width: 42,
+                      height: 58,
                       decoration: BoxDecoration(
                         color: const Color(0xFF241E16),
                         boxShadow: [
                           BoxShadow(
                             color: _goldAccent.withValues(alpha: 0.2),
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: const Offset(0, 2),
                           ),
                         ],
@@ -2447,44 +2373,44 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         book.metadata.title,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'serif',
                           color: _textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         book.metadata.author,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10.5,
                           color: _textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Row(
                         children: [
                           _buildFormatBadge(book, isMini: true),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           Icon(Icons.access_time_rounded,
-                              size: 11, color: _textSecondary),
-                          const SizedBox(width: 3),
+                              size: 10, color: _textSecondary),
+                          const SizedBox(width: 2),
                           Text(
                             timeStr,
                             style: TextStyle(
-                              fontSize: 10.5,
+                              fontSize: 10,
                               color: _textSecondary,
                             ),
                           ),
@@ -2505,7 +2431,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 Text(
                   'Chapter ${progress.chapterIndex + 1} of $chapterCount',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                     color: _textSecondary,
                   ),
@@ -2513,20 +2439,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 Text(
                   '$percent%',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.bold,
                     color: _goldAccent,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 4),
             Container(
-              height: 4.0,
+              height: 3.5,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: _cardBorder,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(3),
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
@@ -2534,13 +2460,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: _goldAccent,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Resume Actions: Read & Audio
             Row(
@@ -2553,21 +2479,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       paragraphIndex: progress.paragraphIndex,
                     ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _isDark ? const Color(0xFF2C241B) : const Color(0xFF2B2620),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.menu_book_rounded, size: 13, color: Color(0xFFF3ECE0)),
-                          const SizedBox(width: 5),
-                          const Text(
+                          Icon(Icons.menu_book_rounded, size: 12, color: Color(0xFFF3ECE0)),
+                          SizedBox(width: 4),
+                          Text(
                             'Read',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFFF3ECE0),
                             ),
@@ -2577,16 +2503,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: _TappableScale(
                     onTap: () => _openAudiobook(book),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: _goldAccent.withValues(alpha: 0.6),
                           width: 1,
@@ -2595,12 +2521,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.headphones_rounded, size: 13, color: _goldAccent),
-                          const SizedBox(width: 5),
+                          Icon(Icons.headphones_rounded, size: 12, color: _goldAccent),
+                          const SizedBox(width: 4),
                           Text(
                             'Audio',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.bold,
                               color: _goldAccent,
                             ),
@@ -2624,11 +2550,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
     required String shelfTag,
   }) {
     return SizedBox(
-      height: 258,
+      height: 232,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         itemCount: books.length,
         itemBuilder: (context, index) {
           final book = books[index];
@@ -2644,22 +2570,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     required String shelfTag,
   }) {
     return Container(
-      width: 136,
-      margin: const EdgeInsets.only(right: 12),
+      width: 125,
+      margin: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _cardBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(7),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2667,16 +2593,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _TappableScale(
               onTap: () => _openReader(book),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  height: 120,
+                  height: 106,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: const Color(0xFF241E16),
                     boxShadow: [
                       BoxShadow(
-                        color: tagColor.withValues(alpha: 0.25),
-                        blurRadius: 8,
+                        color: tagColor.withValues(alpha: 0.2),
+                        blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -2692,8 +2618,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           : _buildDefaultCover(book, isMini: true),
                       // Top-right format badge
                       Positioned(
-                        top: 6,
-                        right: 6,
+                        top: 4,
+                        right: 4,
                         child: _buildFormatBadge(book, isMini: true),
                       ),
                     ],
@@ -2701,7 +2627,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 5),
             // Title
             _TappableScale(
               onTap: () => _openReader(book),
@@ -2710,7 +2636,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'serif',
                   color: _textPrimary,
@@ -2724,7 +2650,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 color: _textSecondary,
               ),
             ),
@@ -2736,17 +2662,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   child: _TappableScale(
                     onTap: () => _openReader(book),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 3.5),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _chipBg,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                         border: Border.all(color: _cardBorder.withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         'Read',
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: _textPrimary,
                         ),
@@ -2754,18 +2680,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 5),
+                const SizedBox(width: 4),
                 Expanded(
                   child: _TappableScale(
                     onTap: () => _openAudiobook(book),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 3.5),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: _isDark
                             ? _goldAccent.withValues(alpha: 0.18)
                             : const Color(0xFFFBF4E4),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                         border: Border.all(
                           color: _goldAccent.withValues(alpha: 0.5),
                           width: 0.8,
@@ -2774,7 +2700,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       child: Text(
                         'Listen',
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: _goldAccent,
                         ),
