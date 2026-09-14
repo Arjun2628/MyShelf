@@ -238,7 +238,7 @@ void main() {
         );
         await Future.delayed(const Duration(milliseconds: 50));
       });
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('Catalog & Shelves'), findsOneWidget);
@@ -248,14 +248,12 @@ void main() {
 
       // Switch to Catalog Books tab
       await tester.tap(find.text('Catalog Books'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
       expect(find.text('Chemmeen (ചെമ്മീൻ)'), findsOneWidget);
 
       // Switch to Cloud & Sync tab
       await tester.tap(find.text('Cloud & Sync'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
       expect(find.text('Remote Catalog Status'), findsOneWidget);
       expect(find.text('Create Cloud Backup Snapshot'), findsOneWidget);
     });
