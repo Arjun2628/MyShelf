@@ -20,7 +20,8 @@ gitGraph
    commit id: "0ef5763 (git docs)" tag: "v1.0-redesign-checkpoint"
    branch feature/home-screen-v2
    checkout feature/home-screen-v2
-   commit id: "branch: v2 iteration" tag: "active-head"
+   commit id: "7f40997 (init branch)"
+   commit id: "3c1e3bc (import hub & filter modal)" tag: "active-head"
 ```
 
 ---
@@ -57,10 +58,12 @@ gitGraph
    └──► (Branch point: git checkout -b feature/home-screen-v2)
          │
          ▼
- [feature/home-screen-v2] ── (ACTIVE EXPERIMENT BRANCH 🚀)
-       • Clean sandbox created directly from feature/home-screen-redesign
-       • Safe to try new layouts, palettes, animations, and concepts
-       • Can switch back to feature/home-screen-redesign anytime
+ [feature/home-screen-v2] ── (ACTIVE EXPERIMENT BRANCH 🚀: 3c1e3bc)
+       • Unified Import Hub Button & Modal (EPUB/PDF/TXT, Camera OCR, In-app Writing, Clipboard)
+       • Dedicated Category Filter Button & Modal (All, In Progress, Malayalam, Classics, Formats)
+       • Action Trio Bar (Read, Listen, Explore) + Editorial Tagline
+       • Active Filter Banner with instant clear button
+       • Streamlined Search Bar Row with 44px squircle action buttons
 ```
 
 ---
@@ -69,13 +72,15 @@ gitGraph
 
 | Attribute | `main` | `feature/home-screen-redesign` | `feature/home-screen-v2` *(Active)* |
 | :--- | :--- | :--- | :--- |
-| **Branch Purpose** | Core engine stability | Preserved ScribbleVerse checkpoint | Active sandbox for new design exploration |
-| **Status** | Stable base (`2c82394`) | Preserved intact (`0ef5763`) | Active working branch 🚀 |
-| **Aesthetic Theme** | Clean Material 3 standard | ScribbleVerse Warm Linen (`#F3ECE0`) | Custom / New Design Experimentation |
-| **Shelf Architecture** | Stacked format shelves | Composed Smart Collections | Ready for new layout ideas |
-| **Scroll Animation** | Standard linear scroll | Dynamic 3D Focal Scaling (`Matrix4`) | Customizable |
+| **Branch Purpose** | Core engine stability | Preserved ScribbleVerse checkpoint | Active sandbox: Unified Import Hub & Filter Modal |
+| **Status** | Stable base (`2c82394`) | Preserved intact (`0ef5763`) | Active working branch (`3c1e3bc`) 🚀 |
+| **Aesthetic Theme** | Clean Material 3 standard | ScribbleVerse Warm Linen (`#F3ECE0`) | ScribbleVerse Warm Linen + 44px Action Squircles |
+| **Import Architecture** | Header action buttons | Horizontal quick action chips | **Unified Import Hub Modal** (Files, OCR, Write, Paste) |
+| **Filter Architecture** | Dropdown menu | Horizontal scrollable chip bar | **Dedicated Category Filter Modal** with live counts |
+| **Search & Actions** | Basic search bar | Full-width search bar | **Inline Row**: Search Bar + Import Button + Filter Button |
 | **Test Suite Status** | 92 / 92 Passed ✅ | 92 / 92 Passed ✅ | 92 / 92 Passed ✅ |
 | **Static Analysis** | 0 Issues ✅ | 0 Issues ✅ | 0 Issues ✅ |
+| **APK Release Status** | Tested & Validated | Compiled | Compiled (`126.6 MB`) |
 
 ---
 
