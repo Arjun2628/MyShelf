@@ -1160,16 +1160,47 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Scaffold(
       backgroundColor: _canvasBg,
       appBar: AppBar(
-        title: Text(
-          _selectedTabIndex == 0 ? 'Epub and audiobooks' : 'Saved & Bookmarks',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontFamily: 'serif',
-            letterSpacing: 0.8,
-            fontSize: 16.5,
-            color: _textPrimary,
-          ),
-        ),
+        title: _selectedTabIndex == 0
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.auto_stories_rounded,
+                        color: _goldAccent,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Audiobooks',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'serif',
+                      letterSpacing: 0.6,
+                      fontSize: 18,
+                      color: _textPrimary,
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                'Saved & Bookmarks',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'serif',
+                  letterSpacing: 0.8,
+                  fontSize: 16.5,
+                  color: _textPrimary,
+                ),
+              ),
         backgroundColor: _canvasBg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -1861,44 +1892,71 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final targetBook = activeBook ?? (_books.isNotEmpty ? _books.first : null);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: _cardBorder.withValues(alpha: 0.8),
-            width: 1,
-          ),
+        color: _isDark ? const Color(0xFF221A12) : const Color(0xFFEAE0CF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _isDark ? const Color(0xFF3E3123) : const Color(0xFFD6C8AE),
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDark ? 0.28 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2.5),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildTrioActionItem(
-            icon: Icons.menu_book_rounded,
-            label: 'Read',
-            onTap: () {
-              if (targetBook != null) {
-                _openReader(targetBook);
-              }
-            },
+          Expanded(
+            child: _buildTrioActionItem(
+              icon: Icons.menu_book_rounded,
+              label: 'Read',
+              onTap: () {
+                if (targetBook != null) {
+                  _openReader(targetBook);
+                }
+              },
+            ),
           ),
-          _buildTrioActionItem(
-            icon: Icons.headphones_rounded,
-            label: 'Listen',
-            onTap: () {
-              if (targetBook != null) {
-                _openAudiobook(targetBook);
-              }
-            },
+          Container(
+            height: 28,
+            width: 1,
+            color: _isDark
+                ? const Color(0xFF382C1E)
+                : const Color(0xFFD3C4A7).withValues(alpha: 0.8),
           ),
-          _buildTrioActionItem(
-            icon: Icons.explore_rounded,
-            label: 'Explore',
-            onTap: () {
-              setState(() {
-                _isGridView = !_isGridView;
-              });
-            },
+          Expanded(
+            child: _buildTrioActionItem(
+              icon: Icons.headphones_rounded,
+              label: 'Listen',
+              onTap: () {
+                if (targetBook != null) {
+                  _openAudiobook(targetBook);
+                }
+              },
+            ),
+          ),
+          Container(
+            height: 28,
+            width: 1,
+            color: _isDark
+                ? const Color(0xFF382C1E)
+                : const Color(0xFFD3C4A7).withValues(alpha: 0.8),
+          ),
+          Expanded(
+            child: _buildTrioActionItem(
+              icon: Icons.explore_rounded,
+              label: 'Explore',
+              onTap: () {
+                setState(() {
+                  _isGridView = !_isGridView;
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -1913,17 +1971,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return _TappableScale(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 21, color: _textPrimary),
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: _isDark
+                    ? const Color(0xFF2E241A)
+                    : const Color(0xFFDFD2BC),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: _textPrimary,
+              ),
+            ),
             const SizedBox(height: 5),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'serif',
-                fontSize: 11,
+                fontSize: 11.5,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.8,
                 color: _textPrimary,
