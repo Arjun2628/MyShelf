@@ -1,4 +1,3 @@
-import 'package:epub_audio/features/auth/domain/entities/auth_user.dart';
 import 'package:epub_audio/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:epub_audio/features/auth/presentation/widgets/auth_modal.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
@@ -7,6 +6,7 @@ import 'package:epub_audio/features/profile/domain/entities/reading_stats.dart';
 import 'package:epub_audio/features/profile/domain/entities/user_profile.dart';
 import 'package:epub_audio/features/profile/domain/repositories/profile_repository.dart';
 import 'package:epub_audio/features/profile/presentation/widgets/avatar_picker_modal.dart';
+import 'package:epub_audio/features/admin/presentation/screens/admin_catalog_screen.dart';
 import 'package:epub_audio/main.dart';
 import 'package:flutter/material.dart';
 
@@ -664,10 +664,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF8B5CF6)),
                             onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('👑 Curator mode active: Shelves & Catalog management unlocked.'),
-                                  backgroundColor: Color(0xFF8B5CF6),
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (ctx) => const AdminCatalogScreen(),
                                 ),
                               );
                             },

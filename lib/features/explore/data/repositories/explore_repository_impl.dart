@@ -1,10 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
-import 'package:epub_audio/features/epub/data/datasources/epub_archive_loader.dart';
-import 'package:epub_audio/features/epub/data/parsers/container_parser.dart';
-import 'package:epub_audio/features/epub/data/parsers/ncx_parser.dart';
-import 'package:epub_audio/features/epub/data/parsers/opf_parser.dart';
 import 'package:epub_audio/features/epub/data/repositories/epub_repository_impl.dart';
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart';
@@ -286,6 +282,30 @@ class ExploreRepositoryImpl implements ExploreRepository {
   @override
   Future<List<BookShelf>> getCuratedShelves() async {
     await _ensureCatalogLoaded();
+
+    try {
+      final customJson = _hiveStorageService.getCustomSetting<String>('curated_shelves_custom_v1');
+      if (customJson != null && customJson.isNotEmpty) {
+        final List<dynamic> list = jsonDecode(customJson);
+        return list.map((item) {
+          final map = item as Map<String, dynamic>;
+          final styleName = map['displayStyle'] as String?;
+          final style = ShelfDisplayStyle.values.firstWhere(
+            (s) => s.name == styleName,
+            orElse: () => ShelfDisplayStyle.horizontalShelf,
+          );
+          return BookShelf(
+            id: map['id'] as String? ?? 'shelf_custom',
+            title: map['title'] as String? ?? 'Curated Shelf',
+            subtitle: map['subtitle'] as String?,
+            bookIds: (map['bookIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+            displayStyle: style,
+            categoryId: map['categoryId'] as String?,
+          );
+        }).toList();
+      }
+    } catch (_) {}
+
     return [
       const BookShelf(
         id: 'shelf_malayalam',

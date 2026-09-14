@@ -292,6 +292,94 @@ lib/
 │   │       └── widgets/
 │   │           └── mini_audio_player.dart
 │   │
+│   ├── voice/ (Multi-Voice Audition & Acoustic Param Casting)
+│   │   └── presentation/
+│   │       └── widgets/
+│   │           └── book_voice_audition_modal.dart
+│   │
+│   ├── opening_experience/ (Decoupled Book Opening Engine & 3D Atmosphere Stage)
+│   │   └── presentation/
+│   │       ├── screens/
+│   │       │   └── book_opening_experience_screen.dart
+│   │       └── widgets/
+│   │           ├── book_cover_3d_stage.dart
+│   │           └── atmospheric_particle_canvas.dart
+│   │
+│   ├── explore/ (Discovery Hub, Dynamic Category Presets & 7 Shelf Display Styles)
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   ├── category_experience_config.dart
+│   │   │   │   ├── book_shelf.dart
+│   │   │   │   └── explore_section.dart
+│   │   │   └── repositories/
+│   │   │       └── explore_repository.dart
+│   │   ├── data/
+│   │   │   └── repositories/
+│   │   │       └── explore_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── screens/
+│   │       │   ├── explore_screen.dart
+│   │       │   └── category_experience_screen.dart
+│   │       └── widgets/
+│   │           └── shelves/
+│   │               ├── large_featured_shelf_view.dart
+│   │               ├── horizontal_carousel_shelf_view.dart
+│   │               ├── horizontal_shelf_view.dart
+│   │               ├── grid_shelf_view.dart
+│   │               ├── vertical_list_shelf_view.dart
+│   │               ├── cover_carousel_shelf_view.dart
+│   │               └── story_cards_shelf_view.dart
+│   │
+│   ├── profile/ (Reading Identity, Activity Matrix & Avatar Customizer)
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   ├── user_profile.dart
+│   │   │   │   └── reading_stats.dart
+│   │   │   └── repositories/
+│   │   │       └── profile_repository.dart
+│   │   ├── data/
+│   │   │   └── repositories/
+│   │   │       └── profile_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── screens/
+│   │       │   └── profile_screen.dart
+│   │       └── widgets/
+│   │           └── avatar_picker_modal.dart
+│   │
+│   ├── auth/ (Role-Based Authentication: Guest, Member, Admin)
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── auth_user.dart
+│   │   │   └── repositories/
+│   │   │       └── auth_repository.dart
+│   │   ├── data/
+│   │   │   └── repositories/
+│   │   │       └── auth_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── controllers/
+│   │       │   └── auth_controller.dart
+│   │       └── widgets/
+│   │           └── auth_modal.dart
+│   │
+│   ├── catalog/ (Remote Catalog Manifest & Cloud Sync Lifecycle)
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── remote_catalog_manifest.dart
+│   │   │   ├── repositories/
+│   │   │   │   └── remote_catalog_repository.dart
+│   │   │   └── services/
+│   │   │       └── catalog_sync_service.dart
+│   │   └── data/
+│   │       └── repositories/
+│   │           └── remote_catalog_repository_impl.dart
+│   │
+│   ├── admin/ (Curator Console & Live Shelf Management)
+│   │   └── presentation/
+│   │       ├── screens/
+│   │       │   └── admin_catalog_screen.dart
+│   │       └── widgets/
+│   │           └── edit_shelf_modal.dart
+│   │
 │   ├── session/ (Bidirectional Reader & Audiobook Synchronization)
 │   │   ├── domain/
 │   │   │   └── entities/
@@ -300,6 +388,11 @@ lib/
 │   │   └── presentation/
 │   │       └── controllers/
 │   │           └── book_session_controller.dart
+│   │
+│   ├── navigation/ (Root App Navigation Shell)
+│   │   └── presentation/
+│   │       └── screens/
+│   │           └── main_navigation_screen.dart
 │   │
 │   └── library/
 │       ├── data/
