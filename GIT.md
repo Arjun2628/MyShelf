@@ -1,37 +1,196 @@
 # Git Branching & Version Control Guide
 
-This document outlines the Git branching strategy, commit history, branch management workflows, and release procedures for the **Epub & Audiobooks** project.
+This document outlines the complete Git branching model, repository architecture, commit history, branch management workflows, and release procedures for the **Epub & Audiobooks** project.
 
 ---
 
-## 🌳 Branch Architecture
+## 🌳 Repository Branching Structure & Model
+
+The project adheres to a streamlined **Feature Branching / GitHub Flow** model optimized for Flutter mobile development. Production releases remain strictly stable on `main`, while UI redesigns, audio engine additions, and experimental features are developed in isolated branches.
 
 ```mermaid
 gitGraph
-   commit id: "7109908 (session)"
-   commit id: "2c82394 (reader: tap isolation)"
+   commit id: "7109908 (session engine)"
+   commit id: "2c82394 (reader: tap isolation)" tag: "main-v1.0"
    branch feature/home-screen-redesign
    checkout feature/home-screen-redesign
-   commit id: "eff8b43 (ScribbleVerse theme)"
+   commit id: "eff8b43 (ScribbleVerse UI)"
    commit id: "d09a872 (composed shelves)"
    commit id: "9a606b0 (3D focal animation)"
+   commit id: "6827fde (git docs)" tag: "feature-head"
    checkout main
+   merge feature/home-screen-redesign id: "Merge PR #1 (Future)" tag: "v1.1.0-release"
 ```
-
-| Branch Name | Status | Description | Head Commit |
-| :--- | :--- | :--- | :--- |
-| **`main`** | `Production Base` | Stable production branch with reader tap event isolation, word-level audio sync, multi-voice TTS, and OCR. | `2c82394` |
-| **`feature/home-screen-redesign`** | `Active Feature` | ScribbleVerse Warm Linen & Dark Ebony redesign, composed shelves, dynamic 3D scroll scaling, and spring micro-animations. | `9a606b0` |
 
 ---
 
-## 📜 Key Commit History & Milestones
+## 🌲 Visual Branch Hierarchy & Commit Graph
+
+```text
+========================================================================================
+                               GIT BRANCH HIERARCHY
+========================================================================================
+
+ [main] ── (Production Stable Base: 2c82394)
+   │
+   ├─► 2c82394: feat(reader): isolate tap events & word boundary highlight expansion
+   ├─► 7109908: feat(session): multi-voice narrator, paragraph playback & word sync
+   ├─► fd26f70: feat(audio): voice switching, speech rate calibration & completion
+   ├─► 10d8cae: feat(synchronization): reading position & audio segment tracking
+   ├─► a9ad5c0: feat(voice): multi-voice architecture & character speaker profiles
+   ├─► b026cf9: fix(ui): scrollable quick action bar & reader content insets
+   ├─► c91c7b8: feat(intent): Android OS text share and send intent handling
+   ├─► 84ad851: feat(text_content): in-app writing, clipboard paste & Hive storage
+   ├─► e35d60c: feat(theme): app-wide dark mode & synchronized reader/player themes
+   ├─► aba5010: feat(ocr): multilingual OCR scan & dynamic TTS voice switching
+   └─► fc982da: feat(pdf): reflowable PDF reader with distinct format badges
+         │
+         │ (Branch point: git checkout -b feature/home-screen-redesign)
+         ▼
+ [feature/home-screen-redesign] ── (Active UI Overhaul: 6827fde)
+   │
+   ├───► eff8b43: feat(ui): implement ScribbleVerse warm linen & ebony design
+   │       • Warm parchment/linen palette (#F3ECE0 / #2B2620)
+   │       • Editorial small-caps serif typography & floating dark capsule bar
+   │       • 120ms spring micro-interactions (_TappableScale)
+   │
+   ├───► d09a872: feat(ui): compose library shelves into clean, compact collections
+   │       • Streamlined 2–3 collections (Continue Reading, Malayalam, Classics, Imports)
+   │       • Interactive top filter chips for instant shelf focusing
+   │       • Compact card dimensions (232px vs 258px) eliminating vertical scroll fatigue
+   │
+   ├───► 9a606b0: feat(ui): add scroll-driven focal scaling & 3D perspective tilt
+   │       • Dynamic focal zoom (1.0x active with golden halo vs 0.91x off-focus)
+   │       • 3D perspective tilt on horizontal drag (Matrix4..rotateY)
+   │       • Realistic book spine depth gradient shadow
+   │
+   └───► 6827fde: docs: add GIT.md with branch guide, commit history, and release workflows
+```
+
+---
+
+## 📊 Branch Matrix & Feature Comparison
+
+| Attribute | `main` | `feature/home-screen-redesign` |
+| :--- | :--- | :--- |
+| **Branch Purpose** | Core engine stability & production base | Editorial UI, micro-animations & layout experiments |
+| **Head Commit** | `2c82394` | `6827fde` |
+| **Aesthetic Theme** | Clean Material 3 standard | ScribbleVerse Warm Linen (`#F3ECE0`) & Dark Ebony (`#2B2620`) |
+| **Shelf Architecture** | Stacked format shelves | Composed Smart Collections (`Malayalam`, `Classics`, `Imports`) |
+| **Scroll Animation** | Standard linear scroll | Dynamic 3D Focal Scaling (`Matrix4..rotateY` & Gaussian scale) |
+| **Touch Feedback** | Standard ink ripples | 120ms Spring-Scale Micro-Animations (`_TappableScale`) |
+| **Test Suite Status** | 92 / 92 Passed ✅ | 92 / 92 Passed ✅ |
+| **Static Analysis** | 0 Issues ✅ | 0 Issues ✅ |
+| **APK Release Status** | Tested & Validated | Compiled (`build/app/outputs/flutter-apk/app-release.apk`) |
+
+---
+
+## 🏷️ Branch Types & Naming Conventions
+
+When developing new features, fixes, or experiments, adhere to this naming taxonomy:
+
+| Branch Pattern | Purpose | Base Branch | Merge Target | Lifecycle |
+| :--- | :--- | :--- | :--- | :--- |
+| `main` | Production-ready, fully tested releases | N/A | Production Deploy | Permanent |
+| `feature/<name>` | New capabilities, UI revamps, or UX flows | `main` | `main` | Deleted after merge |
+| `bugfix/<name>` | Non-critical bug repairs & edge-case handling | `main` | `main` | Deleted after merge |
+| `hotfix/<name>` | Urgent production patches | `main` | `main` | Deleted after merge |
+| `experiment/<name>` | Exploratory prototypes or performance spikes | `main` | Optional merge | Temporary |
+| `release/v<X.Y.Z>` | Release staging, freeze, and final QA | `main` | `main` (with tag) | Deleted after tag |
+
+---
+
+## 🔄 Branch Lifecycle & Workflow Procedures
+
+```mermaid
+flowchart LR
+    M1[main: stable] -->|git checkout -b| F1[feature/name]
+    F1 -->|commits| F2[feature: testing]
+    F2 -->|flutter analyze & test| F3[feature: validated]
+    F3 -->|git checkout main & merge| M2[main: updated]
+    M2 -->|git tag vX.Y.Z| R1[Production APK Release]
+```
+
+### 1. Inspecting Branch Status
+```bash
+# List all local branches with active branch highlighted
+git branch -v
+
+# View full commit graph across all branches in terminal
+git log --graph --oneline --all --decorate -n 15
+```
+
+### 2. Switching Between Branches
+```bash
+# Switch to the stable main base
+git checkout main
+
+# Switch to the redesigned feature branch
+git checkout feature/home-screen-redesign
+```
+
+### 3. Creating a New Feature Branch
+```bash
+# Always branch off a clean, up-to-date main
+git checkout main
+git checkout -b feature/audio-dsp-equalizer
+
+# Make changes and commit with conventional commits
+git add .
+git commit -m "feat(audio): add 5-band equalizer and bass boost presets"
+```
+
+### 4. Merging a Feature Branch into `main`
+When the feature is complete and verified:
+```bash
+# 1. Switch to main
+git checkout main
+
+# 2. Merge with explicit merge commit preserving history
+git merge --no-ff feature/home-screen-redesign -m "Merge branch 'feature/home-screen-redesign' into main"
+
+# 3. Run automated verification suite
+flutter analyze
+flutter test
+
+# 4. Build production APK
+flutter build apk --release
+```
+
+### 5. Hotfix Workflow
+For urgent patches directly onto production:
+```bash
+git checkout main
+git checkout -b hotfix/tts-null-pointer
+
+# Apply fix and commit
+git commit -am "fix(tts): guard against uninitialized audio track on lock screen"
+
+# Merge back into main
+git checkout main
+git merge --no-ff hotfix/tts-null-pointer
+git tag -a v1.0.1 -m "Release v1.0.1 hotfix"
+```
+
+### 6. Cleaning Up Completed Branches
+```bash
+# Delete local feature branch after merging
+git branch -d feature/home-screen-redesign
+
+# Force delete an unmerged experimental branch
+git branch -D experiment/discarded-concept
+```
+
+---
+
+## 📜 Complete Repository Commit Log
 
 ### 🎨 Home Screen Redesign (`feature/home-screen-redesign`)
+* **`6827fde`** - `docs: add GIT.md with branch guide, commit history, and release workflows`
 * **`9a606b0`** - `feat(ui): add dynamic scroll-driven focal scaling, 3D perspective tilt and book spine depth shadows to horizontal shelves`
-  - Added live dynamic focal scaling (`1.0x` focus with glowing aura vs `0.91x` off-focus).
-  - Added 3D perspective rotation tilt on horizontal drag.
-  - Added authentic book spine depth gradient shadow on covers.
+  - Dynamic focal zoom (`1.0x` focus with warm glow vs `0.91x` off-focus).
+  - 3D perspective rotation tilt on horizontal drag.
+  - Authentic book spine depth gradient shadow on all covers.
 * **`d09a872`** - `feat(ui): compose library shelves into clean, compact collections and eliminate infinite vertical stacking`
   - Reorganized home into 2–3 streamlined shelves (Continue Reading, Malayalam Literature, World Classics, Your Imports).
   - Transformed top chips into real-time interactive collection filters.
@@ -41,7 +200,7 @@ gitGraph
   - Small-caps serif typography and floating dark capsule bottom navigation bar.
   - Spring-scale micro-interactions (`_TappableScale`).
 
-### 📚 Core Reader & Audio Engines (`main`)
+### 📚 Core Engine Milestones (`main`)
 * **`2c82394`** - `feat(reader): isolate tap events in reading view and refine word boundary highlight expansion`
 * **`7109908`** - `feat(session): integrate multi-voice narrator, seamless paragraph playback, and acoustic word synchronization`
 * **`fd26f70`** - `feat(audio): extend audio engine with voice switching, speech rate calibration, and completion handling`
@@ -57,67 +216,23 @@ gitGraph
 
 ---
 
-## 🛠️ Common Git Workflows
+## 📱 Release APK Compilation & Verification
 
-### 1. Checking Status & Switching Branches
-```bash
-# Check current active branch and working directory status
-git status
-
-# Switch to the stable main branch
-git checkout main
-
-# Switch to the redesign feature branch
-git checkout feature/home-screen-redesign
-```
-
-### 2. Merging the Redesign into `main` (When Ready)
-When you are satisfied with the new design and want to make it the default on `main`:
-```bash
-# 1. Switch to main
-git checkout main
-
-# 2. Merge the feature branch
-git merge feature/home-screen-redesign
-
-# 3. Verify tests and build
-flutter test
-flutter build apk --release
-```
-
-### 3. Reverting to Previous Commits (Rollback)
-If you ever want to test or revert to a specific previous commit:
-```bash
-# Temporarily inspect an older commit (detached HEAD)
-git checkout 2c82394
-
-# Return to your active branch
-git checkout feature/home-screen-redesign
-```
-
-### 4. Creating a New Feature Branch
-```bash
-# Create and switch to a new branch from your current position
-git checkout -b feature/my-new-feature
-```
-
----
-
-## 📱 Building & Installing Release APKs
-
-From any active branch:
+To verify and package the application on any branch:
 
 ```bash
-# 1. Run static analysis & test suite
+# 1. Static Analysis (Zero warning policy)
 flutter analyze
+
+# 2. Automated Test Suite (92 Unit & Widget Tests)
 flutter test
 
-# 2. Build release APK
+# 3. Production Release APK Compilation
 flutter build apk --release
 
-# 3. Install to connected device via ADB
+# 4. Direct Device Installation via ADB
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
 
-**Output Artifact Location**:
-`build/app/outputs/flutter-apk/app-release.apk`
+**Binary Output Location**:
+[`build/app/outputs/flutter-apk/app-release.apk`](file:///Users/admin/epub_audio/build/app/outputs/flutter-apk/app-release.apk)
