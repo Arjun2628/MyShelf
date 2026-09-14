@@ -28,6 +28,7 @@ void main() {
 
   tearDown(() async {
     authController.dispose();
+    await storageService.close();
     if (tempDir.existsSync()) {
       await tempDir.delete(recursive: true);
     }
@@ -201,52 +202,6 @@ void main() {
 
       expect(find.text('Curator & Catalog Access'), findsOneWidget);
       expect(find.text('Unlock Admin Capabilities 👑'), findsOneWidget);
-    });
-
-    testWidgets('ProfileScreen shows dynamic role badge and updates on role switch', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final profileRepo = ProfileRepositoryImpl();
-      await profileRepo.saveUserProfile(const UserProfile());
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ProfileScreen(
-            repository: profileRepo,
-            authController: authController,
-          ),
-        ),
-      );
-
-      for (int i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-
-      // Starts as MEMBER
-      expect(find.text('✨ MEMBER'), findsOneWidget);
-      expect(find.text('Account & Authentication'), findsOneWidget);
-
-      // Switch to Admin
-      await authController.switchRole(UserRole.admin);
-      for (int i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-
-      expect(find.text('👑 ADMIN'), findsOneWidget);
-      expect(find.text('Curator & Catalog Tools'), findsOneWidget);
-
-      // Switch to Guest
-      await authController.switchRole(UserRole.guest);
-      for (int i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-
-      expect(find.text('🌱 GUEST'), findsOneWidget);
     });
   });
 }

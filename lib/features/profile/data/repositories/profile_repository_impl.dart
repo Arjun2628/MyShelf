@@ -18,7 +18,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<UserProfile> getUserProfile() async {
-    await _storageService.init();
     try {
       final raw = _storageService.getCustomSetting<String>(_profileKey);
       if (raw != null && raw.isNotEmpty) {
@@ -32,17 +31,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<void> saveUserProfile(UserProfile profile) async {
-    await _storageService.init();
     try {
       await _storageService.setCustomSetting(_profileKey, profile.toJson());
-      // Also synchronize app theme mode preference
-      if (profile.preferredThemeMode == 'light') {
-        await _storageService.setAppThemeMode(ThemeMode.light);
-      } else if (profile.preferredThemeMode == 'dark') {
-        await _storageService.setAppThemeMode(ThemeMode.dark);
-      } else {
-        await _storageService.setAppThemeMode(ThemeMode.system);
-      }
     } catch (e) {
       debugPrint('[ProfileRepo] Error saving user profile: $e');
     }
@@ -50,7 +40,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<ReadingStats> getReadingStats() async {
-    await _storageService.init();
     final profile = await getUserProfile();
 
     // Check completed books count and progress from Hive

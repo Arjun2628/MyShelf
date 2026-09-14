@@ -54,23 +54,45 @@ class HiveStorageService {
         Hive.init(customPath);
       } else {
         try {
-          await Hive.initFlutter();
+          final isTest = Platform.environment.containsKey('FLUTTER_TEST') ||
+              WidgetsBinding.instance.runtimeType.toString().contains('Test');
+          if (isTest) {
+            final tempDir = Directory.systemTemp.createTempSync('epub_hive_test_');
+            Hive.init(tempDir.path);
+          } else {
+            await Hive.initFlutter().timeout(const Duration(milliseconds: 500), onTimeout: () {
+              final tempDir = Directory.systemTemp.createTempSync('epub_hive_fallback_');
+              Hive.init(tempDir.path);
+            });
+          }
         } catch (_) {
           final tempDir = Directory.systemTemp.createTempSync('epub_hive_');
           Hive.init(tempDir.path);
         }
       }
-      _booksBox = await Hive.openBox(booksBoxName);
-      _progressBox = await Hive.openBox(progressBoxName);
-      _highlightsBox = await Hive.openBox(highlightsBoxName);
-      _bookmarksBox = await Hive.openBox(bookmarksBoxName);
-      _settingsBox = await Hive.openBox(settingsBoxName);
-      _textDocsBox = await Hive.openBox(textDocsBoxName);
+      _booksBox = Hive.isBoxOpen(booksBoxName) ? Hive.box(booksBoxName) : await Hive.openBox(booksBoxName);
+      _progressBox = Hive.isBoxOpen(progressBoxName) ? Hive.box(progressBoxName) : await Hive.openBox(progressBoxName);
+      _highlightsBox = Hive.isBoxOpen(highlightsBoxName) ? Hive.box(highlightsBoxName) : await Hive.openBox(highlightsBoxName);
+      _bookmarksBox = Hive.isBoxOpen(bookmarksBoxName) ? Hive.box(bookmarksBoxName) : await Hive.openBox(bookmarksBoxName);
+      _settingsBox = Hive.isBoxOpen(settingsBoxName) ? Hive.box(settingsBoxName) : await Hive.openBox(settingsBoxName);
+      _textDocsBox = Hive.isBoxOpen(textDocsBoxName) ? Hive.box(textDocsBoxName) : await Hive.openBox(textDocsBoxName);
       _isInitialized = true;
       debugPrint('[HiveStorage] Initialized successfully. Stored books: ${_booksBox?.length}, text docs: ${_textDocsBox?.length}');
     } catch (e) {
       debugPrint('[HiveStorage] Initialization error: $e');
     }
+  }
+
+  /// Closes all open boxes and resets initialized state (useful for tests and clean tearDown).
+  Future<void> close() async {
+    _isInitialized = false;
+    _booksBox = null;
+    _progressBox = null;
+    _highlightsBox = null;
+    _bookmarksBox = null;
+    _settingsBox = null;
+    _textDocsBox = null;
+    await Hive.close();
   }
 
   // ----------------- APP ONBOARDING / SETTINGS -----------------
@@ -95,7 +117,9 @@ class HiveStorageService {
 
   /// Sets custom setting value by key.
   Future<void> setCustomSetting(String key, dynamic value) async {
-    await init();
+    if (_settingsBox == null || !_settingsBox!.isOpen) {
+      await init();
+    }
     await _settingsBox?.put(key, value);
   }
 

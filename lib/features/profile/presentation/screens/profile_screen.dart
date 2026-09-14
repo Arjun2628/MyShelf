@@ -48,8 +48,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _handleAuthChanged() {
     if (mounted) {
       final authUser = _auth.currentUser;
-      _updateProfile(
-        _profile.copyWith(
+      setState(() {
+        _profile = _profile.copyWith(
           displayName: authUser.displayName,
           email: authUser.email ?? 'guest@scribbleverse.io',
           avatarEmoji: authUser.avatarEmoji,
@@ -58,8 +58,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               : authUser.isGuest
                   ? 'GUEST • ANONYMOUS'
                   : 'READER • TIER 1',
-        ),
-      );
+        );
+      });
     }
   }
 
@@ -72,7 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     int bookmarks = 0;
     try {
       final storage = HiveStorageService();
-      await storage.init();
       highlights = storage.getAllHighlights().length;
       bookmarks = storage.getAllBookmarks().length;
     } catch (_) {}
