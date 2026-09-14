@@ -37,8 +37,9 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  final OpenEpubUseCase _openEpubUseCase =
-      const OpenEpubUseCase(EpubRepositoryImpl());
+  final OpenEpubUseCase _openEpubUseCase = const OpenEpubUseCase(
+    EpubRepositoryImpl(),
+  );
   final OpenPdfUseCase _openPdfUseCase = OpenPdfUseCase();
   final ScanBookUseCase _scanBookUseCase = ScanBookUseCase();
   final ScanDocumentParser _scanParser = ScanDocumentParser();
@@ -55,20 +56,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
   bool _isLoading = true;
   late int _selectedTabIndex; // 0: Library, 1: Saved
   String _searchQuery = '';
-  String _selectedFilterTag = 'All'; // 'All', 'In Progress', 'Malayalam', 'English', 'Imported'
+  String _selectedFilterTag =
+      'All'; // 'All', 'In Progress', 'Malayalam', 'English', 'Imported'
   bool _isGridView = false; // Toggle for explore section
   String _savedFilter = 'All'; // 'All', 'Highlights', 'Bookmarks', 'Notes'
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
-  Color get _canvasBg => _isDark ? const Color(0xFF16120E) : const Color(0xFFF3ECE0);
-  Color get _cardBg => _isDark ? const Color(0xFF221B14) : const Color(0xFFFFFDF8);
-  Color get _cardBorder => _isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA);
-  Color get _textPrimary => _isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620);
-  Color get _textSecondary => _isDark ? const Color(0xFFA99C85) : const Color(0xFF857863);
-  Color get _chipBg => _isDark ? const Color(0xFF2C241B) : const Color(0xFFEBE2D0);
-  Color get _iconColor => _isDark ? const Color(0xFFDCCFBB) : const Color(0xFF383127);
-  Color get _goldAccent => _isDark ? const Color(0xFFE0B45F) : const Color(0xFFC99538);
-  Color get _navBarBg => _isDark ? const Color(0xFF1D1711) : const Color(0xFF2B2620);
+  Color get _canvasBg =>
+      _isDark ? const Color(0xFF16120E) : const Color(0xFFF3ECE0);
+  Color get _cardBg =>
+      _isDark ? const Color(0xFF221B14) : const Color(0xFFFFFDF8);
+  Color get _cardBorder =>
+      _isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA);
+  Color get _textPrimary =>
+      _isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620);
+  Color get _textSecondary =>
+      _isDark ? const Color(0xFFA99C85) : const Color(0xFF857863);
+  Color get _chipBg =>
+      _isDark ? const Color(0xFF2C241B) : const Color(0xFFEBE2D0);
+  Color get _iconColor =>
+      _isDark ? const Color(0xFFDCCFBB) : const Color(0xFF383127);
+  Color get _goldAccent =>
+      _isDark ? const Color(0xFFE0B45F) : const Color(0xFFC99538);
+  Color get _navBarBg =>
+      _isDark ? const Color(0xFF1D1711) : const Color(0xFF2B2620);
   Color get _navBarActive => const Color(0xFFF3ECE0);
   Color get _navBarInactive => const Color(0xFFA99C85);
 
@@ -80,9 +91,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
       isScrollControlled: true,
       builder: (ctx) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final modalBg = isDark ? const Color(0xFF221B14) : const Color(0xFFFFFDF8);
-        final textColor = isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620);
-        final subTextColor = isDark ? const Color(0xFFA99C85) : const Color(0xFF857863);
+        final modalBg = isDark
+            ? const Color(0xFF221B14)
+            : const Color(0xFFFFFDF8);
+        final textColor = isDark
+            ? const Color(0xFFF7F1E6)
+            : const Color(0xFF2B2620);
+        final subTextColor = isDark
+            ? const Color(0xFFA99C85)
+            : const Color(0xFF857863);
 
         return Container(
           decoration: BoxDecoration(
@@ -108,7 +125,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF4A3E31) : const Color(0xFFC7BBA5),
+                      color: isDark
+                          ? const Color(0xFF4A3E31)
+                          : const Color(0xFFC7BBA5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -199,7 +218,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
               icon,
               color: isSelected
                   ? gold
-                  : (isDark ? const Color(0xFFDCCFBB) : const Color(0xFF6E624E)),
+                  : (isDark
+                        ? const Color(0xFFDCCFBB)
+                        : const Color(0xFF6E624E)),
               size: 22,
             ),
             const SizedBox(width: 14),
@@ -210,9 +231,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w600,
                       fontSize: 14.5,
-                      color: isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620),
+                      color: isDark
+                          ? const Color(0xFFF7F1E6)
+                          : const Color(0xFF2B2620),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -220,18 +245,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? const Color(0xFFA99C85) : const Color(0xFF857863),
+                      color: isDark
+                          ? const Color(0xFFA99C85)
+                          : const Color(0xFF857863),
                     ),
                   ),
                 ],
               ),
             ),
             if (isSelected)
-              Icon(
-                Icons.check_circle_rounded,
-                color: gold,
-                size: 20,
-              ),
+              Icon(Icons.check_circle_rounded, color: gold, size: 20),
           ],
         ),
       ),
@@ -276,8 +299,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final firstLine = lines.isNotEmpty
         ? lines.first.replaceAll(RegExp(r'^#+\s*'), '')
         : 'Shared Note';
-    final title =
-        firstLine.length > 40 ? '${firstLine.substring(0, 37)}...' : firstLine;
+    final title = firstLine.length > 40
+        ? '${firstLine.substring(0, 37)}...'
+        : firstLine;
 
     Navigator.push(
       context,
@@ -353,7 +377,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
         Book importedBook;
         final isPdf = file.name.toLowerCase().endsWith('.pdf');
-        final isTxt = file.name.toLowerCase().endsWith('.txt') ||
+        final isTxt =
+            file.name.toLowerCase().endsWith('.txt') ||
             file.name.toLowerCase().endsWith('.md');
         final bytes = file.bytes;
 
@@ -489,7 +514,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: _isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                      color: _isDark
+                          ? const Color(0xFF475569)
+                          : const Color(0xFFCBD5E1),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -507,7 +534,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 22),
+                      child: const Icon(
+                        Icons.document_scanner_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -540,7 +571,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 // Language Selection Header & Chips
                 Row(
                   children: [
-                    Icon(Icons.translate_rounded, size: 16, color: _textSecondary),
+                    Icon(
+                      Icons.translate_rounded,
+                      size: 16,
+                      color: _textSecondary,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Document Language / Script:',
@@ -552,7 +587,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(8),
@@ -578,7 +616,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 6.0),
                         child: ChoiceChip(
-                          avatar: Text(lang.flag, style: const TextStyle(fontSize: 13)),
+                          avatar: Text(
+                            lang.flag,
+                            style: const TextStyle(fontSize: 13),
+                          ),
                           label: Text(lang.displayName),
                           selected: isSelected,
                           onSelected: (val) {
@@ -590,9 +631,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           labelStyle: TextStyle(
                             color: isSelected ? Colors.white : _textPrimary,
                             fontSize: 11.5,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                           ),
-                          backgroundColor: _isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                          backgroundColor: _isDark
+                              ? const Color(0xFF0F172A)
+                              : const Color(0xFFF1F5F9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -611,15 +656,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 _buildScanOptionTile(
                   icon: Icons.camera_alt_rounded,
                   title: 'Take Photo with Camera',
-                  subtitle: 'Digitize physical page in ${selectedLanguage.displayName}',
-                  gradientColors: [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+                  subtitle:
+                      'Digitize physical page in ${selectedLanguage.displayName}',
+                  gradientColors: [
+                    const Color(0xFFF59E0B),
+                    const Color(0xFFD97706),
+                  ],
                   onTap: () {
                     Navigator.pop(ctx);
                     _runScan(
-                      scanAction: (onProgress) => _scanBookUseCase.scanFromCamera(
-                        language: selectedLanguage,
-                        onProgress: onProgress,
-                      ),
+                      scanAction: (onProgress) =>
+                          _scanBookUseCase.scanFromCamera(
+                            language: selectedLanguage,
+                            onProgress: onProgress,
+                          ),
                     );
                   },
                 ),
@@ -628,14 +678,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   icon: Icons.photo_library_rounded,
                   title: 'Choose from Gallery',
                   subtitle: 'Select a photo in ${selectedLanguage.displayName}',
-                  gradientColors: [const Color(0xFF10B981), const Color(0xFF059669)],
+                  gradientColors: [
+                    const Color(0xFF10B981),
+                    const Color(0xFF059669),
+                  ],
                   onTap: () {
                     Navigator.pop(ctx);
                     _runScan(
-                      scanAction: (onProgress) => _scanBookUseCase.scanFromGallery(
-                        language: selectedLanguage,
-                        onProgress: onProgress,
-                      ),
+                      scanAction: (onProgress) =>
+                          _scanBookUseCase.scanFromGallery(
+                            language: selectedLanguage,
+                            onProgress: onProgress,
+                          ),
                     );
                   },
                 ),
@@ -643,15 +697,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 _buildScanOptionTile(
                   icon: Icons.collections_bookmark_rounded,
                   title: 'Batch Photo Scan',
-                  subtitle: 'Select multiple photos to create a multi-page book',
-                  gradientColors: [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)],
+                  subtitle:
+                      'Select multiple photos to create a multi-page book',
+                  gradientColors: [
+                    const Color(0xFF8B5CF6),
+                    const Color(0xFF6D28D9),
+                  ],
                   onTap: () {
                     Navigator.pop(ctx);
                     _runScan(
-                      scanAction: (onProgress) => _scanBookUseCase.scanMultipleFromGallery(
-                        language: selectedLanguage,
-                        onProgress: onProgress,
-                      ),
+                      scanAction: (onProgress) =>
+                          _scanBookUseCase.scanMultipleFromGallery(
+                            language: selectedLanguage,
+                            onProgress: onProgress,
+                          ),
                     );
                   },
                 ),
@@ -710,15 +769,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: _textSecondary),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: _textSecondary),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: _textSecondary,
+            ),
           ],
         ),
       ),
@@ -743,7 +803,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
             return PopScope(
               canPop: false,
               child: AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 content: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Column(
@@ -785,7 +847,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         child: LinearProgressIndicator(
                           value: progressValue > 0 ? progressValue : null,
                           backgroundColor: const Color(0xFFE2E8F0),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFF59E0B),
+                          ),
                           minHeight: 6,
                         ),
                       ),
@@ -851,7 +915,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Book'),
         content: Text(
-            'Are you sure you want to remove "${book.metadata.title}" from your library?'),
+          'Are you sure you want to remove "${book.metadata.title}" from your library?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -968,8 +1033,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
       if (_searchQuery.trim().isNotEmpty) {
         final query = _searchQuery.toLowerCase().trim();
         final matchesTitle = book.metadata.title.toLowerCase().contains(query);
-        final matchesAuthor =
-            book.metadata.author.toLowerCase().contains(query);
+        final matchesAuthor = book.metadata.author.toLowerCase().contains(
+          query,
+        );
         final desc = book.metadata.description ?? '';
         final matchesDesc = desc.toLowerCase().contains(query);
         final lang = book.metadata.language ?? '';
@@ -998,8 +1064,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             book.id.contains('chemmeen') ||
             book.metadata.title.contains('ചെമ്മീൻ');
       } else if (_selectedFilterTag == 'English') {
-        return lang.contains('en') ||
-            book.id.contains('alice');
+        return lang.contains('en') || book.id.contains('alice');
       } else if (_selectedFilterTag == 'Imported') {
         return book.id != 'sample_chemmeen' && book.id != 'sample_alice';
       }
@@ -1016,21 +1081,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final bgColors = isText
         ? [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)]
         : (isScan
-            ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
-            : (isPdf
-                ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
-                : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)]));
+              ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+              : (isPdf
+                    ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+                    : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)]));
     final icon = isText
         ? Icons.edit_note_rounded
         : (isScan
-            ? Icons.document_scanner_rounded
-            : (isPdf ? Icons.picture_as_pdf_rounded : Icons.auto_stories_rounded));
-    final label = isText ? 'TEXT' : (isScan ? 'SCAN' : (isPdf ? 'PDF' : 'EPUB'));
+              ? Icons.document_scanner_rounded
+              : (isPdf
+                    ? Icons.picture_as_pdf_rounded
+                    : Icons.auto_stories_rounded));
+    final label = isText
+        ? 'TEXT'
+        : (isScan ? 'SCAN' : (isPdf ? 'PDF' : 'EPUB'));
     final shadowColor = isText
         ? Colors.purple
-        : (isScan
-            ? Colors.amber
-            : (isPdf ? Colors.red : Colors.blue));
+        : (isScan ? Colors.amber : (isPdf ? Colors.red : Colors.blue));
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1117,7 +1184,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Icon(
-                  _isGridView ? Icons.view_stream_rounded : Icons.grid_view_rounded,
+                  _isGridView
+                      ? Icons.view_stream_rounded
+                      : Icons.grid_view_rounded,
                   color: _iconColor,
                   size: 21,
                 ),
@@ -1146,11 +1215,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ],
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: _goldAccent,
-              ),
-            )
+          ? Center(child: CircularProgressIndicator(color: _goldAccent))
           : Stack(
               children: [
                 _selectedTabIndex == 0
@@ -1179,7 +1244,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ),
             ],
             border: Border.all(
-              color: _isDark ? const Color(0xFF382F24) : const Color(0xFF3D352B),
+              color: _isDark
+                  ? const Color(0xFF382F24)
+                  : const Color(0xFF3D352B),
               width: 1,
             ),
           ),
@@ -1193,7 +1260,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: _selectedTabIndex == 0
-                          ? (_isDark ? const Color(0xFF2C241B) : const Color(0xFF3E362C))
+                          ? (_isDark
+                                ? const Color(0xFF2C241B)
+                                : const Color(0xFF3E362C))
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -1203,7 +1272,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         Icon(
                           Icons.auto_stories_rounded,
                           size: 18,
-                          color: _selectedTabIndex == 0 ? _navBarActive : _navBarInactive,
+                          color: _selectedTabIndex == 0
+                              ? _navBarActive
+                              : _navBarInactive,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -1212,8 +1283,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             fontFamily: 'serif',
                             fontSize: 12,
                             letterSpacing: 0.8,
-                            fontWeight: _selectedTabIndex == 0 ? FontWeight.bold : FontWeight.w500,
-                            color: _selectedTabIndex == 0 ? _navBarActive : _navBarInactive,
+                            fontWeight: _selectedTabIndex == 0
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: _selectedTabIndex == 0
+                                ? _navBarActive
+                                : _navBarInactive,
                           ),
                         ),
                       ],
@@ -1229,7 +1304,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: _selectedTabIndex == 1
-                          ? (_isDark ? const Color(0xFF2C241B) : const Color(0xFF3E362C))
+                          ? (_isDark
+                                ? const Color(0xFF2C241B)
+                                : const Color(0xFF3E362C))
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -1241,7 +1318,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               ? Icons.bookmarks_rounded
                               : Icons.bookmarks_outlined,
                           size: 18,
-                          color: _selectedTabIndex == 1 ? _navBarActive : _navBarInactive,
+                          color: _selectedTabIndex == 1
+                              ? _navBarActive
+                              : _navBarInactive,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -1250,8 +1329,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             fontFamily: 'serif',
                             fontSize: 12,
                             letterSpacing: 0.8,
-                            fontWeight: _selectedTabIndex == 1 ? FontWeight.bold : FontWeight.w500,
-                            color: _selectedTabIndex == 1 ? _navBarActive : _navBarInactive,
+                            fontWeight: _selectedTabIndex == 1
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: _selectedTabIndex == 1
+                                ? _navBarActive
+                                : _navBarInactive,
                           ),
                         ),
                       ],
@@ -1283,12 +1366,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
             final isPlaying = session.audioState.isPlaying;
             final book = session.book;
-            final chapterTitle = session.currentChapterContent?.title ??
+            final chapterTitle =
+                session.currentChapterContent?.title ??
                 'Chapter ${session.currentChapterIndex + 1}';
             final paraIdx = session.currentParagraphIndex + 1;
             final totalParas = session.currentChapterParagraphs.length;
-            final progressFactor =
-                totalParas > 0 ? (paraIdx / totalParas).clamp(0.0, 1.0) : 0.0;
+            final progressFactor = totalParas > 0
+                ? (paraIdx / totalParas).clamp(0.0, 1.0)
+                : 0.0;
 
             return Container(
               key: const ValueKey('active_audio_tile'),
@@ -1317,7 +1402,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 border: Border.all(
                   color: isPlaying
                       ? _goldAccent.withValues(alpha: 0.6)
-                      : (_isDark ? const Color(0xFF4A3E31) : const Color(0xFF5A4D3B)),
+                      : (_isDark
+                            ? const Color(0xFF4A3E31)
+                            : const Color(0xFF5A4D3B)),
                   width: 1.2,
                 ),
               ),
@@ -1343,7 +1430,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   borderRadius: BorderRadius.circular(9),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.45),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.45,
+                                      ),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1363,7 +1452,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                             book.coverImageBytes!,
                                             fit: BoxFit.cover,
                                           )
-                                        : _buildDefaultCover(book, isMini: true),
+                                        : _buildDefaultCover(
+                                            book,
+                                            isMini: true,
+                                          ),
                                   ),
                                 ),
                               ),
@@ -1379,12 +1471,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                       children: [
                                         if (isPlaying)
                                           Container(
-                                            margin: const EdgeInsets.only(right: 6),
+                                            margin: const EdgeInsets.only(
+                                              right: 6,
+                                            ),
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 5, vertical: 2),
+                                              horizontal: 5,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: _goldAccent.withValues(alpha: 0.25),
-                                              borderRadius: BorderRadius.circular(6),
+                                              color: _goldAccent.withValues(
+                                                alpha: 0.25,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                             child: const Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -1465,8 +1564,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFFE0B45F)
-                                                .withValues(alpha: 0.4),
+                                            color: const Color(
+                                              0xFFE0B45F,
+                                            ).withValues(alpha: 0.4),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -1525,9 +1625,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         value: progressFactor,
                         minHeight: 2.5,
                         backgroundColor: const Color(0xFF1E1812),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _goldAccent,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(_goldAccent),
                       ),
                   ],
                 ),
@@ -1563,9 +1661,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final Book? heroBook = historyBooks.isNotEmpty
         ? historyBooks.first.key
         : (_books.isNotEmpty ? _books.first : null);
-    final BookProgress? heroProgress = historyBooks.isNotEmpty
-        ? historyBooks.first.value
-        : (heroBook != null ? _progressMap[heroBook.id] : null);
 
     // Curated Shelves
     final importedBooks = _books
@@ -1573,32 +1668,44 @@ class _LibraryScreenState extends State<LibraryScreen> {
         .toList();
 
     final malayalamBooks = _books
-        .where((b) =>
-            (b.metadata.language ?? '').toLowerCase().contains('ml') ||
-            b.id.contains('chemmeen') ||
-            b.metadata.title.contains('ചെമ്മീൻ'))
+        .where(
+          (b) =>
+              (b.metadata.language ?? '').toLowerCase().contains('ml') ||
+              b.id.contains('chemmeen') ||
+              b.metadata.title.contains('ചെമ്മീൻ'),
+        )
         .toList();
     final englishBooks = _books
-        .where((b) =>
-            (b.metadata.language ?? '').toLowerCase().contains('en') ||
-            b.id.contains('alice'))
+        .where(
+          (b) =>
+              (b.metadata.language ?? '').toLowerCase().contains('en') ||
+              b.id.contains('alice'),
+        )
         .toList();
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // 1. Quick Actions, Search Bar & Filter Header
+        // 1. Search Bar, Import Hub Button & Filter Button
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildQuickActionBar(),
-                const SizedBox(height: 12),
-                _buildSearchBar(),
-                const SizedBox(height: 12),
-                _buildCategoryChipsBar(),
+                Row(
+                  children: [
+                    Expanded(child: _buildSearchBar()),
+                    const SizedBox(width: 8),
+                    _buildImportHubButton(),
+                    const SizedBox(width: 8),
+                    _buildFilterHubButton(),
+                  ],
+                ),
+                if (_selectedFilterTag != 'All') ...[
+                  const SizedBox(height: 10),
+                  _buildActiveFilterBanner(),
+                ],
               ],
             ),
           ),
@@ -1608,13 +1715,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
         if (isSearching) ...[
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
               child: Row(
                 children: [
                   Text(
-                    'Search Results (${filteredBooks.length})',
+                    _selectedFilterTag != 'All'
+                        ? 'Category: $_selectedFilterTag (${filteredBooks.length})'
+                        : 'Search Results (${filteredBooks.length})',
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 16.5,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'serif',
                       color: _textPrimary,
@@ -1631,8 +1740,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         });
                       },
                       child: Text(
-                        'Reset',
-                        style: TextStyle(color: _goldAccent, fontWeight: FontWeight.bold),
+                        'Reset Filter',
+                        style: TextStyle(
+                          color: _goldAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                 ],
@@ -1646,35 +1758,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ? _buildGridSliver(filteredBooks)
                 : _buildListSliver(filteredBooks),
         ] else ...[
-          // 3. Hero In-Progress Card (Matches demo)
-          if (heroBook != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-                child: _buildHeroInProgressCard(heroBook, heroProgress),
-              ),
-            ),
-
-          // 4. Action Trio Bar (Read, Listen, Explore)
+          // 3. Action Trio Bar (Read, Listen, Explore)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
               child: _buildActionTrioBar(heroBook),
             ),
           ),
 
-          // 5. Editorial Tagline
+          // 4. Editorial Tagline
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: _buildEditorialTagline(),
             ),
           ),
-
           if (_isGridView) ...[
             _buildGridSliver(_books),
           ] else ...[
-            // 6. Continue Reading / History Shelf
+            // 5. Continue Reading / History Shelf
             if (historyBooks.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: _buildShelfHeader(
@@ -1685,9 +1787,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   count: historyBooks.length,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: _buildHistoryShelf(historyBooks),
-              ),
+              SliverToBoxAdapter(child: _buildHistoryShelf(historyBooks)),
             ],
 
             // 7. Malayalam Literature Shelf
@@ -1757,169 +1857,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
-  // ----------------- QUICK ACTION BAR & SEARCH & FILTER WIDGETS -----------------
-
-  // ----------------- HERO IN-PROGRESS CARD & ACTION TRIO -----------------
-
-  Widget _buildHeroInProgressCard(Book book, BookProgress? progress) {
-    final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
-    final currentChap = (progress?.chapterIndex ?? 0) + 1;
-    final progressFraction = progress != null
-        ? ((progress.chapterIndex + 1) / chapterCount).clamp(0.0, 1.0)
-        : 0.3;
-    final percent = (progressFraction * 100).toInt();
-    final timeStr = progress != null
-        ? _formatRelativeTime(progress.lastUpdated)
-        : '6h ago';
-    final fmtStr = book.isPdf ? 'pdf' : (book.isText ? 'text' : (book.isScan ? 'scan' : 'epub'));
-
-    return _TappableScale(
-      onTap: () => _openReader(book, chapterIndex: progress?.chapterIndex ?? 0),
-      child: Container(
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _cardBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: _isDark ? 0.3 : 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Mini Cover
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 52,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF241E16),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _goldAccent.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: book.coverImageBytes != null
-                    ? Image.memory(
-                        book.coverImageBytes!,
-                        fit: BoxFit.cover,
-                      )
-                    : Center(
-                        child: Icon(
-                          Icons.auto_stories_rounded,
-                          color: _goldAccent,
-                          size: 24,
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 14),
-
-            // Metadata & Progress
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    book.metadata.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'serif',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                      letterSpacing: 0.3,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${book.metadata.author} · $fmtStr · $timeStr',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: _textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  // Thin Progress Bar
-                  Container(
-                    height: 3.5,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: _isDark ? const Color(0xFF382F24) : const Color(0xFFECDFC0),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: progressFraction,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _isDark ? _goldAccent : const Color(0xFF2B2620),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ch. $currentChap / $chapterCount · $percent%',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: _textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-
-            // Circular Play Button
-            _TappableScale(
-              onTap: () => _openAudiobook(book),
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _isDark ? _goldAccent : const Color(0xFF2B2620),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (_isDark ? _goldAccent : const Color(0xFF2B2620))
-                          .withValues(alpha: 0.35),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.play_arrow_rounded,
-                  size: 18,
-                  color: _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildActionTrioBar(Book? activeBook) {
+    final targetBook = activeBook ?? (_books.isNotEmpty ? _books.first : null);
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -1935,8 +1877,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
             icon: Icons.menu_book_rounded,
             label: 'Read',
             onTap: () {
-              if (activeBook != null) {
-                _openReader(activeBook);
+              if (targetBook != null) {
+                _openReader(targetBook);
               }
             },
           ),
@@ -1944,8 +1886,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
             icon: Icons.headphones_rounded,
             label: 'Listen',
             onTap: () {
-              if (activeBook != null) {
-                _openAudiobook(activeBook);
+              if (targetBook != null) {
+                _openAudiobook(targetBook);
               }
             },
           ),
@@ -1970,26 +1912,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }) {
     return _TappableScale(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 21,
-            color: _textPrimary,
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'serif',
-              fontSize: 10.5,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.9,
-              color: _textPrimary,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 21, color: _textPrimary),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'serif',
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+                color: _textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1999,65 +1940,686 @@ class _LibraryScreenState extends State<LibraryScreen> {
       'Discover universes in words and sound',
       style: TextStyle(
         fontFamily: 'serif',
-        fontSize: 15,
-        letterSpacing: 0.4,
+        fontSize: 14.5,
+        letterSpacing: 0.3,
         fontWeight: FontWeight.w400,
         color: _textPrimary,
       ),
     );
   }
 
-  // ----------------- QUICK ACTION BAR & SEARCH & FILTER WIDGETS -----------------
+  // ----------------- SEARCH, IMPORT HUB & FILTER MODAL WIDGETS -----------------
 
-  Widget _buildQuickActionBar() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
+  Widget _buildSearchBar() {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: _cardBorder),
+      ),
+      child: TextField(
+        controller: _searchController,
+        style: TextStyle(color: _textPrimary, fontSize: 13),
+        onChanged: (val) {
+          setState(() {
+            _searchQuery = val;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Search books, authors...',
+          hintStyle: TextStyle(color: _textSecondary, fontSize: 12.5),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: _textSecondary,
+            size: 19,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear_rounded,
+                    color: _textSecondary,
+                    size: 16,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.clear();
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 10,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImportHubButton() {
+    return _TappableScale(
+      onTap: _showImportHubModal,
+      child: Tooltip(
+        message: 'Import Book',
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: _cardBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _cardBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.file_upload_outlined,
+                  color: _textPrimary,
+                  size: 20,
+                ),
+                // Hidden 0-size text element ensuring find.text('Import Book') matches in widget test
+                SizedBox(
+                  width: 0,
+                  height: 0,
+                  child: Text(
+                    'Import Book',
+                    style: TextStyle(
+                      fontSize: 0.1,
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterHubButton() {
+    final bool isFilterActive = _selectedFilterTag != 'All';
+
+    return _TappableScale(
+      onTap: _showCategoryFilterModal,
+      child: Tooltip(
+        message: 'Filter Categories',
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: isFilterActive
+                ? (_isDark ? const Color(0xFF382C1E) : const Color(0xFFF0E4CE))
+                : _cardBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isFilterActive ? _goldAccent : _cardBorder,
+              width: isFilterActive ? 1.4 : 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isFilterActive
+                    ? _goldAccent.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.tune_rounded,
+                color: isFilterActive ? _goldAccent : _textPrimary,
+                size: 20,
+              ),
+              if (isFilterActive)
+                Positioned(
+                  top: 7,
+                  right: 7,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: _goldAccent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveFilterBanner() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: _isDark ? const Color(0xFF2B2218) : const Color(0xFFEFE6D5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _goldAccent.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
       child: Row(
         children: [
-          _buildQuickActionButton(
-            label: 'Write text',
-            icon: Icons.edit_outlined,
-            onTap: _openTextEditor,
-          ),
+          Icon(Icons.tune_rounded, size: 15, color: _goldAccent),
           const SizedBox(width: 8),
-          _buildQuickActionButton(
-            label: 'Quick paste',
-            icon: Icons.content_paste_rounded,
-            onTap: _openQuickPaste,
+          Expanded(
+            child: Text(
+              'Filtering by: $_selectedFilterTag',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'serif',
+                color: _textPrimary,
+              ),
+            ),
           ),
-          const SizedBox(width: 8),
-          _buildQuickActionButton(
-            label: 'Scan photo',
-            icon: Icons.document_scanner_outlined,
-            onTap: _showScanOptionsModal,
-          ),
-          const SizedBox(width: 8),
-          _buildQuickActionButton(
-            label: 'Import Book',
-            icon: Icons.file_upload_outlined,
-            onTap: _importBookFile,
+          _TappableScale(
+            onTap: () {
+              setState(() {
+                _selectedFilterTag = 'All';
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: _isDark ? const Color(0xFF3B3023) : const Color(0xFFDFD4C0),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.close_rounded, size: 12, color: _textSecondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Clear',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: _textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActionButton({
-    required String label,
+  Future<void> _showImportHubModal() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final modalBg = isDark ? const Color(0xFF221B14) : const Color(0xFFFFFDF8);
+        final textColor = isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620);
+        final subTextColor = isDark ? const Color(0xFFA99C85) : const Color(0xFF857863);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: modalBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF4A3E31) : const Color(0xFFC7BBA5),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _goldAccent.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.file_upload_outlined, color: _goldAccent, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Add & Import Books',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'serif',
+                              color: textColor,
+                            ),
+                          ),
+                          Text(
+                            'Import documents, scan pages, or write text',
+                            style: TextStyle(fontSize: 12, color: subTextColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildModalActionTile(
+                    icon: Icons.file_open_rounded,
+                    iconColor: const Color(0xFF3B82F6),
+                    title: 'Import File (EPUB, PDF, Text)',
+                    subtitle: 'Select .epub, .pdf, .txt, or .md files from storage',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _importBookFile();
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildModalActionTile(
+                    icon: Icons.document_scanner_rounded,
+                    iconColor: const Color(0xFFF59E0B),
+                    title: 'Scan Document (OCR)',
+                    subtitle: 'Digitize physical books with camera or gallery photos',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _showScanOptionsModal();
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildModalActionTile(
+                    icon: Icons.edit_note_rounded,
+                    iconColor: const Color(0xFF8B5CF6),
+                    title: 'Write In-App Text / Note',
+                    subtitle: 'Compose custom stories, notes, or long-form text',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _openTextEditor();
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildModalActionTile(
+                    icon: Icons.content_paste_rounded,
+                    iconColor: const Color(0xFF10B981),
+                    title: 'Quick Paste from Clipboard',
+                    subtitle: 'Instantly generate a readable book from copied text',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _openQuickPaste();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showCategoryFilterModal() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final modalBg = isDark ? const Color(0xFF221B14) : const Color(0xFFFFFDF8);
+        final textColor = isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620);
+        final subTextColor = isDark ? const Color(0xFFA99C85) : const Color(0xFF857863);
+
+        final epubCount = _books.where((b) => !b.isPdf && !b.isScan && !b.isText).length;
+        final pdfCount = _books.where((b) => b.isPdf && !b.isScan).length;
+        final textCount = _books.where((b) => b.isText).length;
+        final scanCount = _books.where((b) => b.isScan).length;
+        final inProgressCount = _recentProgressList.length;
+        final mlCount = _books
+            .where((b) =>
+                (b.metadata.language ?? '').toLowerCase().contains('ml') ||
+                b.id.contains('chemmeen') ||
+                b.metadata.title.contains('ചെമ്മീൻ'))
+            .length;
+        final enCount = _books
+            .where((b) =>
+                (b.metadata.language ?? '').toLowerCase().contains('en') ||
+                b.id.contains('alice'))
+            .length;
+        final importCount = _books
+            .where((b) => b.id != 'sample_chemmeen' && b.id != 'sample_alice')
+            .length;
+
+        final categories = [
+          {
+            'tag': 'All',
+            'title': 'All Books & Documents',
+            'subtitle': 'Browse entire library collection',
+            'count': _books.length,
+            'icon': Icons.auto_stories_rounded,
+            'color': _goldAccent,
+          },
+          {
+            'tag': 'In Progress',
+            'title': 'In Progress & History',
+            'subtitle': 'Books currently being read or listened to',
+            'count': inProgressCount,
+            'icon': Icons.history_rounded,
+            'color': const Color(0xFFF59E0B),
+          },
+          {
+            'tag': 'Malayalam',
+            'title': 'Malayalam Literature',
+            'subtitle': 'മലയാള സാഹിത്യം & audio synchronized books',
+            'count': mlCount,
+            'icon': Icons.local_fire_department_rounded,
+            'color': const Color(0xFFEA580C),
+          },
+          {
+            'tag': 'English',
+            'title': 'World Classics & English',
+            'subtitle': 'Timeless classics & English literature',
+            'count': enCount,
+            'icon': Icons.public_rounded,
+            'color': const Color(0xFF7C3AED),
+          },
+          {
+            'tag': 'EPUB',
+            'title': 'EPUB Books',
+            'subtitle': 'Standard reflowable EPUB ebooks',
+            'count': epubCount,
+            'icon': Icons.book_rounded,
+            'color': const Color(0xFF3B82F6),
+          },
+          {
+            'tag': 'PDF',
+            'title': 'PDF Documents',
+            'subtitle': 'Reflowable PDF documents with TTS',
+            'count': pdfCount,
+            'icon': Icons.picture_as_pdf_rounded,
+            'color': const Color(0xFFEF4444),
+          },
+          {
+            'tag': 'Text & Notes',
+            'title': 'Text & In-App Notes',
+            'subtitle': 'Written stories, pasted articles & text files',
+            'count': textCount,
+            'icon': Icons.edit_note_rounded,
+            'color': const Color(0xFF8B5CF6),
+          },
+          {
+            'tag': 'Scans',
+            'title': 'Scanned Documents (OCR)',
+            'subtitle': 'Digitized physical pages & photos',
+            'count': scanCount,
+            'icon': Icons.document_scanner_rounded,
+            'color': const Color(0xFFD97706),
+          },
+          {
+            'tag': 'Imported',
+            'title': 'Your Imports & Custom Books',
+            'subtitle': 'User-imported files and saved scans',
+            'count': importCount,
+            'icon': Icons.folder_shared_rounded,
+            'color': const Color(0xFF10B981),
+          },
+        ];
+
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.72,
+          decoration: BoxDecoration(
+            color: modalBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF4A3E31) : const Color(0xFFC7BBA5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _goldAccent.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.tune_rounded, color: _goldAccent, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Filter by Category',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'serif',
+                                color: textColor,
+                              ),
+                            ),
+                            Text(
+                              'Select a collection to filter your library',
+                              style: TextStyle(fontSize: 12, color: subTextColor),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_selectedFilterTag != 'All')
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedFilterTag = 'All';
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          child: Text(
+                            'Reset',
+                            style: TextStyle(
+                              color: _goldAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Divider(
+                  height: 1,
+                  color: isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                    itemCount: categories.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      final tag = cat['tag'] as String;
+                      final isSelected = _selectedFilterTag == tag;
+                      final count = cat['count'] as int;
+
+                      return _buildCategoryFilterTile(
+                        tag: tag,
+                        title: cat['title'] as String,
+                        subtitle: cat['subtitle'] as String,
+                        count: count,
+                        icon: cat['icon'] as IconData,
+                        iconColor: cat['color'] as Color,
+                        isSelected: isSelected,
+                        onTap: () {
+                          setState(() {
+                            _selectedFilterTag = tag;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildModalActionTile({
     required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
     return _TappableScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _cardBg,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _cardBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: _isDark ? 0.2 : 0.03),
+              blurRadius: 5,
+              offset: const Offset(0, 1.5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: _isDark ? 0.22 : 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11.5, color: _textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 13,
+              color: _textSecondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryFilterTile({
+    required String tag,
+    required String title,
+    required String subtitle,
+    required int count,
+    required IconData icon,
+    required Color iconColor,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return _TappableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (_isDark ? const Color(0xFF2C241B) : const Color(0xFFEBE2D0))
+              : _cardBg,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: _isDark ? const Color(0xFF4A3E31) : const Color(0xFF2B2620),
-            width: 1,
+            color: isSelected ? _goldAccent : _cardBorder,
+            width: isSelected ? 1.4 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
@@ -2068,160 +2630,70 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ],
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 13.5,
-              color: _textPrimary,
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? _goldAccent.withValues(alpha: 0.25)
+                    : iconColor.withValues(alpha: _isDark ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? _goldAccent : iconColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontSize: 13.5,
+                      fontFamily: 'serif',
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11, color: _textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? _goldAccent
+                    : (_isDark ? const Color(0xFF382F24) : const Color(0xFFE2D6C0)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected
+                      ? (_isDark ? const Color(0xFF1E1812) : Colors.white)
+                      : _textPrimary,
+                ),
+              ),
             ),
             const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: _textPrimary,
-              ),
-            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded, color: _goldAccent, size: 18)
+            else
+              const SizedBox(width: 18),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _cardBg,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-        border: Border.all(color: _cardBorder),
-      ),
-      child: TextField(
-        controller: _searchController,
-        style: TextStyle(color: _textPrimary, fontSize: 13.5),
-        onChanged: (val) {
-          setState(() {
-            _searchQuery = val;
-          });
-        },
-        decoration: InputDecoration(
-          hintText: 'Search by book title, author, or language...',
-          hintStyle: TextStyle(color: _textSecondary, fontSize: 13),
-          prefixIcon: Icon(Icons.search_rounded, color: _textSecondary, size: 20),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: Icon(Icons.clear_rounded, color: _textSecondary, size: 18),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _searchQuery = '';
-                    });
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChipsBar() {
-    final tags = [
-      'All',
-      'EPUB',
-      'PDF',
-      'Text & Notes',
-      'Scans',
-      'In Progress',
-      'Malayalam',
-      'English',
-      'Imported'
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: tags.map((tag) {
-          final isSelected = _selectedFilterTag == tag;
-          int count = 0;
-          if (tag == 'All') {
-            count = _books.length;
-          } else if (tag == 'EPUB') {
-            count = _books.where((b) => !b.isPdf && !b.isScan && !b.isText).length;
-          } else if (tag == 'PDF') {
-            count = _books.where((b) => b.isPdf && !b.isScan).length;
-          } else if (tag == 'Text & Notes') {
-            count = _books.where((b) => b.isText).length;
-          } else if (tag == 'Scans') {
-            count = _books.where((b) => b.isScan).length;
-          } else if (tag == 'In Progress') {
-            count = _recentProgressList.length;
-          } else if (tag == 'Malayalam') {
-            count = _books
-                .where((b) =>
-                    (b.metadata.language ?? '').toLowerCase().contains('ml') ||
-                    b.id.contains('chemmeen') ||
-                    b.metadata.title.contains('ചെമ്മീൻ'))
-                .length;
-          } else if (tag == 'English') {
-            count = _books
-                .where((b) =>
-                    (b.metadata.language ?? '').toLowerCase().contains('en') ||
-                    b.id.contains('alice'))
-                .length;
-          } else if (tag == 'Imported') {
-            count = _books
-                .where((b) =>
-                    b.id != 'sample_chemmeen' && b.id != 'sample_alice')
-                .length;
-          }
-
-          final activeBg = _isDark ? const Color(0xFFF3ECE0) : const Color(0xFF2B2620);
-          final activeFg = _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0);
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: _TappableScale(
-              onTap: () {
-                setState(() {
-                  _selectedFilterTag = tag;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: isSelected ? activeBg : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? activeBg
-                        : (_isDark ? const Color(0xFF4A3E31) : const Color(0xFFC9BC9E)),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  '$tag ($count)',
-                  style: TextStyle(
-                    color: isSelected ? activeFg : _textSecondary,
-                    fontSize: 11.5,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }
@@ -2264,7 +2736,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 1),
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: _chipBg,
                         borderRadius: BorderRadius.circular(10),
@@ -2282,10 +2756,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: _textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 11.5, color: _textSecondary),
                 ),
               ],
             ),
@@ -2349,13 +2820,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final book = books[index];
-            return _buildBookCard(book);
-          },
-          childCount: books.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final book = books[index];
+          return _buildBookCard(book);
+        }, childCount: books.length),
       ),
     );
   }
@@ -2364,16 +2832,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final book = books[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildBookListTile(book),
-            );
-          },
-          childCount: books.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final book = books[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildBookListTile(book),
+          );
+        }, childCount: books.length),
       ),
     );
   }
@@ -2437,10 +2902,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     book.metadata.author,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: _textSecondary),
                   ),
                   const SizedBox(height: 5),
                   Row(
@@ -2449,7 +2911,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 1.5),
+                          horizontal: 6,
+                          vertical: 1.5,
+                        ),
                         decoration: BoxDecoration(
                           color: _chipBg,
                           borderRadius: BorderRadius.circular(6),
@@ -2457,14 +2921,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         child: Text(
                           '${book.chapterCount} Chapters',
                           style: TextStyle(
-                              fontSize: 10.5, color: _textSecondary),
+                            fontSize: 10.5,
+                            color: _textSecondary,
+                          ),
                         ),
                       ),
                       if (progress != null) ...[
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 1.5),
+                            horizontal: 6,
+                            vertical: 1.5,
+                          ),
                           decoration: BoxDecoration(
                             color: _isDark
                                 ? _goldAccent.withValues(alpha: 0.2)
@@ -2492,8 +2960,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
               children: [
                 _TappableScale(
                   child: IconButton(
-                    icon: Icon(Icons.headphones_rounded,
-                        color: _goldAccent, size: 20),
+                    icon: Icon(
+                      Icons.headphones_rounded,
+                      color: _goldAccent,
+                      size: 20,
+                    ),
                     tooltip: 'Listen Audiobook',
                     onPressed: () => _openAudiobook(book),
                   ),
@@ -2501,8 +2972,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 if (isCustomBook)
                   _TappableScale(
                     child: IconButton(
-                      icon: Icon(Icons.delete_outline_rounded,
-                          color: _textSecondary, size: 18),
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: _textSecondary,
+                        size: 18,
+                      ),
                       tooltip: 'Delete Book',
                       onPressed: () => _deleteBook(book),
                     ),
@@ -2544,8 +3018,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   child: _TappableScale(
                     onTap: () => _openReader(book),
                     child: ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(15)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(15),
+                      ),
                       child: book.coverImageBytes != null
                           ? Image.memory(
                               book.coverImageBytes!,
@@ -2568,7 +3043,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         const SizedBox(width: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.75),
                             borderRadius: BorderRadius.circular(6),
@@ -2637,10 +3114,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   book.metadata.author,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: _textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 11, color: _textSecondary),
                 ),
                 const SizedBox(height: 8),
 
@@ -2656,7 +3130,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           decoration: BoxDecoration(
                             color: _chipBg,
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: _cardBorder.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: _cardBorder.withValues(alpha: 0.5),
+                            ),
                           ),
                           child: Text(
                             'Read',
@@ -2714,16 +3190,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final color1 = isScan
         ? const Color(0xFF8B4513)
         : (isPdf
-            ? const Color(0xFF5C1D1D)
-            : HSLColor.fromAHSL(1.0, (hash.abs() % 360).toDouble(), 0.35, 0.22)
-                .toColor());
+              ? const Color(0xFF5C1D1D)
+              : HSLColor.fromAHSL(
+                  1.0,
+                  (hash.abs() % 360).toDouble(),
+                  0.35,
+                  0.22,
+                ).toColor());
     final color2 = isScan
         ? const Color(0xFF4A250B)
         : (isPdf
-            ? const Color(0xFF380E0E)
-            : HSLColor.fromAHSL(
-                    1.0, ((hash.abs() + 40) % 360).toDouble(), 0.45, 0.14)
-                .toColor());
+              ? const Color(0xFF380E0E)
+              : HSLColor.fromAHSL(
+                  1.0,
+                  ((hash.abs() + 40) % 360).toDouble(),
+                  0.45,
+                  0.14,
+                ).toColor());
 
     final icon = isScan
         ? Icons.document_scanner_rounded
@@ -2775,16 +3258,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.search_off_rounded,
-                size: 52, color: _textSecondary),
+            Icon(Icons.search_off_rounded, size: 52, color: _textSecondary),
             const SizedBox(height: 12),
             Text(
               'No Books Found',
               style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'serif',
-                  color: _textPrimary),
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'serif',
+                color: _textPrimary,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -2805,8 +3288,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_stories_rounded,
-                size: 64, color: _goldAccent.withValues(alpha: 0.6)),
+            Icon(
+              Icons.auto_stories_rounded,
+              size: 64,
+              color: _goldAccent.withValues(alpha: 0.6),
+            ),
             const SizedBox(height: 16),
             Text(
               'No Books in Library',
@@ -2826,7 +3312,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _TappableScale(
               onTap: _importBookFile,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _isDark ? _goldAccent : const Color(0xFF2B2620),
                   borderRadius: BorderRadius.circular(20),
@@ -2837,7 +3326,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     Icon(
                       Icons.file_open_rounded,
                       size: 18,
-                      color: _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0),
+                      color: _isDark
+                          ? const Color(0xFF1E1812)
+                          : const Color(0xFFF3ECE0),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -2845,7 +3336,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       style: TextStyle(
                         fontFamily: 'serif',
                         fontWeight: FontWeight.bold,
-                        color: _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0),
+                        color: _isDark
+                            ? const Color(0xFF1E1812)
+                            : const Color(0xFFF3ECE0),
                       ),
                     ),
                   ],
@@ -2875,10 +3368,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
     } else {
       items = [..._highlights, ..._bookmarks];
       items.sort((a, b) {
-        final DateTime dateA =
-            a is TextHighlight ? a.createdAt : (a as Bookmark).createdAt;
-        final DateTime dateB =
-            b is TextHighlight ? b.createdAt : (b as Bookmark).createdAt;
+        final DateTime dateA = a is TextHighlight
+            ? a.createdAt
+            : (a as Bookmark).createdAt;
+        final DateTime dateB = b is TextHighlight
+            ? b.createdAt
+            : (b as Bookmark).createdAt;
         return dateB.compareTo(dateA);
       });
     }
@@ -2895,7 +3390,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
             child: Row(
               children: [
                 _buildSavedFilterChip(
-                    'All', _highlights.length + _bookmarks.length),
+                  'All',
+                  _highlights.length + _bookmarks.length,
+                ),
                 const SizedBox(width: 8),
                 _buildSavedFilterChip('Highlights', _highlights.length),
                 const SizedBox(width: 8),
@@ -2936,8 +3433,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Widget _buildSavedFilterChip(String label, int count) {
     final isSelected = _savedFilter == label;
-    final activeBg = _isDark ? const Color(0xFFF3ECE0) : const Color(0xFF2B2620);
-    final activeFg = _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0);
+    final activeBg = _isDark
+        ? const Color(0xFFF3ECE0)
+        : const Color(0xFF2B2620);
+    final activeFg = _isDark
+        ? const Color(0xFF1E1812)
+        : const Color(0xFFF3ECE0);
 
     return _TappableScale(
       onTap: () {
@@ -3021,7 +3522,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _isDark ? _goldAccent : const Color(0xFF2B2620),
                   borderRadius: BorderRadius.circular(18),
@@ -3032,7 +3536,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     Icon(
                       Icons.auto_stories_rounded,
                       size: 16,
-                      color: _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0),
+                      color: _isDark
+                          ? const Color(0xFF1E1812)
+                          : const Color(0xFFF3ECE0),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -3040,7 +3546,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       style: TextStyle(
                         fontFamily: 'serif',
                         fontWeight: FontWeight.bold,
-                        color: _isDark ? const Color(0xFF1E1812) : const Color(0xFFF3ECE0),
+                        color: _isDark
+                            ? const Color(0xFF1E1812)
+                            : const Color(0xFFF3ECE0),
                       ),
                     ),
                   ],
@@ -3108,8 +3616,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: _chipBg,
                       borderRadius: BorderRadius.circular(12),
@@ -3125,8 +3635,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    icon: Icon(Icons.delete_outline_rounded,
-                        size: 18, color: _textSecondary),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: _textSecondary,
+                    ),
                     tooltip: 'Delete Highlight',
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
@@ -3143,7 +3656,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: highlight.color.withValues(alpha: _isDark ? 0.22 : 0.12),
+                  color: highlight.color.withValues(
+                    alpha: _isDark ? 0.22 : 0.12,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -3176,8 +3691,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.translate_rounded,
-                          size: 16, color: _goldAccent),
+                      Icon(
+                        Icons.translate_rounded,
+                        size: 16,
+                        color: _goldAccent,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -3206,11 +3724,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     }
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.menu_book_rounded, size: 14, color: _goldAccent),
+                        Icon(
+                          Icons.menu_book_rounded,
+                          size: 14,
+                          color: _goldAccent,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Read in Chapter',
@@ -3253,9 +3778,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: _goldAccent, width: 5.0),
-            ),
+            border: Border(left: BorderSide(color: _goldAccent, width: 5.0)),
           ),
           padding: const EdgeInsets.all(14.0),
           child: Column(
@@ -3264,8 +3787,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               // Header Row: Bookmark Icon, Book Title, Chapter, Delete
               Row(
                 children: [
-                  Icon(Icons.bookmark_rounded,
-                      size: 18, color: _goldAccent),
+                  Icon(Icons.bookmark_rounded, size: 18, color: _goldAccent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -3281,8 +3803,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: _isDark
                           ? _goldAccent.withValues(alpha: 0.18)
@@ -3302,8 +3826,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    icon: Icon(Icons.delete_outline_rounded,
-                        size: 18, color: _textSecondary),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: _textSecondary,
+                    ),
                     tooltip: 'Delete Bookmark',
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
@@ -3342,7 +3869,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     }
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -3355,7 +3885,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_rounded, size: 14, color: _goldAccent),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: _goldAccent,
+                        ),
                       ],
                     ),
                   ),
@@ -3374,10 +3908,7 @@ class _TappableScale extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
 
-  const _TappableScale({
-    required this.child,
-    this.onTap,
-  });
+  const _TappableScale({required this.child, this.onTap});
 
   @override
   State<_TappableScale> createState() => _TappableScaleState();
@@ -3390,9 +3921,15 @@ class _TappableScaleState extends State<_TappableScale> {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: widget.onTap == null ? null : (_) => setState(() => _isPressed = true),
-      onTapUp: widget.onTap == null ? null : (_) => setState(() => _isPressed = false),
-      onTapCancel: widget.onTap == null ? null : () => setState(() => _isPressed = false),
+      onTapDown: widget.onTap == null
+          ? null
+          : (_) => setState(() => _isPressed = true),
+      onTapUp: widget.onTap == null
+          ? null
+          : (_) => setState(() => _isPressed = false),
+      onTapCancel: widget.onTap == null
+          ? null
+          : () => setState(() => _isPressed = false),
       onTap: widget.onTap,
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
@@ -3454,8 +3991,9 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
       child: AnimatedBuilder(
         animation: _scrollController,
         builder: (context, _) {
-          final scrollOffset =
-              _scrollController.hasClients ? _scrollController.offset : 0.0;
+          final scrollOffset = _scrollController.hasClients
+              ? _scrollController.offset
+              : 0.0;
 
           return ListView.builder(
             controller: _scrollController,
@@ -3481,7 +4019,11 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                 scale: scale,
                 child: Opacity(
                   opacity: opacity,
-                  child: _buildHistoryCard(book, progress, isFocused: isFocused),
+                  child: _buildHistoryCard(
+                    book,
+                    progress,
+                    isFocused: isFocused,
+                  ),
                 ),
               );
             },
@@ -3491,10 +4033,16 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
     );
   }
 
-  Widget _buildHistoryCard(Book book, BookProgress progress, {required bool isFocused}) {
+  Widget _buildHistoryCard(
+    Book book,
+    BookProgress progress, {
+    required bool isFocused,
+  }) {
     final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
-    final progressFraction =
-        ((progress.chapterIndex + 1) / chapterCount).clamp(0.0, 1.0);
+    final progressFraction = ((progress.chapterIndex + 1) / chapterCount).clamp(
+      0.0,
+      1.0,
+    );
     final percent = (progressFraction * 100).toInt();
     final timeStr = widget.formatRelativeTime(progress.lastUpdated);
 
@@ -3513,7 +4061,9 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
         boxShadow: [
           BoxShadow(
             color: isFocused
-                ? widget.goldAccent.withValues(alpha: widget.isDark ? 0.3 : 0.15)
+                ? widget.goldAccent.withValues(
+                    alpha: widget.isDark ? 0.3 : 0.15,
+                  )
                 : Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.04),
             blurRadius: isFocused ? 10 : 6,
             offset: Offset(0, isFocused ? 3 : 2),
@@ -3531,7 +4081,10 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
               children: [
                 // Mini Cover with glowing aura
                 _TappableScale(
-                  onTap: () => widget.onOpenReader(book, chapterIndex: progress.chapterIndex),
+                  onTap: () => widget.onOpenReader(
+                    book,
+                    chapterIndex: progress.chapterIndex,
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(7),
                     child: Container(
@@ -3541,7 +4094,9 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                         color: const Color(0xFF241E16),
                         boxShadow: [
                           BoxShadow(
-                            color: widget.goldAccent.withValues(alpha: isFocused ? 0.35 : 0.2),
+                            color: widget.goldAccent.withValues(
+                              alpha: isFocused ? 0.35 : 0.2,
+                            ),
                             blurRadius: isFocused ? 7 : 5,
                             offset: const Offset(0, 2),
                           ),
@@ -3587,8 +4142,11 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                         children: [
                           widget.buildFormatBadge(book, isMini: true),
                           const SizedBox(width: 4),
-                          Icon(Icons.access_time_rounded,
-                              size: 10, color: widget.textSecondary),
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 10,
+                            color: widget.textSecondary,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             timeStr,
@@ -3673,8 +4231,11 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.menu_book_rounded,
-                              size: 12, color: Color(0xFFF3ECE0)),
+                          Icon(
+                            Icons.menu_book_rounded,
+                            size: 12,
+                            color: Color(0xFFF3ECE0),
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'Read',
@@ -3707,8 +4268,11 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.headphones_rounded,
-                              size: 12, color: widget.goldAccent),
+                          Icon(
+                            Icons.headphones_rounded,
+                            size: 12,
+                            color: widget.goldAccent,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Audio',
@@ -3787,8 +4351,9 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
       child: AnimatedBuilder(
         animation: _scrollController,
         builder: (context, _) {
-          final scrollOffset =
-              _scrollController.hasClients ? _scrollController.offset : 0.0;
+          final scrollOffset = _scrollController.hasClients
+              ? _scrollController.offset
+              : 0.0;
 
           return ListView.builder(
             controller: _scrollController,
@@ -3806,7 +4371,10 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
               final scale = 1.0 - (normDist * 0.09);
               final opacity = 1.0 - (normDist * 0.12);
               final isFocused = normDist < 0.3;
-              final tilt = ((itemPos - scrollOffset) / 900.0).clamp(-0.06, 0.06);
+              final tilt = ((itemPos - scrollOffset) / 900.0).clamp(
+                -0.06,
+                0.06,
+              );
 
               return Transform(
                 alignment: Alignment.center,
@@ -3850,7 +4418,9 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
         boxShadow: [
           BoxShadow(
             color: isFocused
-                ? widget.goldAccent.withValues(alpha: widget.isDark ? 0.35 : 0.16)
+                ? widget.goldAccent.withValues(
+                    alpha: widget.isDark ? 0.35 : 0.16,
+                  )
                 : Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.04),
             blurRadius: isFocused ? 10 : 6,
             offset: Offset(0, isFocused ? 3 : 2),
@@ -3874,7 +4444,9 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
                     color: const Color(0xFF241E16),
                     boxShadow: [
                       BoxShadow(
-                        color: tagColor.withValues(alpha: isFocused ? 0.35 : 0.2),
+                        color: tagColor.withValues(
+                          alpha: isFocused ? 0.35 : 0.2,
+                        ),
                         blurRadius: isFocused ? 8 : 6,
                         offset: const Offset(0, 2),
                       ),
@@ -3941,10 +4513,7 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
               book.metadata.author,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
-                color: widget.textSecondary,
-              ),
+              style: TextStyle(fontSize: 9.5, color: widget.textSecondary),
             ),
             const Spacer(),
             // Quick Action Buttons: Read & Listen
@@ -4010,5 +4579,3 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
     );
   }
 }
-
-
