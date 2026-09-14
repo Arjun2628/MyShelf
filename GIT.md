@@ -17,9 +17,10 @@ gitGraph
    commit id: "eff8b43 (ScribbleVerse UI)"
    commit id: "d09a872 (composed shelves)"
    commit id: "9a606b0 (3D focal animation)"
-   commit id: "6827fde (git docs)" tag: "feature-head"
-   checkout main
-   merge feature/home-screen-redesign id: "Merge PR #1 (Future)" tag: "v1.1.0-release"
+   commit id: "0ef5763 (git docs)" tag: "v1.0-redesign-checkpoint"
+   branch feature/home-screen-v2
+   checkout feature/home-screen-v2
+   commit id: "branch: v2 iteration" tag: "active-head"
 ```
 
 ---
@@ -47,41 +48,34 @@ gitGraph
          │
          │ (Branch point: git checkout -b feature/home-screen-redesign)
          ▼
- [feature/home-screen-redesign] ── (Active UI Overhaul: 6827fde)
+ [feature/home-screen-redesign] ── (Preserved Checkpoint: 0ef5763)
+   │   • ScribbleVerse Warm Linen & Dark Ebony Theme (#F3ECE0 / #2B2620)
+   │   • 3D Horizontal Focal Perspective Tilt & Spine Shadows
+   │   • Composed Smart Collections (Malayalam, Classics, Imports) & Filter Chips
+   │   • Floating Dark Capsule Bottom Navigation Bar
    │
-   ├───► eff8b43: feat(ui): implement ScribbleVerse warm linen & ebony design
-   │       • Warm parchment/linen palette (#F3ECE0 / #2B2620)
-   │       • Editorial small-caps serif typography & floating dark capsule bar
-   │       • 120ms spring micro-interactions (_TappableScale)
-   │
-   ├───► d09a872: feat(ui): compose library shelves into clean, compact collections
-   │       • Streamlined 2–3 collections (Continue Reading, Malayalam, Classics, Imports)
-   │       • Interactive top filter chips for instant shelf focusing
-   │       • Compact card dimensions (232px vs 258px) eliminating vertical scroll fatigue
-   │
-   ├───► 9a606b0: feat(ui): add scroll-driven focal scaling & 3D perspective tilt
-   │       • Dynamic focal zoom (1.0x active with golden halo vs 0.91x off-focus)
-   │       • 3D perspective tilt on horizontal drag (Matrix4..rotateY)
-   │       • Realistic book spine depth gradient shadow
-   │
-   └───► 6827fde: docs: add GIT.md with branch guide, commit history, and release workflows
+   └──► (Branch point: git checkout -b feature/home-screen-v2)
+         │
+         ▼
+ [feature/home-screen-v2] ── (ACTIVE EXPERIMENT BRANCH 🚀)
+       • Clean sandbox created directly from feature/home-screen-redesign
+       • Safe to try new layouts, palettes, animations, and concepts
+       • Can switch back to feature/home-screen-redesign anytime
 ```
 
 ---
 
 ## 📊 Branch Matrix & Feature Comparison
 
-| Attribute | `main` | `feature/home-screen-redesign` |
-| :--- | :--- | :--- |
-| **Branch Purpose** | Core engine stability & production base | Editorial UI, micro-animations & layout experiments |
-| **Head Commit** | `2c82394` | `6827fde` |
-| **Aesthetic Theme** | Clean Material 3 standard | ScribbleVerse Warm Linen (`#F3ECE0`) & Dark Ebony (`#2B2620`) |
-| **Shelf Architecture** | Stacked format shelves | Composed Smart Collections (`Malayalam`, `Classics`, `Imports`) |
-| **Scroll Animation** | Standard linear scroll | Dynamic 3D Focal Scaling (`Matrix4..rotateY` & Gaussian scale) |
-| **Touch Feedback** | Standard ink ripples | 120ms Spring-Scale Micro-Animations (`_TappableScale`) |
-| **Test Suite Status** | 92 / 92 Passed ✅ | 92 / 92 Passed ✅ |
-| **Static Analysis** | 0 Issues ✅ | 0 Issues ✅ |
-| **APK Release Status** | Tested & Validated | Compiled (`build/app/outputs/flutter-apk/app-release.apk`) |
+| Attribute | `main` | `feature/home-screen-redesign` | `feature/home-screen-v2` *(Active)* |
+| :--- | :--- | :--- | :--- |
+| **Branch Purpose** | Core engine stability | Preserved ScribbleVerse checkpoint | Active sandbox for new design exploration |
+| **Status** | Stable base (`2c82394`) | Preserved intact (`0ef5763`) | Active working branch 🚀 |
+| **Aesthetic Theme** | Clean Material 3 standard | ScribbleVerse Warm Linen (`#F3ECE0`) | Custom / New Design Experimentation |
+| **Shelf Architecture** | Stacked format shelves | Composed Smart Collections | Ready for new layout ideas |
+| **Scroll Animation** | Standard linear scroll | Dynamic 3D Focal Scaling (`Matrix4`) | Customizable |
+| **Test Suite Status** | 92 / 92 Passed ✅ | 92 / 92 Passed ✅ | 92 / 92 Passed ✅ |
+| **Static Analysis** | 0 Issues ✅ | 0 Issues ✅ | 0 Issues ✅ |
 
 ---
 
