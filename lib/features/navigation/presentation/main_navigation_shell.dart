@@ -4,6 +4,7 @@ import 'package:epub_audio/features/explore/data/repositories/explore_repository
 import 'package:epub_audio/features/explore/domain/repositories/explore_repository.dart';
 import 'package:epub_audio/features/explore/presentation/screens/explore_screen.dart';
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
+import 'package:epub_audio/features/opening_experience/presentation/screens/book_opening_experience_screen.dart';
 import 'package:epub_audio/features/profile/presentation/screens/profile_screen.dart';
 import 'package:epub_audio/features/reader/presentation/screens/reader_screen.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
@@ -30,6 +31,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   void initState() {
     super.initState();
     _exploreRepository = widget.exploreRepository ?? ExploreRepositoryImpl();
+  }
+
+  void _openBookExperience(Book book, {String? categoryId}) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookOpeningExperienceScreen(
+          book: book,
+          categoryId: categoryId,
+        ),
+      ),
+    );
   }
 
   void _openReader(Book book, {int? chapterIndex, int? paragraphIndex}) async {
@@ -73,7 +86,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           // Tab 0: Explore Discovery Hub
           ExploreScreen(
             repository: _exploreRepository,
-            onBookSelected: (book) => _openReader(book),
+            onBookSelected: (book) => _openBookExperience(book),
             onReadBook: (book) => _openReader(book),
             onListenBook: (book) => _openAudiobook(book),
             onProfileTap: () => setState(() => _currentTabIndex = 2),
