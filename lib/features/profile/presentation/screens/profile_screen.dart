@@ -1,23 +1,84 @@
+import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
+import 'package:epub_audio/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:epub_audio/features/profile/domain/entities/reading_stats.dart';
+import 'package:epub_audio/features/profile/domain/entities/user_profile.dart';
+import 'package:epub_audio/features/profile/domain/repositories/profile_repository.dart';
+import 'package:epub_audio/features/profile/presentation/widgets/avatar_picker_modal.dart';
 import 'package:epub_audio/main.dart';
 import 'package:flutter/material.dart';
 
-/// Initial Profile & Reading Identity foundation screen for Phase 1.
+/// Full-featured Profile & Reading Identity Screen.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final ProfileRepository? repository;
+
+  const ProfileScreen({super.key, this.repository});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _selectedAvatarIndex = 0;
-  final String _userName = 'Arjun (Reader)';
-  final String _userEmail = 'reader@scribbleverse.io';
-  final int _readingStreak = 5;
-  final int _booksRead = 4;
-  final double _hoursListened = 6.5;
+  late final ProfileRepository _repository;
+  UserProfile _profile = const UserProfile();
+  ReadingStats _stats = const ReadingStats();
+  bool _isLoading = true;
+  int _highlightCount = 0;
+  int _bookmarkCount = 0;
 
-  final List<String> _avatarEmojis = ['🦉', '🦊', '🦁', '🚀', '🐉', '✨'];
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? ProfileRepositoryImpl();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    final profile = await _repository.getUserProfile();
+    final stats = await _repository.getReadingStats();
+
+    // Check highlights & bookmarks count
+    int highlights = 0;
+    int bookmarks = 0;
+    try {
+      final storage = HiveStorageService();
+      await storage.init();
+      highlights = storage.getAllHighlights().length;
+      bookmarks = storage.getAllBookmarks().length;
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _profile = profile;
+        _stats = stats;
+        _highlightCount = highlights;
+        _bookmarkCount = bookmarks;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateProfile(UserProfile updated) async {
+    setState(() => _profile = updated);
+    await _repository.saveUserProfile(updated);
+    await _loadProfileData();
+  }
+
+  Color _parseHex(String hex, Color fallback) {
+    try {
+      final clean = hex.replaceAll('#', '').replaceAll('0x', '');
+      return Color(int.parse('FF$clean', radix: 16));
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  void _showAvatarCustomizer() {
+    AvatarPickerModal.show(
+      context,
+      currentProfile: _profile,
+      onProfileUpdated: _updateProfile,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +88,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final borderColor = isDark ? const Color(0xFF382D21) : const Color(0xFFE2D4C3);
     final titleColor = isDark ? const Color(0xFFF7F2EB) : const Color(0xFF261D13);
     final subColor = isDark ? const Color(0xFFA89F93) : const Color(0xFF7A6E5F);
-    const accentColor = Color(0xFFD4A373);
+    final accentColor = _parseHex(_profile.avatarGradientStart, const Color(0xFFD4A373));
+    final gradStart = _parseHex(_profile.avatarGradientStart, const Color(0xFFD4A373));
+    final gradEnd = _parseHex(_profile.avatarGradientEnd, const Color(0xFFA8764B));
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: canvasBg,
+        body: const Center(
+          child: CircularProgressIndicator(color: Color(0xFFD4A373)),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: canvasBg,
@@ -55,7 +127,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 12),
-                  // Avatar & Name Card
+
+                  // 1. Avatar & Identity Header Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -72,58 +145,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Selected Avatar
+                        // Selected Avatar with edit trigger
                         GestureDetector(
-                          onTap: _showAvatarPickerModal,
+                          onTap: _showAvatarCustomizer,
                           child: Stack(
                             alignment: Alignment.bottomRight,
                             children: [
                               Container(
-                                width: 84,
-                                height: 84,
+                                width: 88,
+                                height: 88,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFD4A373), Color(0xFFA8764B)],
+                                  gradient: LinearGradient(
+                                    colors: [gradStart, gradEnd],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: accentColor.withValues(alpha: 0.35),
-                                      blurRadius: 12,
+                                      color: gradStart.withValues(alpha: 0.4),
+                                      blurRadius: 14,
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
                                 child: Center(
                                   child: Text(
-                                    _avatarEmojis[_selectedAvatarIndex],
-                                    style: const TextStyle(fontSize: 42),
+                                    _profile.avatarEmoji,
+                                    style: const TextStyle(fontSize: 44),
                                   ),
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.all(5),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF261D13),
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF261D13) : Colors.white,
                                   shape: BoxShape.circle,
+                                  border: Border.all(color: borderColor),
                                 ),
-                                child: const Icon(Icons.edit_rounded, size: 14, color: accentColor),
+                                child: Icon(Icons.edit_rounded, size: 14, color: accentColor),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          _userName,
+                          _profile.displayName,
                           style: TextStyle(
-                            fontSize: 19,
+                            fontSize: 19.5,
                             fontWeight: FontWeight.w800,
                             color: titleColor,
                           ),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          _userEmail,
+                          _profile.email,
                           style: TextStyle(
                             fontSize: 12.5,
                             color: subColor,
@@ -131,18 +207,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 10),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
                             color: accentColor.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: accentColor.withValues(alpha: 0.3)),
                           ),
-                          child: const Text(
-                            'READER • TIER 1',
+                          child: Text(
+                            _profile.readerTier,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               color: accentColor,
-                              letterSpacing: 0.7,
+                              letterSpacing: 0.8,
                             ),
                           ),
                         ),
@@ -150,22 +227,266 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
-                  // Reading & Listening Statistics
+                  // 2. Daily Reading Goal Card
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 54,
+                          height: 54,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                value: _stats.dailyGoalProgress,
+                                backgroundColor: isDark ? const Color(0xFF2E2419) : const Color(0xFFE2D4C3),
+                                valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                                strokeWidth: 5,
+                              ),
+                              Text(
+                                '${(_stats.dailyGoalProgress * 100).toInt()}%',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: titleColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Daily Reading Goal',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: titleColor,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                '${_stats.todayMinutesCompleted} / ${_stats.dailyGoalMinutes} mins read today',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: subColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _showGoalCustomizer,
+                          icon: Icon(Icons.tune_rounded, size: 18, color: accentColor),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 3. Streak & 7-Day Activity Matrix
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Text('🔥', style: TextStyle(fontSize: 18)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${_stats.currentStreakDays} Day Reading Streak',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: titleColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              'Best: ${_stats.longestStreakDays} days',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: subColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        // 7-day dot matrix
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: _stats.weeklyActivity.map((day) {
+                            return Column(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: day.completed
+                                        ? accentColor
+                                        : (isDark ? const Color(0xFF281E15) : const Color(0xFFE2D4C3)),
+                                    border: Border.all(
+                                      color: day.completed ? accentColor : Colors.transparent,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: day.completed
+                                        ? const Icon(Icons.check_rounded, size: 16, color: Color(0xFF1E140A))
+                                        : Text(
+                                            '${day.minutes}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: subColor,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  day.dayName,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: day.completed ? titleColor : subColor,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 4. Reading & Listening Statistics Cards
                   Row(
                     children: [
-                      _buildStatCard('🔥 $_readingStreak Days', 'Reading Streak', cardBg, borderColor, titleColor, subColor),
+                      _buildStatCard(
+                        '${_stats.totalBooksCompleted}',
+                        'Books Read',
+                        Icons.auto_stories_rounded,
+                        cardBg,
+                        borderColor,
+                        titleColor,
+                        subColor,
+                        accentColor,
+                      ),
                       const SizedBox(width: 10),
-                      _buildStatCard('📚 $_booksRead Books', 'Completed', cardBg, borderColor, titleColor, subColor),
+                      _buildStatCard(
+                        '${_stats.totalChaptersRead}',
+                        'Chapters',
+                        Icons.menu_book_rounded,
+                        cardBg,
+                        borderColor,
+                        titleColor,
+                        subColor,
+                        accentColor,
+                      ),
                       const SizedBox(width: 10),
-                      _buildStatCard('🎧 ${_hoursListened}h', 'Listening Time', cardBg, borderColor, titleColor, subColor),
+                      _buildStatCard(
+                        '${_stats.totalHoursListened.toStringAsFixed(1)}h',
+                        'Audio Time',
+                        Icons.headphones_rounded,
+                        cardBg,
+                        borderColor,
+                        titleColor,
+                        subColor,
+                        accentColor,
+                      ),
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
-                  // Quick Settings & Preferences
+                  // 5. Highlights & Bookmarks Quick Cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.highlight_rounded, size: 20, color: accentColor),
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$_highlightCount Highlights',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: titleColor),
+                                  ),
+                                  Text('Saved in library', style: TextStyle(fontSize: 10.5, color: subColor)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.bookmark_rounded, size: 20, color: accentColor),
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$_bookmarkCount Bookmarks',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: titleColor),
+                                  ),
+                                  Text('Fast navigation', style: TextStyle(fontSize: 10.5, color: subColor)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 6. Preferences & Settings List
                   Container(
                     decoration: BoxDecoration(
                       color: cardBg,
@@ -185,7 +506,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
                                 color: accentColor,
                               ),
-                              title: Text('Appearance Theme', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor)),
+                              title: Text(
+                                'Appearance Theme',
+                                style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor),
+                              ),
                               subtitle: Text(
                                 themeMode == ThemeMode.system
                                     ? 'System default'
@@ -197,6 +521,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 activeColor: accentColor,
                                 onChanged: (val) {
                                   appThemeModeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
+                                  _updateProfile(_profile.copyWith(
+                                    preferredThemeMode: val ? 'dark' : 'light',
+                                  ));
                                 },
                               ),
                             );
@@ -204,16 +531,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Divider(height: 1, color: borderColor),
                         ListTile(
-                          leading: const Icon(Icons.record_voice_over_rounded, color: accentColor),
-                          title: Text('Multi-Voice Narration', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor)),
-                          subtitle: Text('Malayalam & English TTS profiles calibrated', style: TextStyle(fontSize: 12, color: subColor)),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                          leading: Icon(Icons.record_voice_over_rounded, color: accentColor),
+                          title: Text(
+                            'Multi-Voice Narration',
+                            style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor),
+                          ),
+                          subtitle: Text(
+                            'English & Malayalam characters distinct voices',
+                            style: TextStyle(fontSize: 12, color: subColor),
+                          ),
+                          trailing: const Icon(Icons.check_circle_rounded, size: 18, color: Color(0xFF10B981)),
                         ),
                         Divider(height: 1, color: borderColor),
                         ListTile(
-                          leading: const Icon(Icons.admin_panel_settings_rounded, color: accentColor),
-                          title: Text('Account & Authentication', style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor)),
-                          subtitle: Text('Phase 5 User & Admin sign in', style: TextStyle(fontSize: 12, color: subColor)),
+                          leading: Icon(Icons.admin_panel_settings_rounded, color: accentColor),
+                          title: Text(
+                            'Account & Authentication',
+                            style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: titleColor),
+                          ),
+                          subtitle: Text(
+                            'Phase 5: Guest, User & Admin management',
+                            style: TextStyle(fontSize: 12, color: subColor),
+                          ),
                           trailing: const Icon(Icons.lock_outline_rounded, size: 16),
                         ),
                       ],
@@ -233,10 +572,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatCard(
     String value,
     String label,
+    IconData icon,
     Color bg,
     Color border,
     Color titleColor,
     Color subColor,
+    Color accent,
   ) {
     return Expanded(
       child: Container(
@@ -248,15 +589,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Column(
           children: [
+            Icon(icon, size: 18, color: accent),
+            const SizedBox(height: 6),
             Text(
               value,
               style: TextStyle(
-                fontSize: 13.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: titleColor,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
@@ -270,60 +613,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showAvatarPickerModal() {
-    showModalBottomSheet(
+  void _showGoalCustomizer() {
+    showDialog(
       context: context,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF1E1812)
-          : const Color(0xFFFAF4EA),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Choose Your Avatar',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(_avatarEmojis.length, (index) {
-                  final isSelected = index == _selectedAvatarIndex;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedAvatarIndex = index);
-                      Navigator.pop(context);
+      builder: (ctx) {
+        int selected = _profile.dailyGoalMinutes;
+        return StatefulBuilder(
+          builder: (context, setDlgState) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1E1812)
+                  : const Color(0xFFFAF4EA),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('Set Daily Reading Goal', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [15, 30, 45, 60].map((mins) {
+                  return RadioListTile<int>(
+                    title: Text('$mins minutes / day'),
+                    value: mins,
+                    groupValue: selected,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDlgState(() => selected = val);
+                      }
                     },
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSelected ? const Color(0xFFD4A373).withValues(alpha: 0.3) : Colors.transparent,
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFFD4A373) : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: Text(
-                        _avatarEmojis[index],
-                        style: const TextStyle(fontSize: 32),
-                      ),
-                    ),
                   );
-                }),
+                }).toList(),
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _updateProfile(_profile.copyWith(dailyGoalMinutes: selected));
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

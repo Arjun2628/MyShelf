@@ -87,6 +87,18 @@ class HiveStorageService {
     await _settingsBox?.put('has_seen_onboarding', value);
   }
 
+  /// Retrieves custom setting value by key.
+  T? getCustomSetting<T>(String key, [T? defaultValue]) {
+    if (_settingsBox == null || !_settingsBox!.isOpen) return defaultValue;
+    return (_settingsBox?.get(key, defaultValue: defaultValue) as T?) ?? defaultValue;
+  }
+
+  /// Sets custom setting value by key.
+  Future<void> setCustomSetting(String key, dynamic value) async {
+    await init();
+    await _settingsBox?.put(key, value);
+  }
+
   /// Retrieves the saved app theme mode ('system', 'light', 'dark').
   ThemeMode getAppThemeMode() {
     if (_settingsBox == null || !_settingsBox!.isOpen) return ThemeMode.system;
