@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../epub/domain/entities/book.dart';
@@ -10,18 +11,18 @@ import '../../../epub/domain/entities/book.dart';
 ///   leather/cloth textures, gold embossing, and bottom progress ribbons.
 /// - The center active book is pulled out into a prominent 3D Hardcover Showcase
 ///   with 3D perspective rotation, 3D paper page block thickness, and realistic cast shadow.
+/// - Auto-cycles / switches active book every 5 seconds.
 /// - Smooth horizontal drag / snap gestures with haptic feedback.
 /// - Metadata display below with subtitle, serif title, and author/year.
-/// - Pull-out Action Trio: [ READ ], [ LISTEN ] (with glowing gold ring), and [ EXPLORE ].
 class SpineRack3dCarouselWidget extends StatefulWidget {
   final List<Book> books;
   final int initialIndex;
   final bool isDark;
   final Color goldAccent;
-  final ValueChanged<Book> onBookSelected;
-  final ValueChanged<Book> onReadPressed;
-  final ValueChanged<Book> onListenPressed;
-  final VoidCallback onExplorePressed;
+  final ValueChanged<Book>? onBookSelected;
+  final ValueChanged<Book>? onReadPressed;
+  final ValueChanged<Book>? onListenPressed;
+  final VoidCallback? onExplorePressed;
 
   const SpineRack3dCarouselWidget({
     super.key,
@@ -29,10 +30,10 @@ class SpineRack3dCarouselWidget extends StatefulWidget {
     this.initialIndex = 0,
     required this.isDark,
     required this.goldAccent,
-    required this.onBookSelected,
-    required this.onReadPressed,
-    required this.onListenPressed,
-    required this.onExplorePressed,
+    this.onBookSelected,
+    this.onReadPressed,
+    this.onListenPressed,
+    this.onExplorePressed,
   });
 
   @override
@@ -43,6 +44,7 @@ class SpineRack3dCarouselWidget extends StatefulWidget {
 class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
   late PageController _pageController;
   int _currentIndex = 0;
+  Timer? _autoSwitchTimer;
 
   @override
   void initState() {
@@ -55,6 +57,23 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
       initialPage: _currentIndex,
       viewportFraction: 0.52,
     );
+    _startAutoSwitchTimer();
+  }
+
+  void _startAutoSwitchTimer() {
+    _autoSwitchTimer?.cancel();
+    if (widget.books.length <= 1) return;
+    _autoSwitchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || !_pageController.hasClients || widget.books.length <= 1) {
+        return;
+      }
+      final nextPage = (_currentIndex + 1) % widget.books.length;
+      _pageController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    });
   }
 
   @override
@@ -63,10 +82,14 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
     if (widget.books.isNotEmpty && _currentIndex >= widget.books.length) {
       _currentIndex = widget.books.length - 1;
     }
+    if (widget.books.length != oldWidget.books.length) {
+      _startAutoSwitchTimer();
+    }
   }
 
   @override
   void dispose() {
+    _autoSwitchTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -77,7 +100,8 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
         _currentIndex = index;
       });
       HapticFeedback.selectionClick();
-      widget.onBookSelected(widget.books[index]);
+      widget.onBookSelected?.call(widget.books[index]);
+      _startAutoSwitchTimer();
     }
   }
 
@@ -195,7 +219,7 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,
                   color: widget.isDark
-                      ? const Color(0xFF9E9282)
+                      ? const Color(0xFF9499A5)
                       : const Color(0xFF7A6E5E),
                 ),
                 textAlign: TextAlign.center,
@@ -211,7 +235,7 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
                   fontFamily: 'serif',
                   letterSpacing: -0.4,
                   color: widget.isDark
-                      ? const Color(0xFFF7F1E6)
+                      ? const Color(0xFFE4E0D8)
                       : const Color(0xFF1E1812),
                 ),
                 textAlign: TextAlign.center,
@@ -225,7 +249,7 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
                   fontSize: 12.5,
                   fontWeight: FontWeight.w500,
                   color: widget.isDark
-                      ? const Color(0xFFB5A895)
+                      ? const Color(0xFFB0B5C0)
                       : const Color(0xFF6B5F4E),
                 ),
                 textAlign: TextAlign.center,
@@ -235,11 +259,6 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
             ],
           ),
         ),
-
-        const SizedBox(height: 14),
-
-        // 3. Pull-out Action Trio: [ READ ], [ LISTEN ] (with glowing gold ring), [ EXPLORE ]
-        _buildActionTrio(activeBook),
       ],
     );
   }
@@ -249,7 +268,7 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
     final spineColor = _getBookSpineColor(book);
 
     return GestureDetector(
-      onTap: () => widget.onReadPressed(book),
+      onTap: () => widget.onReadPressed?.call(book),
       child: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
@@ -471,14 +490,21 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
     );
   }
 
-  /// Builds a standing vertical 3D book spine (~40px wide) on the rack
   Widget _buildStandingSpine(Book book, int index) {
     final spineColor = _getBookSpineColor(book);
 
-    return Container(
-      width: 42,
-      height: 184,
-      margin: const EdgeInsets.symmetric(horizontal: 3),
+    return GestureDetector(
+      onTap: () {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+        );
+      },
+      child: Container(
+        width: 42,
+        height: 184,
+        margin: const EdgeInsets.symmetric(horizontal: 3),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
@@ -572,161 +598,11 @@ class _SpineRack3dCarouselWidgetState extends State<SpineRack3dCarouselWidget> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  /// Pull-out Action Trio: [ READ ], [ LISTEN ] (Glowing gold ring), [ EXPLORE ]
-  Widget _buildActionTrio(Book activeBook) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 1. READ Action Button
-          _buildActionButton(
-            label: 'Read',
-            icon: Icons.menu_book_rounded,
-            isCenterHighlight: false,
-            onTap: () => widget.onReadPressed(activeBook),
-          ),
 
-          const SizedBox(width: 14),
-
-          // 2. LISTEN Action Button (Prominent Center with Gold Glowing Ring)
-          _buildActionButton(
-            label: 'Listen',
-            icon: Icons.headphones_rounded,
-            isCenterHighlight: true,
-            onTap: () => widget.onListenPressed(activeBook),
-          ),
-
-          const SizedBox(width: 14),
-
-          // 3. EXPLORE Action Button
-          _buildActionButton(
-            label: 'Explore',
-            icon: Icons.explore_rounded,
-            isCenterHighlight: false,
-            onTap: widget.onExplorePressed,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required String label,
-    required IconData icon,
-    required bool isCenterHighlight,
-    required VoidCallback onTap,
-  }) {
-    if (isCenterHighlight) {
-      return GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 82,
-          height: 82,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: widget.isDark
-                ? const Color(0xFF1E1710)
-                : const Color(0xFF2C241B),
-            border: Border.all(
-              color: widget.goldAccent,
-              width: 2.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.goldAccent.withValues(alpha: 0.45),
-                blurRadius: 18,
-                spreadRadius: 2,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 26,
-                color: widget.goldAccent,
-              ),
-              const SizedBox(height: 3),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  fontFamily: 'serif',
-                  color: widget.goldAccent,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 74,
-        height: 74,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: widget.isDark
-              ? const Color(0xFF1F1C18).withValues(alpha: 0.9)
-              : const Color(0xFFE8E0D2),
-          border: Border.all(
-            color: widget.isDark
-                ? const Color(0xFF38322A)
-                : const Color(0xFFD4C7B5),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(
-                alpha: widget.isDark ? 0.35 : 0.08,
-              ),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: widget.isDark
-                  ? const Color(0xFFD8CEBF)
-                  : const Color(0xFF4A4033),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.6,
-                fontFamily: 'serif',
-                color: widget.isDark
-                    ? const Color(0xFFD8CEBF)
-                    : const Color(0xFF4A4033),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Color _getBookSpineColor(Book book) {
     if (book.id.contains('chemmeen') ||

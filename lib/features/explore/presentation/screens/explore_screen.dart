@@ -76,10 +76,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canvasBg = isDark ? const Color(0xFF14100C) : const Color(0xFFFBF7F0);
-    final titleColor = isDark ? const Color(0xFFF7F2EB) : const Color(0xFF261D13);
-    final subColor = isDark ? const Color(0xFFA89F93) : const Color(0xFF7A6E5F);
-    const accentColor = Color(0xFFD4A373);
+    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFFBF7F0);
+    final titleColor = isDark ? const Color(0xFFE4E0D8) : const Color(0xFF261D13);
+    final subColor = isDark ? const Color(0xFF9499A5) : const Color(0xFF7A6E5F);
+    const accentColor = Color(0xFFD4AF7A);
 
     return Scaffold(
       backgroundColor: canvasBg,

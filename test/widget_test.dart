@@ -20,28 +20,26 @@ void main() {
     await HiveStorageService().init(tempDir.path);
   });
 
-  testWidgets('LibraryScreen loads and renders search bar, row shelves and sample books', (WidgetTester tester) async {
+  testWidgets('LibraryScreen loads and renders search bar, 3D Carousel and sample books', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
     for (int i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.textContaining('EPUB'), findsWidgets);
     expect(find.text('Import Book'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.textContaining('Malayalam Literature'), findsOneWidget);
+    expect(find.byType(SpineRack3dCarouselWidget), findsOneWidget);
     expect(find.textContaining('Chemmeen'), findsWidgets);
 
-    // Scroll down to reveal World Classics shelf
+    // Scroll down to reveal Rotunda Cylindrical Shelf
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
     for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.textContaining('World Classics'), findsOneWidget);
-    expect(find.textContaining('Alice'), findsWidgets);
-    expect(find.text('Read'), findsWidgets);
-    expect(find.text('Listen'), findsWidgets);
+    expect(find.byType(CircularArcShelfWidget), findsOneWidget);
+    expect(find.textContaining('Rotunda Cylindrical Library'), findsOneWidget);
+    expect(find.textContaining('World Masterpieces'), findsOneWidget);
   });
 
   testWidgets('LibraryScreen search filters books by query', (WidgetTester tester) async {
@@ -64,7 +62,7 @@ void main() {
     for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(find.textContaining('Malayalam Literature'), findsOneWidget);
+    expect(find.byType(SpineRack3dCarouselWidget), findsOneWidget);
   });
 
   testWidgets('LibraryScreen displays Continue Reading shelf when progress exists', (WidgetTester tester) async {
@@ -83,8 +81,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.textContaining('Continue Reading'), findsOneWidget);
-    expect(find.textContaining('Chapter 2 of'), findsOneWidget);
+    // Scroll down to reveal Continue Reading shelf
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    expect(find.textContaining('CONTINUE READING'), findsOneWidget);
+    expect(find.textContaining('Ch. 2'), findsOneWidget);
   });
 
   testWidgets('LibraryScreen switches to Saved & Bookmarks tab and displays saved items', (WidgetTester tester) async {
@@ -190,45 +194,44 @@ void main() {
     expect(HiveStorageService().getAppThemeMode(), equals(ThemeMode.dark));
   });
 
-  testWidgets('LibraryScreen toggles between Shelf and 3D Spine Rack Carousel modes', (WidgetTester tester) async {
+  testWidgets('LibraryScreen filters by category directly in 3D Carousel and Rotunda shelf', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
     for (int i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // Verify Carousel and Shelf toggle buttons in AppBar
-    expect(find.text('Carousel'), findsOneWidget);
-    expect(find.text('Shelf'), findsOneWidget);
-
-    // Tap Carousel button
-    await tester.tap(find.text('Carousel'));
-    for (int i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-
-    // Verify 3D Spine Rack Carousel & Center Hardcover Showcase is rendered with Action Trio
+    // Verify 3D Spine Rack Carousel is present by default
     expect(find.byType(SpineRack3dCarouselWidget), findsOneWidget);
-    expect(find.text('Explore'), findsWidgets);
 
-    // Tap Shelf button to toggle back
-    await tester.tap(find.text('Shelf'));
-    for (int i = 0; i < 10; i++) {
+    // Open category filter modal via Filter button in search bar header
+    final filterButton = find.byIcon(Icons.tune_rounded).first;
+    await tester.tap(filterButton);
+    await tester.pumpAndSettle();
+
+    // Verify category filter modal options
+    expect(find.text('Filter by Category'), findsOneWidget);
+    expect(find.text('Malayalam Literature'), findsOneWidget);
+
+    // Select Malayalam category
+    await tester.tap(find.text('Malayalam Literature'));
+    await tester.pumpAndSettle();
+
+    // Verify active filter banner
+    expect(find.textContaining('Filtering by: Malayalam'), findsOneWidget);
+    expect(find.byType(SpineRack3dCarouselWidget), findsOneWidget);
+
+    // Clear filter
+    await tester.tap(find.text('Clear'));
+    for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.byType(SpineRack3dCarouselWidget), findsNothing);
-    expect(find.textContaining('Malayalam Literature'), findsOneWidget);
+    expect(find.textContaining('Filtering by:'), findsNothing);
   });
 
-  testWidgets('CircularArcShelfWidget renders multi-tier scrollable curved rows in Carousel mode', (WidgetTester tester) async {
+  testWidgets('CircularArcShelfWidget renders multi-tier scrollable curved rows and toggles Face View', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
     for (int i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-
-    // Switch to Carousel mode
-    await tester.tap(find.text('Carousel'));
-    for (int i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 

@@ -113,13 +113,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canvasBg = isDark ? const Color(0xFF14100C) : const Color(0xFFFBF7F0);
-    final cardBg = isDark ? const Color(0xFF1E1812) : const Color(0xFFFAF4EA);
-    final borderColor = isDark ? const Color(0xFF382D21) : const Color(0xFFE2D4C3);
-    final titleColor = isDark ? const Color(0xFFF7F2EB) : const Color(0xFF261D13);
-    final subColor = isDark ? const Color(0xFFA89F93) : const Color(0xFF7A6E5F);
-    final accentColor = _parseHex(_profile.avatarGradientStart, const Color(0xFFD4A373));
-    final gradStart = _parseHex(_profile.avatarGradientStart, const Color(0xFFD4A373));
+    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFFBF7F0);
+    final cardBg = isDark ? const Color(0xFF1D2128) : const Color(0xFFFAF4EA);
+    final borderColor = isDark ? const Color(0xFF2B313C) : const Color(0xFFE2D4C3);
+    final titleColor = isDark ? const Color(0xFFE4E0D8) : const Color(0xFF261D13);
+    final subColor = isDark ? const Color(0xFF9499A5) : const Color(0xFF7A6E5F);
+    final accentColor = _parseHex(_profile.avatarGradientStart, const Color(0xFFD4AF7A));
+    final gradStart = _parseHex(_profile.avatarGradientStart, const Color(0xFFD4AF7A));
     final gradEnd = _parseHex(_profile.avatarGradientEnd, const Color(0xFFA8764B));
 
     if (_isLoading) {

@@ -22,7 +22,6 @@ import 'package:epub_audio/features/text_content/domain/entities/text_document.d
 import 'package:epub_audio/features/text_content/presentation/screens/text_editor_screen.dart';
 import 'package:epub_audio/features/text_content/presentation/widgets/quick_paste_modal.dart';
 import 'package:epub_audio/features/library/presentation/widgets/circular_arc_shelf_widget.dart';
-import 'package:epub_audio/features/library/presentation/widgets/interactive_bookshelf_category_widget.dart';
 import 'package:epub_audio/features/library/presentation/widgets/spine_rack_3d_carousel_widget.dart';
 import 'package:epub_audio/main.dart';
 import 'package:file_picker/file_picker.dart';
@@ -67,27 +66,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String _selectedFilterTag =
       'All'; // 'All', 'In Progress', 'Malayalam', 'English', 'Imported'
   bool _isGridView = false; // Toggle for explore section
-  bool _isCarouselMode = false; // Toggle between 3D Carousel and Shelf view
   String _savedFilter = 'All'; // 'All', 'Highlights', 'Bookmarks', 'Notes'
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
   Color get _canvasBg =>
-      _isDark ? const Color(0xFF14100C) : const Color(0xFFFBF7F0);
+      _isDark ? const Color(0xFF14161A) : const Color(0xFFFBF7F0);
   Color get _cardBg =>
-      _isDark ? const Color(0xFF1E1812) : const Color(0xFFFFFDF8);
+      _isDark ? const Color(0xFF1D2128) : const Color(0xFFFFFDF8);
   Color get _cardBorder =>
-      _isDark ? const Color(0xFF382F24) : const Color(0xFFE2D6C5);
+      _isDark ? const Color(0xFF2B313C) : const Color(0xFFE2D6C5);
   Color get _textPrimary =>
-      _isDark ? const Color(0xFFF7F2EB) : const Color(0xFF261D13);
+      _isDark ? const Color(0xFFE4E0D8) : const Color(0xFF261D13);
   Color get _textSecondary =>
-      _isDark ? const Color(0xFFA89F93) : const Color(0xFF7A6E5F);
+      _isDark ? const Color(0xFF9499A5) : const Color(0xFF7A6E5F);
   Color get _chipBg =>
-      _isDark ? const Color(0xFF2C2218) : const Color(0xFFEADBCE);
+      _isDark ? const Color(0xFF242933) : const Color(0xFFEADBCE);
   Color get _iconColor =>
-      _isDark ? const Color(0xFFDCCFBB) : const Color(0xFF383127);
-  Color get _goldAccent => const Color(0xFFD4A373);
+      _isDark ? const Color(0xFFD4C8B5) : const Color(0xFF383127);
+  Color get _goldAccent => const Color(0xFFD4AF7A);
   Color get _navBarBg =>
-      _isDark ? const Color(0xFF1D1711) : const Color(0xFF2B2620);
+      _isDark ? const Color(0xFF181B22) : const Color(0xFF2B2620);
   Color get _navBarActive => const Color(0xFFF7F2EB);
   Color get _navBarInactive => const Color(0xFFA89F93);
 
@@ -100,13 +98,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (ctx) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final modalBg = isDark
-            ? const Color(0xFF221B14)
+            ? const Color(0xFF1D2128)
             : const Color(0xFFFFFDF8);
         final textColor = isDark
-            ? const Color(0xFFF7F1E6)
+            ? const Color(0xFFE4E0D8)
             : const Color(0xFF2B2620);
         final subTextColor = isDark
-            ? const Color(0xFFA99C85)
+            ? const Color(0xFF9499A5)
             : const Color(0xFF857863);
 
         return Container(
@@ -114,7 +112,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             color: modalBg,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border.all(
-              color: isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA),
+              color: isDark ? const Color(0xFF2B313C) : const Color(0xFFDDD2BA),
             ),
           ),
           padding: EdgeInsets.fromLTRB(
@@ -134,7 +132,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     height: 4,
                     decoration: BoxDecoration(
                       color: isDark
-                          ? const Color(0xFF4A3E31)
+                          ? const Color(0xFF38404E)
                           : const Color(0xFFC7BBA5),
                       borderRadius: BorderRadius.circular(2),
                     ),
@@ -178,7 +176,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 _buildThemeOptionTile(
                   icon: Icons.dark_mode_rounded,
                   title: 'Dark Theme',
-                  subtitle: 'Deep ebony night aesthetic with gold accents',
+                  subtitle: 'Soothing night aesthetic with warm gold accents',
                   mode: ThemeMode.dark,
                   isSelected: currentMode == ThemeMode.dark,
                   isDark: isDark,
@@ -199,7 +197,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     required bool isSelected,
     required bool isDark,
   }) {
-    final gold = isDark ? const Color(0xFFE0B45F) : const Color(0xFFC99538);
+    final gold = isDark ? const Color(0xFFD4AF7A) : const Color(0xFFC99538);
     return _TappableScale(
       onTap: () async {
         Navigator.pop(context);
@@ -211,12 +209,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? gold.withValues(alpha: isDark ? 0.2 : 0.12)
-              : (isDark ? const Color(0xFF2C241B) : const Color(0xFFF3ECE0)),
+              : (isDark ? const Color(0xFF242933) : const Color(0xFFF3ECE0)),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? gold
-                : (isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA)),
+                : (isDark ? const Color(0xFF2B313C) : const Color(0xFFDDD2BA)),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -227,7 +225,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               color: isSelected
                   ? gold
                   : (isDark
-                        ? const Color(0xFFDCCFBB)
+                        ? const Color(0xFFD4C8B5)
                         : const Color(0xFF6E624E)),
               size: 22,
             ),
@@ -1243,101 +1241,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
         elevation: 0,
         actions: [
           if (_selectedTabIndex == 0) ...[
-            // View Mode Segmented Control: [ Carousel | Shelf ]
-            Container(
-              margin: const EdgeInsets.only(right: 6),
-              padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(
-                color: _isDark
-                    ? const Color(0xFF1E1A16)
-                    : const Color(0xFFE8E0D2),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _isDark
-                      ? const Color(0xFF383026)
-                      : const Color(0xFFD6CAB8),
-                  width: 0.8,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _isCarouselMode = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _isCarouselMode
-                            ? (_isDark ? const Color(0xFF2C241B) : Colors.white)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: _isCarouselMode
-                            ? [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: _isDark ? 0.3 : 0.08,
-                                  ),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        'Carousel',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: _isCarouselMode
-                              ? FontWeight.bold
-                              : FontWeight.w600,
-                          color: _isCarouselMode ? _goldAccent : _textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() => _isCarouselMode = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: !_isCarouselMode
-                            ? (_isDark ? const Color(0xFF2C241B) : Colors.white)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: !_isCarouselMode
-                            ? [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: _isDark ? 0.3 : 0.08,
-                                  ),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        'Shelf',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: !_isCarouselMode
-                              ? FontWeight.bold
-                              : FontWeight.w600,
-                          color:
-                              !_isCarouselMode ? _goldAccent : _textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Container(
               margin: const EdgeInsets.only(right: 6),
               decoration: BoxDecoration(
@@ -1580,7 +1483,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: _isDark
-                      ? [const Color(0xFF1E1812), const Color(0xFF2B2218)]
+                      ? [const Color(0xFF1D2128), const Color(0xFF252B35)]
                       : [const Color(0xFF2B2620), const Color(0xFF383127)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -1602,7 +1505,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   color: isPlaying
                       ? _goldAccent.withValues(alpha: 0.6)
                       : (_isDark
-                            ? const Color(0xFF4A3E31)
+                            ? const Color(0xFF323B4A)
                             : const Color(0xFF5A4D3B)),
                   width: 1.2,
                 ),
@@ -1874,9 +1777,123 @@ class _LibraryScreenState extends State<LibraryScreen> {
               b.id.contains('alice'),
         )
         .toList();
-
     final bool isTextSearch = _searchQuery.trim().isNotEmpty;
     final bool isCategoryFiltered = _selectedFilterTag != 'All';
+
+    // Compute Rotunda Cylindrical Library rows dynamically based on filter
+    final List<CircularShelfRowData> rotundaRows = [];
+    if (!isCategoryFiltered) {
+      if (malayalamBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'Malayalam Classics & Novels',
+            books: malayalamBooks,
+            accentColor: const Color(0xFFC5A059), // Antique Brass
+          ),
+        );
+      }
+      if (englishBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'World Masterpieces & Literature',
+            books: englishBooks,
+            accentColor: const Color(0xFFD4AF37), // Antique Gold
+          ),
+        );
+      }
+      if (importedBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'Documents & User Imports',
+            books: importedBooks,
+            accentColor: const Color(0xFFCD7F32), // Burnished Bronze
+          ),
+        );
+      }
+    } else {
+      if (_selectedFilterTag == 'Malayalam' && malayalamBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'Malayalam Classics & Novels',
+            books: malayalamBooks,
+            accentColor: const Color(0xFFC5A059),
+          ),
+        );
+      } else if ((_selectedFilterTag == 'English' ||
+              _selectedFilterTag == 'Classics') &&
+          englishBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'World Masterpieces & Literature',
+            books: englishBooks,
+            accentColor: const Color(0xFFD4AF37),
+          ),
+        );
+      } else if (_selectedFilterTag == 'Imported' &&
+          importedBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'Documents & User Imports',
+            books: importedBooks,
+            accentColor: const Color(0xFFCD7F32),
+          ),
+        );
+      } else if (_selectedFilterTag == 'In Progress') {
+        final inProgBooks = historyBooks.map((e) => e.key).toList();
+        if (inProgBooks.isNotEmpty) {
+          rotundaRows.add(
+            CircularShelfRowData(
+              title: 'Currently Reading & Listening',
+              books: inProgBooks,
+              accentColor: const Color(0xFFB8860B),
+            ),
+          );
+        }
+      } else if (_selectedFilterTag == 'EPUB' && filteredBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'EPUB Ebooks Collection',
+            books: filteredBooks,
+            accentColor: const Color(0xFFD4AF37),
+          ),
+        );
+      } else if (_selectedFilterTag == 'PDF' && filteredBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'PDF Documents Collection',
+            books: filteredBooks,
+            accentColor: const Color(0xFFB36B42),
+          ),
+        );
+      } else if (_selectedFilterTag == 'Scans' && filteredBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'OCR Scanned Documents',
+            books: filteredBooks,
+            accentColor: const Color(0xFFC5A059),
+          ),
+        );
+      } else if (_selectedFilterTag == 'Text & Notes' &&
+          filteredBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: 'Text & Notes Collection',
+            books: filteredBooks,
+            accentColor: const Color(0xFFCD7F32),
+          ),
+        );
+      } else if (filteredBooks.isNotEmpty) {
+        rotundaRows.add(
+          CircularShelfRowData(
+            title: '$_selectedFilterTag Collection',
+            books: filteredBooks,
+            accentColor: _goldAccent,
+          ),
+        );
+      }
+    }
+
+    final carouselBooks = isCategoryFiltered ? filteredBooks : _books;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -1948,67 +1965,36 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _isGridView
                 ? _buildGridSliver(filteredBooks)
                 : _buildListSliver(filteredBooks),
+        ] else if (isCategoryFiltered && filteredBooks.isEmpty) ...[
+          SliverToBoxAdapter(child: _buildEmptySearchState()),
         ] else ...[
-          // 2. Spine Rack 3D Carousel & Center Hardcover Showcase (Carousel Mode)
-          if (_isCarouselMode && !isCategoryFiltered && _books.isNotEmpty) ...[
+          // 3. Spine Rack 3D Carousel & Center Hardcover Showcase
+          if (carouselBooks.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: SpineRack3dCarouselWidget(
-                books: _books,
+                books: carouselBooks,
                 isDark: _isDark,
                 goldAccent: _goldAccent,
-                onBookSelected: (book) {
-                  // Book selection feedback
-                },
                 onReadPressed: (book) => _openReader(book),
-                onListenPressed: (book) => _openAudiobook(book),
-                onExplorePressed: () {
-                  setState(() {
-                    _selectedFilterTag = 'All';
-                  });
-                },
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 14)),
           ],
 
-          // 3. Continue Reading / History Shelf
-          if (historyBooks.isNotEmpty) ...[
+          // 4. Continue Reading / History Shelf (when viewing all or in progress)
+          if (historyBooks.isNotEmpty &&
+              (!isCategoryFiltered || _selectedFilterTag == 'In Progress')) ...[
             SliverToBoxAdapter(
-              child: _buildShelfHeader(
-                title: 'Continue Reading & Listening',
-                subtitle: 'Pick up right where you paused',
-                icon: Icons.history_rounded,
-                iconColor: _goldAccent,
-                count: historyBooks.length,
-              ),
+              child: _buildContinueReadingHeader(historyBooks.length),
             ),
             SliverToBoxAdapter(child: _buildHistoryShelf(historyBooks)),
           ],
 
-          // 4. Circular Arc 3D Multi-Row Shelf (Carousel Mode)
-          if (_isCarouselMode && !isCategoryFiltered && _books.isNotEmpty) ...[
+          // 5. Circular Arc 3D Multi-Row Rotunda Library
+          if (rotundaRows.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: CircularArcShelfWidget(
-                rows: [
-                  if (malayalamBooks.isNotEmpty)
-                    CircularShelfRowData(
-                      title: 'Malayalam Classics & Novels',
-                      books: malayalamBooks,
-                      accentColor: const Color(0xFFEA580C),
-                    ),
-                  if (englishBooks.isNotEmpty)
-                    CircularShelfRowData(
-                      title: 'World Masterpieces & Literature',
-                      books: englishBooks,
-                      accentColor: const Color(0xFF7C3AED),
-                    ),
-                  if (importedBooks.isNotEmpty)
-                    CircularShelfRowData(
-                      title: 'Documents & User Imports',
-                      books: importedBooks,
-                      accentColor: const Color(0xFF0284C7),
-                    ),
-                ],
+                rows: rotundaRows,
                 isDark: _isDark,
                 goldAccent: _goldAccent,
                 textPrimary: _textPrimary,
@@ -2022,176 +2008,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
           ],
 
-          if (isCategoryFiltered) ...[
-            // Category Filtered Collection
-            SliverToBoxAdapter(
-              child: InteractiveBookshelfCategoryWidget(
-                selectedCategory: _selectedFilterTag,
-                onCategorySelected: (categoryKey) {
-                  setState(() {
-                    _selectedFilterTag = categoryKey;
-                  });
-                },
-                isDark: _isDark,
-                goldAccent: _goldAccent,
-                textPrimary: _textPrimary,
-                textSecondary: _textSecondary,
-              ),
-            ),
+          // 6. If Grid View is toggled, show Grid Sliver
+          if (_isGridView) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _goldAccent.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Category: $_selectedFilterTag',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'serif',
-                          color: _textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '(${filteredBooks.length} Books)',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedFilterTag = 'All';
-                        });
-                      },
-                      child: Text(
-                        'Show All Shelves',
-                        style: TextStyle(
-                          color: _goldAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Text(
+                  'Book Grid View (${filteredBooks.length})',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'serif',
+                    color: _textPrimary,
+                  ),
                 ),
               ),
             ),
-            if (filteredBooks.isEmpty)
-              SliverToBoxAdapter(child: _buildEmptySearchState())
-            else
-              _isGridView
-                  ? _buildGridSliver(filteredBooks)
-                  : _buildListSliver(filteredBooks),
-          ] else ...[
-            if (_isGridView) ...[
-              SliverToBoxAdapter(
-                child: InteractiveBookshelfCategoryWidget(
-                  selectedCategory: _selectedFilterTag,
-                  onCategorySelected: (categoryKey) {
-                    setState(() {
-                      _selectedFilterTag = categoryKey;
-                    });
-                  },
-                  isDark: _isDark,
-                  goldAccent: _goldAccent,
-                  textPrimary: _textPrimary,
-                  textSecondary: _textSecondary,
-                ),
-              ),
-              _buildGridSliver(_books),
-            ] else if (_isCarouselMode) ...[
-              // Carousel mode concludes cleanly after the Rotunda Cylindrical Shelf
-            ] else ...[
-              // 6. Malayalam Literature Shelf
-              if (malayalamBooks.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: _buildShelfHeader(
-                    title: 'Malayalam Literature & Classics',
-                    subtitle: 'മലയാള സാഹിത്യം • Audio & Sync',
-                    icon: Icons.local_fire_department_rounded,
-                    iconColor: const Color(0xFFEA580C),
-                    count: malayalamBooks.length,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildHorizontalShelf(
-                    books: malayalamBooks,
-                    tagColor: const Color(0xFFEA580C),
-                    shelfTag: 'Malayalam',
-                  ),
-                ),
-              ],
-
-              // 7. Interactive 2-Tier 3D Bookshelf Category Hub
-              SliverToBoxAdapter(
-                child: InteractiveBookshelfCategoryWidget(
-                  selectedCategory: _selectedFilterTag,
-                  onCategorySelected: (categoryKey) {
-                    setState(() {
-                      _selectedFilterTag = categoryKey;
-                    });
-                  },
-                  isDark: _isDark,
-                  goldAccent: _goldAccent,
-                  textPrimary: _textPrimary,
-                  textSecondary: _textSecondary,
-                ),
-              ),
-
-              // 8. English & Global Classics Shelf
-              if (englishBooks.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: _buildShelfHeader(
-                    title: 'World Classics & Novels',
-                    subtitle: 'Timeless literary masterpieces',
-                    icon: Icons.public_rounded,
-                    iconColor: const Color(0xFF7C3AED),
-                    count: englishBooks.length,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildHorizontalShelf(
-                    books: englishBooks,
-                    tagColor: const Color(0xFF7C3AED),
-                    shelfTag: 'Classics',
-                  ),
-                ),
-              ],
-
-              // 9. Combined Imported Books & Notes Shelf
-              if (importedBooks.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: _buildShelfHeader(
-                    title: 'Your Documents & Imports',
-                    subtitle: 'Custom EPUBs, PDFs, OCR scans & text notes',
-                    icon: Icons.folder_special_rounded,
-                    iconColor: const Color(0xFF0284C7),
-                    count: importedBooks.length,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildHorizontalShelf(
-                    books: importedBooks,
-                    tagColor: const Color(0xFF0284C7),
-                    shelfTag: 'Imported',
-                  ),
-                ),
-              ],
-            ],
+            _buildGridSliver(filteredBooks),
           ],
         ],
 
@@ -2319,7 +2152,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           height: 48,
           decoration: BoxDecoration(
             color: isFilterActive
-                ? (_isDark ? const Color(0xFF382C1E) : const Color(0xFFF0E4CE))
+                ? (_isDark ? const Color(0xFF282E3A) : const Color(0xFFF0E4CE))
                 : _cardBg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -2368,7 +2201,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF2B2218) : const Color(0xFFEFE6D5),
+        color: _isDark ? const Color(0xFF202530) : const Color(0xFFEFE6D5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _goldAccent.withValues(alpha: 0.5),
@@ -2399,7 +2232,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: _isDark ? const Color(0xFF3B3023) : const Color(0xFFDFD4C0),
+                color: _isDark ? const Color(0xFF2B3240) : const Color(0xFFDFD4C0),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -2950,70 +2783,69 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
-  Widget _buildShelfHeader({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required int count,
-  }) {
+  Widget _buildContinueReadingHeader(int count) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: iconColor.withValues(alpha: 0.35)),
-            ),
-            child: Icon(icon, size: 18, color: iconColor),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 17.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        color: _textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _chipBg,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: _cardBorder),
-                      ),
-                      child: Text(
-                        '$count',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                          color: _textSecondary,
-                        ),
-                      ),
+          Row(
+            children: [
+              Container(
+                width: 3.5,
+                height: 15,
+                decoration: BoxDecoration(
+                  color: _goldAccent,
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _goldAccent.withValues(alpha: 0.5),
+                      blurRadius: 6,
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: _textSecondary),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'CONTINUE READING & LISTENING',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                  color: _textPrimary,
                 ),
-              ],
+              ),
+            ],
+          ),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _selectedFilterTag = 'In Progress';
+                _isGridView = true;
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Row(
+                children: [
+                  Text(
+                    'See All ($count)',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: _goldAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: _goldAccent,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -3035,29 +2867,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
       cardBorder: _cardBorder,
       textPrimary: _textPrimary,
       textSecondary: _textSecondary,
-      goldAccent: _goldAccent,
-      isDark: _isDark,
-    );
-  }
-
-  Widget _buildHorizontalShelf({
-    required List<Book> books,
-    required Color tagColor,
-    required String shelfTag,
-  }) {
-    return _AnimatedHorizontalShelf(
-      books: books,
-      tagColor: tagColor,
-      shelfTag: shelfTag,
-      onOpenReader: _openReader,
-      onOpenAudiobook: _openAudiobook,
-      buildDefaultCover: _buildDefaultCover,
-      buildFormatBadge: _buildFormatBadge,
-      cardBg: _cardBg,
-      cardBorder: _cardBorder,
-      textPrimary: _textPrimary,
-      textSecondary: _textSecondary,
-      chipBg: _chipBg,
       goldAccent: _goldAccent,
       isDark: _isDark,
     );
@@ -4162,8 +3971,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
 class _TappableScale extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
-  const _TappableScale({required this.child, this.onTap});
+  const _TappableScale({required this.child, this.onTap, this.onLongPress});
 
   @override
   State<_TappableScale> createState() => _TappableScaleState();
@@ -4176,16 +3986,17 @@ class _TappableScaleState extends State<_TappableScale> {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: widget.onTap == null
+      onTapDown: widget.onTap == null && widget.onLongPress == null
           ? null
           : (_) => setState(() => _isPressed = true),
-      onTapUp: widget.onTap == null
+      onTapUp: widget.onTap == null && widget.onLongPress == null
           ? null
           : (_) => setState(() => _isPressed = false),
-      onTapCancel: widget.onTap == null
+      onTapCancel: widget.onTap == null && widget.onLongPress == null
           ? null
           : () => setState(() => _isPressed = false),
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 120),
@@ -4239,10 +4050,196 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
     super.dispose();
   }
 
+  String _estimateTimeLeft(Book book, BookProgress progress) {
+    final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
+    final remainingChapters =
+        (chapterCount - (progress.chapterIndex + 1)).clamp(0, 999);
+    if (remainingChapters == 0) {
+      return 'Completed';
+    }
+    final totalMinutes = remainingChapters * 9;
+    if (totalMinutes >= 60) {
+      final hours = totalMinutes ~/ 60;
+      final mins = totalMinutes % 60;
+      return mins == 0 ? '${hours}h left' : '${hours}h ${mins}m left';
+    }
+    return '${totalMinutes}m left';
+  }
+
+  void _showBookInfoSheet(
+    BuildContext context,
+    Book book,
+    BookProgress progress,
+  ) {
+    final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
+    final progressFraction =
+        ((progress.chapterIndex + 1) / chapterCount).clamp(0.0, 1.0);
+    final percent = (progressFraction * 100).toInt();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+          decoration: BoxDecoration(
+            color: widget.isDark
+                ? const Color(0xFF1E1812)
+                : const Color(0xFFFFFDF9),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: widget.cardBorder,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: widget.cardBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 54,
+                      height: 76,
+                      child: book.coverImageBytes != null
+                          ? Image.memory(
+                              book.coverImageBytes!,
+                              fit: BoxFit.cover,
+                            )
+                          : widget.buildDefaultCover(book, isMini: true),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          book.metadata.title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'serif',
+                            color: widget.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          book.metadata.author,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: widget.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Progress: $percent% • Chapter ${progress.chapterIndex + 1} of $chapterCount (${_estimateTimeLeft(book, progress)})',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: widget.goldAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (book.metadata.description != null &&
+                  book.metadata.description!.trim().isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  book.metadata.description!.trim(),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    height: 1.4,
+                    color: widget.textSecondary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        widget.onOpenReader(
+                          book,
+                          chapterIndex: progress.chapterIndex,
+                          paragraphIndex: progress.paragraphIndex,
+                        );
+                      },
+                      icon: const Icon(Icons.menu_book_rounded, size: 16),
+                      label: const Text('Read Now'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.goldAccent,
+                        foregroundColor: const Color(0xFF14100C),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        widget.onOpenAudiobook(book);
+                      },
+                      icon: Icon(
+                        Icons.headphones_rounded,
+                        size: 16,
+                        color: widget.goldAccent,
+                      ),
+                      label: Text(
+                        'Audiobook',
+                        style: TextStyle(color: widget.goldAccent),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: widget.goldAccent.withValues(alpha: 0.6),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 204,
+      height: 198,
       child: AnimatedBuilder(
         animation: _scrollController,
         builder: (context, _) {
@@ -4254,27 +4251,27 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             itemCount: widget.historyItems.length,
             itemBuilder: (context, index) {
               final item = widget.historyItems[index];
               final book = item.key;
               final progress = item.value;
 
-              const cardWidth = 250.0;
-              const cardSpacing = 12.0;
+              const cardWidth = 104.0;
+              const cardSpacing = 10.0;
               final itemPos = index * (cardWidth + cardSpacing);
               final dist = (itemPos - scrollOffset).abs();
-              final normDist = (dist / 280.0).clamp(0.0, 1.0);
-              final scale = 1.0 - (normDist * 0.07);
-              final opacity = 1.0 - (normDist * 0.1);
+              final normDist = (dist / 220.0).clamp(0.0, 1.0);
+              final scale = 1.0 - (normDist * 0.04);
+              final opacity = 1.0 - (normDist * 0.06);
               final isFocused = normDist < 0.3;
 
               return Transform.scale(
                 scale: scale,
                 child: Opacity(
                   opacity: opacity,
-                  child: _buildHistoryCard(
+                  child: _buildHistoryBookItem(
                     book,
                     progress,
                     isFocused: isFocused,
@@ -4288,607 +4285,314 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
     );
   }
 
-  Widget _buildHistoryCard(
+  Widget _buildHistoryBookItem(
     Book book,
     BookProgress progress, {
     required bool isFocused,
   }) {
     final chapterCount = book.chapterCount > 0 ? book.chapterCount : 1;
-    final progressFraction = ((progress.chapterIndex + 1) / chapterCount).clamp(
-      0.0,
-      1.0,
-    );
+    final progressFraction =
+        ((progress.chapterIndex + 1) / chapterCount).clamp(0.0, 1.0);
     final percent = (progressFraction * 100).toInt();
-    final timeStr = widget.formatRelativeTime(progress.lastUpdated);
 
     return Container(
-      width: 254,
+      width: 106,
       margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: widget.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isFocused
-              ? widget.goldAccent.withValues(alpha: 0.75)
-              : widget.cardBorder,
-          width: isFocused ? 1.4 : 1.0,
+      child: _TappableScale(
+        onTap: () => widget.onOpenReader(
+          book,
+          chapterIndex: progress.chapterIndex,
+          paragraphIndex: progress.paragraphIndex,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isFocused
-                ? widget.goldAccent.withValues(
-                    alpha: widget.isDark ? 0.35 : 0.16,
-                  )
-                : Colors.black.withValues(alpha: widget.isDark ? 0.28 : 0.05),
-            blurRadius: isFocused ? 12 : 7,
-            offset: Offset(0, isFocused ? 3.5 : 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(11),
+        onLongPress: () => _showBookInfoSheet(context, book, progress),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top: Cover Thumbnail + Title & Author
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Mini Cover with glowing aura & spine depth
-                _TappableScale(
-                  onTap: () => widget.onOpenReader(
-                    book,
-                    chapterIndex: progress.chapterIndex,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+            // Realistic 3D Standing Hardcover Book
+            SizedBox(
+              width: 106,
+              height: 144,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // 1. Shelf Drop & Contact Shadow beneath the book
+                  Positioned(
+                    bottom: 1,
+                    left: 4,
+                    right: 4,
+                    height: 10,
                     child: Container(
-                      width: 44,
-                      height: 60,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF241E16),
+                        borderRadius: BorderRadius.circular(6),
                         boxShadow: [
                           BoxShadow(
-                            color: widget.goldAccent.withValues(
-                              alpha: isFocused ? 0.4 : 0.22,
+                            color: Colors.black.withValues(
+                              alpha: widget.isDark ? 0.65 : 0.25,
                             ),
-                            blurRadius: isFocused ? 8 : 5,
-                            offset: const Offset(0, 2),
+                            blurRadius: isFocused ? 10 : 6,
+                            offset: const Offset(0, 3.5),
+                          ),
+                          if (isFocused)
+                            BoxShadow(
+                              color: widget.goldAccent.withValues(
+                                alpha: widget.isDark ? 0.35 : 0.2,
+                              ),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // 2. Fore-edge (Right 3D Paper Page Block Thickness)
+                  Positioned(
+                    top: 2.5,
+                    bottom: 3.5,
+                    right: 0,
+                    width: 7,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: widget.isDark
+                              ? [
+                                  const Color(0xFF7A6C58),
+                                  const Color(0xFFD0C0A8),
+                                  const Color(0xFFB5A48C),
+                                ]
+                              : [
+                                  const Color(0xFFA59278),
+                                  const Color(0xFFF0E4D0),
+                                  const Color(0xFFD4C4AC),
+                                ],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(2),
+                          bottomRight: Radius.circular(2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 2,
+                            offset: const Offset(1, 1),
                           ),
                         ],
                       ),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          book.coverImageBytes != null
-                              ? Image.memory(
-                                  book.coverImageBytes!,
-                                  fit: BoxFit.cover,
-                                )
-                              : widget.buildDefaultCover(book, isMini: true),
-                          // Left spine shadow
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: 6,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.42),
-                                    Colors.transparent,
-                                  ],
+                      child: const CustomPaint(
+                        painter: _HistoryPaperLinesPainter(isHorizontal: true),
+                      ),
+                    ),
+                  ),
+
+                  // 3. Head Page Block (Top Exposed Paper Edge)
+                  Positioned(
+                    top: 0,
+                    left: 6,
+                    right: 4,
+                    height: 4.5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: widget.isDark
+                              ? [const Color(0xFFB5A48C), const Color(0xFF7A6C58)]
+                              : [const Color(0xFFF0E4D0), const Color(0xFFA59278)],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(2),
+                          topRight: Radius.circular(2),
+                        ),
+                      ),
+                      child: const CustomPaint(
+                        painter: _HistoryPaperLinesPainter(isHorizontal: false),
+                      ),
+                    ),
+                  ),
+
+                  // 4. Standing Hardcover Front Board (Cover Art + Left Spine Hinge + Sheen)
+                  Positioned(
+                    top: 2.5,
+                    bottom: 3.5,
+                    left: 0,
+                    right: 6, // Leaves 6px visible for right fore-edge paper block
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(2),
+                          bottomLeft: Radius.circular(2),
+                          topRight: Radius.circular(3),
+                          bottomRight: Radius.circular(3),
+                        ),
+                        border: Border.all(
+                          color: isFocused
+                              ? widget.goldAccent.withValues(alpha: 0.85)
+                              : Colors.white.withValues(alpha: 0.12),
+                          width: isFocused ? 1.2 : 0.6,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: widget.isDark ? 0.55 : 0.22,
+                            ),
+                            blurRadius: 5,
+                            offset: const Offset(1.5, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(2),
+                          bottomLeft: Radius.circular(2),
+                          topRight: Radius.circular(3),
+                          bottomRight: Radius.circular(3),
+                        ),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Base Cover Artwork or Leather Texture
+                            book.coverImageBytes != null
+                                ? Image.memory(
+                                    book.coverImageBytes!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : widget.buildDefaultCover(book, isMini: true),
+
+                            // Left Spine Joint / Hinge Indentation Crease
+                            Positioned(
+                              top: 0,
+                              bottom: 0,
+                              left: 0,
+                              width: 9,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.5),
+                                      Colors.black.withValues(alpha: 0.18),
+                                      Colors.white.withValues(alpha: 0.12),
+                                      Colors.black.withValues(alpha: 0.38),
+                                      Colors.transparent,
+                                    ],
+                                    stops: const [0.0, 0.35, 0.55, 0.8, 1.0],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        book.metadata.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'serif',
-                          color: widget.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        book.metadata.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: widget.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          widget.buildFormatBadge(book, isMini: true),
-                          const SizedBox(width: 5),
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 11,
-                            color: widget.goldAccent,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            timeStr,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w500,
-                              color: widget.textSecondary,
+
+                            // Hardcover Satin Gloss Sheen
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.16),
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.2),
+                                    ],
+                                    stops: const [0.0, 0.45, 1.0],
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+
+                            // Embossed Gold Format Ribbon Tag
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(3),
+                                  border: Border.all(
+                                    color: widget.goldAccent.withValues(alpha: 0.7),
+                                    width: 0.7,
+                                  ),
+                                ),
+                                child: Text(
+                                  book.isPdf
+                                      ? 'PDF'
+                                      : (book.isScan
+                                          ? 'OCR'
+                                          : (book.isText ? 'TXT' : 'EPUB')),
+                                  style: TextStyle(
+                                    color: widget.goldAccent,
+                                    fontSize: 7.5,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Bottom Netflix-style Progress Bar
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                height: 3.5,
+                                color: Colors.black.withValues(alpha: 0.65),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: progressFraction,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFFE50914),
+                                          Color(0xFFF59E0B),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const Spacer(),
-
-            // Progress Bar & Stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Chapter ${progress.chapterIndex + 1} of $chapterCount',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: widget.textSecondary,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: widget.goldAccent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '$percent%',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: widget.goldAccent,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+
             const SizedBox(height: 5),
-            Container(
-              height: 4.0,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: widget.cardBorder,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: progressFraction,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [widget.goldAccent, const Color(0xFFF59E0B)],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-            ),
 
-            const SizedBox(height: 9),
-
-            // Resume Actions: Read & Audio
-            Row(
-              children: [
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => widget.onOpenReader(
-                      book,
-                      chapterIndex: progress.chapterIndex,
-                      paragraphIndex: progress.paragraphIndex,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: widget.isDark
-                            ? const Color(0xFF2C241B)
-                            : const Color(0xFF2B2620),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: widget.cardBorder.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.menu_book_rounded,
-                            size: 13,
-                            color: Color(0xFFF3ECE0),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Read',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF3ECE0),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => widget.onOpenAudiobook(book),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: widget.isDark
-                            ? widget.goldAccent.withValues(alpha: 0.18)
-                            : const Color(0xFFFBF4E4),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: widget.goldAccent.withValues(alpha: 0.6),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.headphones_rounded,
-                            size: 13,
-                            color: widget.goldAccent,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Audio',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: widget.goldAccent,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// An animated horizontal shelf with dynamic scroll focal scaling and 3D spine depth
-class _AnimatedHorizontalShelf extends StatefulWidget {
-  final List<Book> books;
-  final Color tagColor;
-  final String shelfTag;
-  final Function(Book) onOpenReader;
-  final Function(Book) onOpenAudiobook;
-  final Widget Function(Book, {bool isMini}) buildDefaultCover;
-  final Widget Function(Book, {bool isMini}) buildFormatBadge;
-  final Color cardBg;
-  final Color cardBorder;
-  final Color textPrimary;
-  final Color textSecondary;
-  final Color chipBg;
-  final Color goldAccent;
-  final bool isDark;
-
-  const _AnimatedHorizontalShelf({
-    required this.books,
-    required this.tagColor,
-    required this.shelfTag,
-    required this.onOpenReader,
-    required this.onOpenAudiobook,
-    required this.buildDefaultCover,
-    required this.buildFormatBadge,
-    required this.cardBg,
-    required this.cardBorder,
-    required this.textPrimary,
-    required this.textSecondary,
-    required this.chipBg,
-    required this.goldAccent,
-    required this.isDark,
-  });
-
-  @override
-  State<_AnimatedHorizontalShelf> createState() =>
-      _AnimatedHorizontalShelfState();
-}
-
-class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 238,
-      child: AnimatedBuilder(
-        animation: _scrollController,
-        builder: (context, _) {
-          final scrollOffset = _scrollController.hasClients
-              ? _scrollController.offset
-              : 0.0;
-
-          return ListView.builder(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            itemCount: widget.books.length,
-            itemBuilder: (context, index) {
-              final book = widget.books[index];
-              const cardWidth = 126.0;
-              const cardSpacing = 10.0;
-              final itemPos = index * (cardWidth + cardSpacing);
-              final dist = (itemPos - scrollOffset).abs();
-              final normDist = (dist / 240.0).clamp(0.0, 1.0);
-              final scale = 1.0 - (normDist * 0.09);
-              final opacity = 1.0 - (normDist * 0.12);
-              final isFocused = normDist < 0.3;
-              final tilt = ((itemPos - scrollOffset) / 900.0).clamp(
-                -0.06,
-                0.06,
-              );
-
-              return Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.0008)
-                  ..rotateY(tilt)
-                  ..scaleByDouble(scale, scale, 1.0, 1.0),
-                child: Opacity(
-                  opacity: opacity,
-                  child: _buildShelfBookCard(
-                    book,
-                    tagColor: widget.tagColor,
-                    isFocused: isFocused,
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildShelfBookCard(
-    Book book, {
-    required Color tagColor,
-    required bool isFocused,
-  }) {
-    return Container(
-      width: 128,
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        color: widget.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isFocused
-              ? widget.goldAccent.withValues(alpha: 0.8)
-              : widget.cardBorder,
-          width: isFocused ? 1.4 : 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isFocused
-                ? widget.goldAccent.withValues(
-                    alpha: widget.isDark ? 0.38 : 0.18,
-                  )
-                : Colors.black.withValues(alpha: widget.isDark ? 0.26 : 0.05),
-            blurRadius: isFocused ? 12 : 6,
-            offset: Offset(0, isFocused ? 3.5 : 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cover Thumbnail with glowing border/shadow & 3D spine depth
-            _TappableScale(
-              onTap: () => widget.onOpenReader(book),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(9),
-                child: Container(
-                  height: 108,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF241E16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: tagColor.withValues(
-                          alpha: isFocused ? 0.4 : 0.22,
-                        ),
-                        blurRadius: isFocused ? 9 : 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      book.coverImageBytes != null
-                          ? Image.memory(
-                              book.coverImageBytes!,
-                              fit: BoxFit.cover,
-                            )
-                          : widget.buildDefaultCover(book, isMini: true),
-                      // Left spine shadow for authentic physical book feel
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: 7,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.42),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Diagonal light sheen overlay
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withValues(alpha: 0.12),
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.15),
-                              ],
-                              stops: const [0.0, 0.45, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Top-right format badge
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: widget.buildFormatBadge(book, isMini: true),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            // Title
-            _TappableScale(
-              onTap: () => widget.onOpenReader(book),
-              child: Text(
-                book.metadata.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'serif',
-                  color: widget.textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 1),
-            // Author
+            // Book Title
             Text(
-              book.metadata.author,
+              book.metadata.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 10,
-                color: widget.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: widget.textPrimary,
+                letterSpacing: -0.2,
               ),
             ),
-            const Spacer(),
-            // Quick Action Buttons: Read & Listen
-            Row(
-              children: [
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => widget.onOpenReader(book),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4.5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: widget.isDark
-                            ? const Color(0xFF2C241B)
-                            : const Color(0xFF2B2620),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: widget.cardBorder.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      child: const Text(
-                        'Read',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFF7F1E6),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: _TappableScale(
-                    onTap: () => widget.onOpenAudiobook(book),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4.5),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: widget.isDark
-                            ? widget.goldAccent.withValues(alpha: 0.18)
-                            : const Color(0xFFFBF4E4),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: widget.goldAccent.withValues(alpha: 0.6),
-                          width: 0.9,
-                        ),
-                      ),
-                      child: Text(
-                        'Listen',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                          color: widget.goldAccent,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+
+            // Progress percentage & chapter info
+            Text(
+              '$percent% • Ch. ${progress.chapterIndex + 1}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w600,
+                color: widget.goldAccent,
+              ),
             ),
           ],
         ),
@@ -4896,3 +4600,33 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
     );
   }
 }
+
+/// Custom painter for top and fore-edge paper page edges on continue shelf
+class _HistoryPaperLinesPainter extends CustomPainter {
+  final bool isHorizontal;
+
+  const _HistoryPaperLinesPainter({this.isHorizontal = false});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.12)
+      ..strokeWidth = 0.55;
+
+    if (isHorizontal) {
+      for (double y = 2; y < size.height; y += 2.5) {
+        canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      }
+    } else {
+      for (double x = 2; x < size.width; x += 2.5) {
+        canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HistoryPaperLinesPainter oldDelegate) =>
+      oldDelegate.isHorizontal != isHorizontal;
+}
+
+

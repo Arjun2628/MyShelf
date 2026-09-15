@@ -50,34 +50,7 @@ class _CircularArcShelfWidgetState extends State<CircularArcShelfWidget> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        // Cylindrical woodgrain rotunda background
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: widget.isDark
-              ? [
-                  const Color(0xFF160F0A),
-                  const Color(0xFF22160E),
-                  const Color(0xFF1A110B),
-                  const Color(0xFF100A06),
-                ]
-              : [
-                  const Color(0xFFE8DAC7),
-                  const Color(0xFFD4BEA2),
-                  const Color(0xFFC4AB8E),
-                  const Color(0xFFB39879),
-                ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: widget.isDark ? 0.6 : 0.15),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -171,7 +144,7 @@ class _CircularArcShelfWidgetState extends State<CircularArcShelfWidget> {
     return Container(
       padding: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF221911) : const Color(0xFFDAC6AD),
+        color: widget.cardBg,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: widget.goldAccent.withValues(alpha: widget.isDark ? 0.35 : 0.45),
@@ -223,7 +196,7 @@ class _CircularArcShelfWidgetState extends State<CircularArcShelfWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
         decoration: BoxDecoration(
           color: isSelected
-              ? (widget.isDark ? const Color(0xFF382A1B) : const Color(0xFFFAF2E6))
+              ? (widget.isDark ? const Color(0xFF2C2218) : const Color(0xFFEADBCE))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isSelected
@@ -766,12 +739,14 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
 
   Widget _buildRealisticBookCoverFallback(Book book) {
     final hash = book.id.hashCode.abs();
+    // Classic Leather and Cloth Color Patterns
     final List<List<Color>> palettes = [
-      [const Color(0xFF5A1515), const Color(0xFF280A0A), const Color(0xFF140505)], // Crimson Leather
-      [const Color(0xFF162D4A), const Color(0xFF0C1B2E), const Color(0xFF050C17)], // Navy Buckram
-      [const Color(0xFF163E23), const Color(0xFF0D2415), const Color(0xFF06130A)], // Hunter Green
-      [const Color(0xFF523717), const Color(0xFF2E1C0A), const Color(0xFF170D04)], // Aged Leather
-      [const Color(0xFF2A2A2E), const Color(0xFF17171A), const Color(0xFF0B0B0D)], // Onyx Cloth
+      [const Color(0xFF381212), const Color(0xFF220909), const Color(0xFF100303)], // Oxblood Leather
+      [const Color(0xFF101C2B), const Color(0xFF0A121D), const Color(0xFF04080D)], // Navy Buckram
+      [const Color(0xFF0F2617), const Color(0xFF09170E), const Color(0xFF040A06)], // Hunter Green
+      [const Color(0xFF332010), const Color(0xFF1E1308), const Color(0xFF0E0803)], // Aged Leather
+      [const Color(0xFF351910), const Color(0xFF200F08), const Color(0xFF0E0603)], // Antique Mahogany
+      [const Color(0xFF1E1B19), const Color(0xFF131110), const Color(0xFF0A0908)], // Onyx Cloth
     ];
     final colors = palettes[hash % palettes.length];
 
@@ -900,24 +875,25 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
     final spineWidth = 32.0 + (hash % 5) * 4.0; // 32px - 48px
     final spineHeight = 142.0 + (hash % 4) * 6.0; // 142px - 160px
 
+    // Classic Leather and Cloth Color Patterns
     final List<List<Color>> palettes = widget.isDark
         ? [
-            [const Color(0xFF6E1B1B), const Color(0xFF3F0D0D), const Color(0xFF220505)],
-            [const Color(0xFF1E3A5F), const Color(0xFF0F1E33), const Color(0xFF080F1B)],
-            [const Color(0xFF1F4A2C), const Color(0xFF0F2617), const Color(0xFF07140B)],
-            [const Color(0xFF634A26), const Color(0xFF3B2B15), const Color(0xFF20170A)],
-            [const Color(0xFF2E2E32), const Color(0xFF1C1C1E), const Color(0xFF0E0E10)],
-            [const Color(0xFF7A4B1A), const Color(0xFF482B0D), const Color(0xFF291705)],
-            [const Color(0xFFD6C8B2), const Color(0xFFB5A48B), const Color(0xFF8C7A62)],
+            [const Color(0xFF421414), const Color(0xFF260A0A), const Color(0xFF120404)], // Oxblood Leather
+            [const Color(0xFF122033), const Color(0xFF0A1320), const Color(0xFF050A10)], // Navy Buckram
+            [const Color(0xFF122E1B), const Color(0xFF0A1C10), const Color(0xFF050E08)], // Forest Green
+            [const Color(0xFF3D2611), const Color(0xFF241609), const Color(0xFF120B04)], // Aged Leather
+            [const Color(0xFF241C16), const Color(0xFF15100C), const Color(0xFF0A0705)], // Dark Walnut
+            [const Color(0xFF1E1E22), const Color(0xFF121214), const Color(0xFF08080A)], // Onyx Cloth
+            [const Color(0xFFC7B79E), const Color(0xFFA89679), const Color(0xFF8A7659)], // Parchment
           ]
         : [
-            [const Color(0xFF8B2C2C), const Color(0xFF5E1B1B), const Color(0xFF3F0F0F)],
-            [const Color(0xFF2B4D78), const Color(0xFF1B3352), const Color(0xFF0F2035)],
-            [const Color(0xFF2E5E3E), const Color(0xFF1C3D27), const Color(0xFF0E2215)],
-            [const Color(0xFF806236), const Color(0xFF564021), const Color(0xFF332512)],
-            [const Color(0xFF3D3D42), const Color(0xFF252528), const Color(0xFF141416)],
-            [const Color(0xFF9E652A), const Color(0xFF6B4319), const Color(0xFF3E250C)],
-            [const Color(0xFFE8DCC9), const Color(0xFFC7B79E), const Color(0xFFA39176)],
+            [const Color(0xFF4A1818), const Color(0xFF2C0D0D), const Color(0xFF160606)],
+            [const Color(0xFF16253B), const Color(0xFF0D1726), const Color(0xFF070D16)],
+            [const Color(0xFF163620), const Color(0xFF0D2113), const Color(0xFF07120A)],
+            [const Color(0xFF452B14), const Color(0xFF2B1B0B), const Color(0xFF150C05)],
+            [const Color(0xFF2A201A), const Color(0xFF1A130F), const Color(0xFF0D0907)],
+            [const Color(0xFF242428), const Color(0xFF161618), const Color(0xFF0B0B0C)],
+            [const Color(0xFFD4C5AC), const Color(0xFFB5A48B), const Color(0xFF96846B)],
           ];
 
     final spineColors = palettes[hash % palettes.length];
@@ -1200,21 +1176,12 @@ class _RotundaCurvedWoodPainter extends CustomPainter {
     final gradient = LinearGradient(
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
-      colors: isDark
-          ? [
-              const Color(0xFF0F0A06),
-              const Color(0xFF26190E),
-              const Color(0xFF332213),
-              const Color(0xFF26190E),
-              const Color(0xFF0F0A06),
-            ]
-          : [
-              const Color(0xFF947B5F),
-              const Color(0xFFC7B093),
-              const Color(0xFFDFCAB0),
-              const Color(0xFFC7B093),
-              const Color(0xFF947B5F),
-            ],
+      colors: [
+        Colors.black.withValues(alpha: isDark ? 0.28 : 0.05),
+        Colors.transparent,
+        Colors.black.withValues(alpha: isDark ? 0.28 : 0.05),
+      ],
+      stops: const [0.0, 0.5, 1.0],
     );
 
     final paint = Paint()..shader = gradient.createShader(rect);
