@@ -232,8 +232,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // Scroll down to reveal Circular Library Arc
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -350));
+    // Scroll down to reveal Rotunda Cylindrical Library
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -247,5 +247,24 @@ void main() {
     final horizontalList = find.byType(ListView).first;
     await tester.drag(horizontalList, const Offset(-100, 0));
     await tester.pump(const Duration(milliseconds: 100));
+
+    // Tap Face View toggle
+    expect(find.text('Face View'), findsOneWidget);
+    await tester.tap(find.text('Face View'));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify switched to Face View
+    expect(find.textContaining('Face View • Rotating 3D cover cards'), findsOneWidget);
+
+    // Tap Spines toggle to switch back
+    expect(find.text('Spines'), findsOneWidget);
+    await tester.tap(find.text('Spines'));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    expect(find.textContaining('Spine View • Revolving leather spines'), findsOneWidget);
   });
 }
