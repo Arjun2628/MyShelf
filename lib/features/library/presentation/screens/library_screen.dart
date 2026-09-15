@@ -2114,21 +2114,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ),
               _buildGridSliver(_books),
             ] else if (_isCarouselMode) ...[
-              // In Carousel Mode: 3-Tier Interactive Bookshelf Category Hub
-              SliverToBoxAdapter(
-                child: InteractiveBookshelfCategoryWidget(
-                  selectedCategory: _selectedFilterTag,
-                  onCategorySelected: (categoryKey) {
-                    setState(() {
-                      _selectedFilterTag = categoryKey;
-                    });
-                  },
-                  isDark: _isDark,
-                  goldAccent: _goldAccent,
-                  textPrimary: _textPrimary,
-                  textSecondary: _textSecondary,
-                ),
-              ),
+              // Carousel mode concludes cleanly after the Rotunda Cylindrical Shelf
             ] else ...[
               // 6. Malayalam Literature Shelf
               if (malayalamBooks.isNotEmpty) ...[
