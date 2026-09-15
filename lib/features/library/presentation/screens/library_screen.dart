@@ -22,6 +22,7 @@ import 'package:epub_audio/features/text_content/domain/entities/text_document.d
 import 'package:epub_audio/features/text_content/presentation/screens/text_editor_screen.dart';
 import 'package:epub_audio/features/text_content/presentation/widgets/quick_paste_modal.dart';
 import 'package:epub_audio/features/library/presentation/widgets/interactive_bookshelf_category_widget.dart';
+import 'package:epub_audio/features/library/presentation/widgets/spine_rack_3d_carousel_widget.dart';
 import 'package:epub_audio/main.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +66,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String _selectedFilterTag =
       'All'; // 'All', 'In Progress', 'Malayalam', 'English', 'Imported'
   bool _isGridView = false; // Toggle for explore section
+  bool _isCarouselMode = false; // Toggle between 3D Carousel and Shelf view
   String _savedFilter = 'All'; // 'All', 'Highlights', 'Bookmarks', 'Notes'
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
@@ -1239,7 +1241,102 @@ class _LibraryScreenState extends State<LibraryScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
-          if (_selectedTabIndex == 0)
+          if (_selectedTabIndex == 0) ...[
+            // View Mode Segmented Control: [ Carousel | Shelf ]
+            Container(
+              margin: const EdgeInsets.only(right: 6),
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                color: _isDark
+                    ? const Color(0xFF1E1A16)
+                    : const Color(0xFFE8E0D2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _isDark
+                      ? const Color(0xFF383026)
+                      : const Color(0xFFD6CAB8),
+                  width: 0.8,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _isCarouselMode = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _isCarouselMode
+                            ? (_isDark ? const Color(0xFF2C241B) : Colors.white)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: _isCarouselMode
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: _isDark ? 0.3 : 0.08,
+                                  ),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Text(
+                        'Carousel',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: _isCarouselMode
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                          color: _isCarouselMode ? _goldAccent : _textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _isCarouselMode = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: !_isCarouselMode
+                            ? (_isDark ? const Color(0xFF2C241B) : Colors.white)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: !_isCarouselMode
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: _isDark ? 0.3 : 0.08,
+                                  ),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Text(
+                        'Shelf',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: !_isCarouselMode
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                          color:
+                              !_isCarouselMode ? _goldAccent : _textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Container(
               margin: const EdgeInsets.only(right: 6),
               decoration: BoxDecoration(
@@ -1248,7 +1345,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 border: Border.all(color: _cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
+                    color: Colors.black.withValues(
+                      alpha: _isDark ? 0.25 : 0.04,
+                    ),
                     blurRadius: 4,
                     offset: const Offset(0, 1.5),
                   ),
@@ -1267,11 +1366,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ? Icons.view_stream_rounded
                         : Icons.grid_view_rounded,
                     color: _iconColor,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ),
             ),
+          ],
           Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
@@ -1848,6 +1948,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ? _buildGridSliver(filteredBooks)
                 : _buildListSliver(filteredBooks),
         ] else ...[
+          // 2. Spine Rack 3D Carousel & Center Hardcover Showcase (Carousel Mode)
+          if (_isCarouselMode && !isCategoryFiltered && _books.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: SpineRack3dCarouselWidget(
+                books: _books,
+                isDark: _isDark,
+                goldAccent: _goldAccent,
+                onBookSelected: (book) {
+                  // Book selection feedback
+                },
+                onReadPressed: (book) => _openReader(book),
+                onListenPressed: (book) => _openAudiobook(book),
+                onExplorePressed: () {
+                  setState(() {
+                    _selectedFilterTag = 'All';
+                  });
+                },
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+          ],
+
           // 3. Continue Reading / History Shelf
           if (historyBooks.isNotEmpty) ...[
             SliverToBoxAdapter(

@@ -4,6 +4,7 @@ import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart'
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/library/data/sample_books_provider.dart';
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
+import 'package:epub_audio/features/library/presentation/widgets/spine_rack_3d_carousel_widget.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
 import 'package:epub_audio/features/session/presentation/controllers/book_session_controller.dart';
@@ -186,5 +187,35 @@ void main() {
 
     // Verify theme state persisted in Hive
     expect(HiveStorageService().getAppThemeMode(), equals(ThemeMode.dark));
+  });
+
+  testWidgets('LibraryScreen toggles between Shelf and 3D Spine Rack Carousel modes', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
+    for (int i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify Carousel and Shelf toggle buttons in AppBar
+    expect(find.text('Carousel'), findsOneWidget);
+    expect(find.text('Shelf'), findsOneWidget);
+
+    // Tap Carousel button
+    await tester.tap(find.text('Carousel'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify 3D Spine Rack Carousel & Center Hardcover Showcase is rendered with Action Trio
+    expect(find.byType(SpineRack3dCarouselWidget), findsOneWidget);
+    expect(find.text('Explore'), findsWidgets);
+
+    // Tap Shelf button to toggle back
+    await tester.tap(find.text('Shelf'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    expect(find.byType(SpineRack3dCarouselWidget), findsNothing);
+    expect(find.textContaining('Malayalam Literature'), findsOneWidget);
   });
 }
