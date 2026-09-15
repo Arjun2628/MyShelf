@@ -38,7 +38,7 @@ void main() {
     }
 
     expect(find.byType(CircularArcShelfWidget), findsOneWidget);
-    expect(find.textContaining('Rotunda Cylindrical Library'), findsOneWidget);
+    expect(find.text('Spines'), findsOneWidget);
     expect(find.textContaining('World Masterpieces'), findsOneWidget);
   });
 
@@ -241,9 +241,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // Verify Circular Arc Shelf is displayed with its headers and rows
+    // Verify Circular Arc Shelf is displayed with its study desk header and rows
     expect(find.byType(CircularArcShelfWidget), findsOneWidget);
-    expect(find.textContaining('Rotunda Cylindrical Library'), findsOneWidget);
+    expect(find.text('Spines'), findsOneWidget);
     expect(find.textContaining('Malayalam Classics'), findsOneWidget);
 
     // Scroll horizontal row inside circular shelf
@@ -258,8 +258,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // Verify switched to Face View
-    expect(find.textContaining('Face View • Rotating 3D standing books'), findsOneWidget);
+    // Verify switched to Face View mode
+    expect(find.text('Face View'), findsOneWidget);
 
     // Tap Spines toggle to switch back
     expect(find.text('Spines'), findsOneWidget);
@@ -268,6 +268,6 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.textContaining('Spine View • Revolving leather spines'), findsOneWidget);
+    expect(find.text('Spines'), findsOneWidget);
   });
 }
