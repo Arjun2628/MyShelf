@@ -45,7 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthUser> init() async {
     try {
-      final savedData = await _storageService.getCustomSetting<String>(_authKey);
+      final savedData = _storageService.getCustomSetting<String>(_authKey);
       if (savedData != null && savedData.isNotEmpty) {
         final Map<String, dynamic> json = jsonDecode(savedData);
         _currentUser = AuthUser.fromJson(json);

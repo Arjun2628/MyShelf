@@ -4,9 +4,6 @@ import 'package:epub_audio/features/auth/domain/entities/auth_user.dart';
 import 'package:epub_audio/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:epub_audio/features/auth/presentation/widgets/auth_modal.dart';
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
-import 'package:epub_audio/features/profile/data/repositories/profile_repository_impl.dart';
-import 'package:epub_audio/features/profile/domain/entities/user_profile.dart';
-import 'package:epub_audio/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

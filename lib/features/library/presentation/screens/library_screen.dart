@@ -68,25 +68,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
   Color get _canvasBg =>
-      _isDark ? const Color(0xFF16120E) : const Color(0xFFF3ECE0);
+      _isDark ? const Color(0xFF14100C) : const Color(0xFFFBF7F0);
   Color get _cardBg =>
-      _isDark ? const Color(0xFF221B14) : const Color(0xFFFFFDF8);
+      _isDark ? const Color(0xFF1E1812) : const Color(0xFFFFFDF8);
   Color get _cardBorder =>
-      _isDark ? const Color(0xFF382F24) : const Color(0xFFDDD2BA);
+      _isDark ? const Color(0xFF382F24) : const Color(0xFFE2D6C5);
   Color get _textPrimary =>
-      _isDark ? const Color(0xFFF7F1E6) : const Color(0xFF2B2620);
+      _isDark ? const Color(0xFFF7F2EB) : const Color(0xFF261D13);
   Color get _textSecondary =>
-      _isDark ? const Color(0xFFA99C85) : const Color(0xFF857863);
+      _isDark ? const Color(0xFFA89F93) : const Color(0xFF7A6E5F);
   Color get _chipBg =>
-      _isDark ? const Color(0xFF2C241B) : const Color(0xFFEBE2D0);
+      _isDark ? const Color(0xFF2C2218) : const Color(0xFFEADBCE);
   Color get _iconColor =>
       _isDark ? const Color(0xFFDCCFBB) : const Color(0xFF383127);
-  Color get _goldAccent =>
-      _isDark ? const Color(0xFFE0B45F) : const Color(0xFFC99538);
+  Color get _goldAccent => const Color(0xFFD4A373);
   Color get _navBarBg =>
       _isDark ? const Color(0xFF1D1711) : const Color(0xFF2B2620);
-  Color get _navBarActive => const Color(0xFFF3ECE0);
-  Color get _navBarInactive => const Color(0xFFA99C85);
+  Color get _navBarActive => const Color(0xFFF7F2EB);
+  Color get _navBarInactive => const Color(0xFFA89F93);
 
   void _showThemeSelectionModal() {
     final currentMode = appThemeModeNotifier.value;
@@ -1169,40 +1168,61 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: _goldAccent.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: _goldAccent.withValues(alpha: 0.35),
+                        width: 1,
+                      ),
+                    ),
                     child: Image.asset(
                       'assets/logo.png',
-                      width: 28,
-                      height: 28,
+                      width: 22,
+                      height: 22,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.auto_stories_rounded,
                         color: _goldAccent,
-                        size: 24,
+                        size: 20,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    'Audiobooks',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'serif',
-                      letterSpacing: 0.6,
-                      fontSize: 18,
-                      color: _textPrimary,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'My Library',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.3,
+                          fontSize: 18,
+                          color: _textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'EPUB & Audiobooks',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: _goldAccent,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               )
             : Text(
                 'Saved & Bookmarks',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'serif',
-                  letterSpacing: 0.8,
-                  fontSize: 16.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.3,
+                  fontSize: 18,
                   color: _textPrimary,
                 ),
               ),
@@ -1211,43 +1231,74 @@ class _LibraryScreenState extends State<LibraryScreen> {
         elevation: 0,
         actions: [
           if (_selectedTabIndex == 0)
-            _TappableScale(
-              onTap: () {
-                setState(() {
-                  _isGridView = !_isGridView;
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Icon(
-                  _isGridView
-                      ? Icons.view_stream_rounded
-                      : Icons.grid_view_rounded,
-                  color: _iconColor,
-                  size: 21,
+            Container(
+              margin: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
+              ),
+              child: _TappableScale(
+                onTap: () {
+                  setState(() {
+                    _isGridView = !_isGridView;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    _isGridView
+                        ? Icons.view_stream_rounded
+                        : Icons.grid_view_rounded,
+                    color: _iconColor,
+                    size: 20,
+                  ),
                 ),
               ),
             ),
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: appThemeModeNotifier,
-            builder: (context, themeMode, _) {
-              final IconData themeIcon;
-              if (themeMode == ThemeMode.system) {
-                themeIcon = Icons.brightness_auto_rounded;
-              } else if (themeMode == ThemeMode.dark) {
-                themeIcon = Icons.dark_mode_rounded;
-              } else {
-                themeIcon = Icons.light_mode_rounded;
-              }
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1.5),
+                ),
+              ],
+            ),
+            child: ValueListenableBuilder<ThemeMode>(
+              valueListenable: appThemeModeNotifier,
+              builder: (context, themeMode, _) {
+                final IconData themeIcon;
+                if (themeMode == ThemeMode.system) {
+                  themeIcon = Icons.brightness_auto_rounded;
+                } else if (themeMode == ThemeMode.dark) {
+                  themeIcon = Icons.dark_mode_rounded;
+                } else {
+                  themeIcon = Icons.light_mode_rounded;
+                }
 
-              return IconButton(
-                icon: Icon(themeIcon, color: _iconColor, size: 21),
-                tooltip: 'App Theme',
-                onPressed: _showThemeSelectionModal,
-              );
-            },
+                return IconButton(
+                  icon: Icon(themeIcon, color: _iconColor, size: 20),
+                  tooltip: 'App Theme',
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                  onPressed: _showThemeSelectionModal,
+                );
+              },
+            ),
           ),
-          const SizedBox(width: 6),
         ],
       ),
       body: _isLoading
@@ -1901,17 +1952,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF1D1711) : const Color(0xFF2B2620),
-        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: _isDark
+              ? [const Color(0xFF1E1812), const Color(0xFF2B2218)]
+              : [const Color(0xFF2D261E), const Color(0xFF3B3227)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _isDark ? const Color(0xFF382F24) : const Color(0xFF3D352B),
-          width: 1,
+          color: _goldAccent.withValues(alpha: _isDark ? 0.35 : 0.25),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: _isDark ? 0.38 : 0.15),
+            color: Colors.black.withValues(alpha: _isDark ? 0.4 : 0.18),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: _goldAccent.withValues(alpha: 0.1),
             blurRadius: 12,
-            offset: const Offset(0, 3.5),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1930,11 +1992,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           ),
           Container(
-            height: 28,
+            height: 32,
             width: 1,
-            color: _isDark
-                ? const Color(0xFF382F24)
-                : const Color(0xFF3D352B),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  _goldAccent.withValues(alpha: 0.4),
+                  Colors.transparent,
+                ],
+              ),
+            ),
           ),
           Expanded(
             child: _buildTrioActionItem(
@@ -1948,11 +2018,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           ),
           Container(
-            height: 28,
+            height: 32,
             width: 1,
-            color: _isDark
-                ? const Color(0xFF382F24)
-                : const Color(0xFF3D352B),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  _goldAccent.withValues(alpha: 0.4),
+                  Colors.transparent,
+                ],
+              ),
+            ),
           ),
           Expanded(
             child: _buildTrioActionItem(
@@ -1983,12 +2061,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: _isDark
-                    ? const Color(0xFF2C231B)
-                    : const Color(0xFF382F25),
-                borderRadius: BorderRadius.circular(10),
+                    ? _goldAccent.withValues(alpha: 0.16)
+                    : const Color(0xFF43392E),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _goldAccent.withValues(alpha: 0.3),
+                  width: 0.8,
+                ),
               ),
               child: Icon(
                 icon,
@@ -2003,8 +2085,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 fontFamily: 'serif',
                 fontSize: 11.5,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 0.8,
-                color: Color(0xFFF3ECE0),
+                letterSpacing: 0.6,
+                color: Color(0xFFF7F1E6),
               ),
             ),
           ],
@@ -2014,14 +2096,55 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildEditorialTagline() {
-    return Text(
-      'Discover universes in words and sound',
-      style: TextStyle(
-        fontFamily: 'serif',
-        fontSize: 14.5,
-        letterSpacing: 0.3,
-        fontWeight: FontWeight.w400,
-        color: _textPrimary,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDark ? 0.22 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2.5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _goldAccent.withValues(alpha: 0.25),
+                  _goldAccent.withValues(alpha: 0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _goldAccent.withValues(alpha: 0.3),
+                width: 0.8,
+              ),
+            ),
+            child: Icon(Icons.auto_stories_rounded, color: _goldAccent, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Discover universes in words and sound',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'serif',
+                color: _textPrimary,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2030,41 +2153,41 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Widget _buildSearchBar() {
     return Container(
-      height: 44,
+      height: 48,
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            blurRadius: 8,
+            offset: const Offset(0, 2.5),
           ),
         ],
         border: Border.all(color: _cardBorder),
       ),
       child: TextField(
         controller: _searchController,
-        style: TextStyle(color: _textPrimary, fontSize: 13),
+        style: TextStyle(color: _textPrimary, fontSize: 13.5),
         onChanged: (val) {
           setState(() {
             _searchQuery = val;
           });
         },
         decoration: InputDecoration(
-          hintText: 'Search books, authors...',
-          hintStyle: TextStyle(color: _textSecondary, fontSize: 12.5),
+          hintText: 'Search books, authors, notes...',
+          hintStyle: TextStyle(color: _textSecondary, fontSize: 13),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: _textSecondary,
-            size: 19,
+            color: _goldAccent,
+            size: 20,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: Icon(
                     Icons.clear_rounded,
                     color: _textSecondary,
-                    size: 16,
+                    size: 18,
                   ),
                   onPressed: () {
                     setState(() {
@@ -2076,8 +2199,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
+            horizontal: 12,
+            vertical: 12,
           ),
         ),
       ),
@@ -2090,17 +2213,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Tooltip(
         message: 'Import Book',
         child: Container(
-          width: 44,
-          height: 44,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             color: _cardBg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: _cardBorder),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                blurRadius: 8,
+                offset: const Offset(0, 2.5),
               ),
             ],
           ),
@@ -2110,8 +2233,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               children: [
                 Icon(
                   Icons.file_upload_outlined,
-                  color: _textPrimary,
-                  size: 20,
+                  color: _goldAccent,
+                  size: 21,
                 ),
                 // Hidden 0-size text element ensuring find.text('Import Book') matches in widget test
                 SizedBox(
@@ -2141,24 +2264,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Tooltip(
         message: 'Filter Categories',
         child: Container(
-          width: 44,
-          height: 44,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             color: isFilterActive
                 ? (_isDark ? const Color(0xFF382C1E) : const Color(0xFFF0E4CE))
                 : _cardBg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isFilterActive ? _goldAccent : _cardBorder,
-              width: isFilterActive ? 1.4 : 1.0,
+              width: isFilterActive ? 1.5 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
                 color: isFilterActive
-                    ? _goldAccent.withValues(alpha: 0.2)
+                    ? _goldAccent.withValues(alpha: 0.25)
                     : Colors.black.withValues(alpha: _isDark ? 0.25 : 0.04),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                blurRadius: 8,
+                offset: const Offset(0, 2.5),
               ),
             ],
           ),
@@ -2168,12 +2291,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
               Icon(
                 Icons.tune_rounded,
                 color: isFilterActive ? _goldAccent : _textPrimary,
-                size: 20,
+                size: 21,
               ),
               if (isFilterActive)
                 Positioned(
-                  top: 7,
-                  right: 7,
+                  top: 8,
+                  right: 8,
                   child: Container(
                     width: 7,
                     height: 7,
@@ -2784,16 +2907,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
     required int count,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 10),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(8),
+              color: iconColor.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: iconColor.withValues(alpha: 0.35)),
             ),
-            child: Icon(icon, size: 17, color: iconColor),
+            child: Icon(icon, size: 18, color: iconColor),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -2805,21 +2929,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'serif',
+                        fontSize: 17.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
                         color: _textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1,
+                        horizontal: 7,
+                        vertical: 1.5,
                       ),
                       decoration: BoxDecoration(
                         color: _chipBg,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: _cardBorder),
                       ),
                       child: Text(
                         '$count',
@@ -2832,9 +2957,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11.5, color: _textSecondary),
+                  style: TextStyle(fontSize: 12, color: _textSecondary),
                 ),
               ],
             ),
@@ -4125,31 +4251,31 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
     final timeStr = widget.formatRelativeTime(progress.lastUpdated);
 
     return Container(
-      width: 250,
+      width: 254,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: widget.cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isFocused
-              ? widget.goldAccent.withValues(alpha: 0.65)
+              ? widget.goldAccent.withValues(alpha: 0.75)
               : widget.cardBorder,
-          width: isFocused ? 1.3 : 1.0,
+          width: isFocused ? 1.4 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: isFocused
                 ? widget.goldAccent.withValues(
-                    alpha: widget.isDark ? 0.3 : 0.15,
+                    alpha: widget.isDark ? 0.35 : 0.16,
                   )
-                : Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.04),
-            blurRadius: isFocused ? 10 : 6,
-            offset: Offset(0, isFocused ? 3 : 2),
+                : Colors.black.withValues(alpha: widget.isDark ? 0.28 : 0.05),
+            blurRadius: isFocused ? 12 : 7,
+            offset: Offset(0, isFocused ? 3.5 : 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(11),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -4157,39 +4283,63 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mini Cover with glowing aura
+                // Mini Cover with glowing aura & spine depth
                 _TappableScale(
                   onTap: () => widget.onOpenReader(
                     book,
                     chapterIndex: progress.chapterIndex,
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
+                    borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      width: 42,
-                      height: 58,
+                      width: 44,
+                      height: 60,
                       decoration: BoxDecoration(
                         color: const Color(0xFF241E16),
                         boxShadow: [
                           BoxShadow(
                             color: widget.goldAccent.withValues(
-                              alpha: isFocused ? 0.35 : 0.2,
+                              alpha: isFocused ? 0.4 : 0.22,
                             ),
-                            blurRadius: isFocused ? 7 : 5,
+                            blurRadius: isFocused ? 8 : 5,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: book.coverImageBytes != null
-                          ? Image.memory(
-                              book.coverImageBytes!,
-                              fit: BoxFit.cover,
-                            )
-                          : widget.buildDefaultCover(book, isMini: true),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          book.coverImageBytes != null
+                              ? Image.memory(
+                                  book.coverImageBytes!,
+                                  fit: BoxFit.cover,
+                                )
+                              : widget.buildDefaultCover(book, isMini: true),
+                          // Left spine shadow
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: 6,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.42),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -4199,37 +4349,38 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'serif',
                           color: widget.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 2),
                       Text(
                         book.metadata.author,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 11,
                           color: widget.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           widget.buildFormatBadge(book, isMini: true),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 5),
                           Icon(
                             Icons.access_time_rounded,
-                            size: 10,
-                            color: widget.textSecondary,
+                            size: 11,
+                            color: widget.goldAccent,
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: 3),
                           Text(
                             timeStr,
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
                               color: widget.textSecondary,
                             ),
                           ),
@@ -4250,42 +4401,51 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                 Text(
                   'Chapter ${progress.chapterIndex + 1} of $chapterCount',
                   style: TextStyle(
-                    fontSize: 10.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: widget.textSecondary,
                   ),
                 ),
-                Text(
-                  '$percent%',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: widget.goldAccent,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: widget.goldAccent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '$percent%',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: widget.goldAccent,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             Container(
-              height: 3.5,
+              height: 4.0,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: widget.cardBorder,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: progressFraction,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: widget.goldAccent,
-                    borderRadius: BorderRadius.circular(3),
+                    gradient: LinearGradient(
+                      colors: [widget.goldAccent, const Color(0xFFF59E0B)],
+                    ),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 9),
 
             // Resume Actions: Read & Audio
             Row(
@@ -4298,27 +4458,30 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                       paragraphIndex: progress.paragraphIndex,
                     ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: widget.isDark
                             ? const Color(0xFF2C241B)
                             : const Color(0xFF2B2620),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: widget.cardBorder.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.menu_book_rounded,
-                            size: 12,
+                            size: 13,
                             color: Color(0xFFF3ECE0),
                           ),
                           SizedBox(width: 4),
                           Text(
                             'Read',
                             style: TextStyle(
-                              fontSize: 10.5,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFFF3ECE0),
                             ),
@@ -4333,11 +4496,13 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                   child: _TappableScale(
                     onTap: () => widget.onOpenAudiobook(book),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
+                        color: widget.isDark
+                            ? widget.goldAccent.withValues(alpha: 0.18)
+                            : const Color(0xFFFBF4E4),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: widget.goldAccent.withValues(alpha: 0.6),
                           width: 1,
@@ -4348,14 +4513,14 @@ class _AnimatedHistoryShelfState extends State<_AnimatedHistoryShelf> {
                         children: [
                           Icon(
                             Icons.headphones_rounded,
-                            size: 12,
+                            size: 13,
                             color: widget.goldAccent,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Audio',
                             style: TextStyle(
-                              fontSize: 10.5,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: widget.goldAccent,
                             ),
@@ -4482,31 +4647,31 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
     required bool isFocused,
   }) {
     return Container(
-      width: 126,
+      width: 128,
       margin: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
         color: widget.cardBg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isFocused
-              ? widget.goldAccent.withValues(alpha: 0.7)
+              ? widget.goldAccent.withValues(alpha: 0.8)
               : widget.cardBorder,
-          width: isFocused ? 1.3 : 1.0,
+          width: isFocused ? 1.4 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: isFocused
                 ? widget.goldAccent.withValues(
-                    alpha: widget.isDark ? 0.35 : 0.16,
+                    alpha: widget.isDark ? 0.38 : 0.18,
                   )
-                : Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.04),
-            blurRadius: isFocused ? 10 : 6,
-            offset: Offset(0, isFocused ? 3 : 2),
+                : Colors.black.withValues(alpha: widget.isDark ? 0.26 : 0.05),
+            blurRadius: isFocused ? 12 : 6,
+            offset: Offset(0, isFocused ? 3.5 : 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(7),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -4514,18 +4679,18 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
             _TappableScale(
               onTap: () => widget.onOpenReader(book),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(9),
                 child: Container(
-                  height: 106,
+                  height: 108,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: const Color(0xFF241E16),
                     boxShadow: [
                       BoxShadow(
                         color: tagColor.withValues(
-                          alpha: isFocused ? 0.35 : 0.2,
+                          alpha: isFocused ? 0.4 : 0.22,
                         ),
-                        blurRadius: isFocused ? 8 : 6,
+                        blurRadius: isFocused ? 9 : 6,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -4551,9 +4716,26 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                               colors: [
-                                Colors.black.withValues(alpha: 0.38),
+                                Colors.black.withValues(alpha: 0.42),
                                 Colors.transparent,
                               ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Diagonal light sheen overlay
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.12),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.15),
+                              ],
+                              stops: const [0.0, 0.45, 1.0],
                             ),
                           ),
                         ),
@@ -4569,7 +4751,7 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
                 ),
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 6),
             // Title
             _TappableScale(
               onTap: () => widget.onOpenReader(book),
@@ -4578,7 +4760,7 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'serif',
                   color: widget.textPrimary,
@@ -4591,7 +4773,11 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
               book.metadata.author,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 9.5, color: widget.textSecondary),
+              style: TextStyle(
+                fontSize: 10,
+                color: widget.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const Spacer(),
             // Quick Action Buttons: Read & Listen
@@ -4601,21 +4787,23 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
                   child: _TappableScale(
                     onTap: () => widget.onOpenReader(book),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 3.5),
+                      padding: const EdgeInsets.symmetric(vertical: 4.5),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: widget.chipBg,
-                        borderRadius: BorderRadius.circular(5),
+                        color: widget.isDark
+                            ? const Color(0xFF2C241B)
+                            : const Color(0xFF2B2620),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: widget.cardBorder.withValues(alpha: 0.5),
+                          color: widget.cardBorder.withValues(alpha: 0.6),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Read',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.bold,
-                          color: widget.textPrimary,
+                          color: Color(0xFFF7F1E6),
                         ),
                       ),
                     ),
@@ -4626,22 +4814,22 @@ class _AnimatedHorizontalShelfState extends State<_AnimatedHorizontalShelf> {
                   child: _TappableScale(
                     onTap: () => widget.onOpenAudiobook(book),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 3.5),
+                      padding: const EdgeInsets.symmetric(vertical: 4.5),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: widget.isDark
                             ? widget.goldAccent.withValues(alpha: 0.18)
                             : const Color(0xFFFBF4E4),
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: widget.goldAccent.withValues(alpha: 0.5),
-                          width: 0.8,
+                          color: widget.goldAccent.withValues(alpha: 0.6),
+                          width: 0.9,
                         ),
                       ),
                       child: Text(
                         'Listen',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.bold,
                           color: widget.goldAccent,
                         ),

@@ -4,7 +4,6 @@ import 'package:epub_audio/features/explore/domain/entities/category.dart';
 import 'package:epub_audio/features/explore/domain/entities/category_experience_config.dart';
 import 'package:epub_audio/features/explore/domain/repositories/explore_repository.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/shelf_renderer.dart';
-import 'package:epub_audio/features/opening_experience/presentation/screens/book_opening_experience_screen.dart';
 import 'package:flutter/material.dart';
 
 /// Screen displaying a specific category with its immersive visual theme and atmospheric backdrop.

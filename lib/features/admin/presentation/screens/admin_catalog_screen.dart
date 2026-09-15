@@ -16,9 +16,8 @@ class AdminCatalogScreen extends StatefulWidget {
   State<AdminCatalogScreen> createState() => _AdminCatalogScreenState();
 }
 
-class _AdminCatalogScreenState extends State<AdminCatalogScreen> with SingleTickerProviderStateMixin {
+class _AdminCatalogScreenState extends State<AdminCatalogScreen> {
   late CatalogSyncService _syncService;
-  late TabController _tabController;
 
   List<BookShelf> _curatedShelves = [];
   bool _isLoading = true;
@@ -28,14 +27,7 @@ class _AdminCatalogScreenState extends State<AdminCatalogScreen> with SingleTick
   void initState() {
     super.initState();
     _syncService = widget.syncService ?? CatalogSyncService.instance;
-    _tabController = TabController(length: 3, vsync: this);
     _loadCatalog();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadCatalog() async {
@@ -133,84 +125,85 @@ class _AdminCatalogScreenState extends State<AdminCatalogScreen> with SingleTick
     final subColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
     const accentColor = Color(0xFF8B5CF6);
 
-    return Scaffold(
-      backgroundColor: canvasBg,
-      appBar: AppBar(
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
         backgroundColor: canvasBg,
-        foregroundColor: titleColor,
-        elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-              ),
-              child: const Text(
-                '👑 CURATOR CONSOLE',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  color: accentColor,
-                  letterSpacing: 0.8,
+        appBar: AppBar(
+          backgroundColor: canvasBg,
+          foregroundColor: titleColor,
+          elevation: 0,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+                ),
+                child: const Text(
+                  '👑 CURATOR CONSOLE',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: accentColor,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
+              Text(
+                'Catalog & Shelves',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: titleColor),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.cloud_sync_rounded, color: accentColor),
+              tooltip: 'Sync Catalog',
+              onPressed: _isLoading ? null : _loadCatalog,
             ),
-            const SizedBox(width: 8),
-            Text(
-              'Catalog & Shelves',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: titleColor),
+            IconButton(
+              icon: const Icon(Icons.publish_rounded, color: Color(0xFF10B981)),
+              tooltip: 'Publish Changes',
+              onPressed: _isLoading ? null : _publishChanges,
             ),
           ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.cloud_sync_rounded, color: accentColor),
-            tooltip: 'Sync Catalog',
-            onPressed: _isLoading ? null : _loadCatalog,
+          bottom: TabBar(
+            indicatorColor: accentColor,
+            labelColor: accentColor,
+            unselectedLabelColor: subColor,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            tabs: const [
+              Tab(text: 'Curated Shelves'),
+              Tab(text: 'Catalog Books'),
+              Tab(text: 'Cloud & Sync'),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.publish_rounded, color: Color(0xFF10B981)),
-            tooltip: 'Publish Changes',
-            onPressed: _isLoading ? null : _publishChanges,
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: accentColor,
-          labelColor: accentColor,
-          unselectedLabelColor: subColor,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: const [
-            Tab(text: 'Curated Shelves'),
-            Tab(text: 'Catalog Books'),
-            Tab(text: 'Cloud & Sync'),
-          ],
         ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: accentColor))
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                // 1. Curated Shelves Tab
-                _buildShelvesTab(cardBg, borderColor, titleColor, subColor, accentColor),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: accentColor))
+            : TabBarView(
+                children: [
+                  // 1. Curated Shelves Tab
+                  _buildShelvesTab(cardBg, borderColor, titleColor, subColor, accentColor),
 
-                // 2. Catalog Books Tab
-                _buildCatalogBooksTab(cardBg, borderColor, titleColor, subColor, accentColor),
+                  // 2. Catalog Books Tab
+                  _buildCatalogBooksTab(cardBg, borderColor, titleColor, subColor, accentColor),
 
-                // 3. Cloud & Sync Tab
-                _buildCloudSyncTab(cardBg, borderColor, titleColor, subColor, accentColor),
-              ],
-            ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditShelfModal(),
-        backgroundColor: accentColor,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('New Curated Shelf', style: TextStyle(fontWeight: FontWeight.bold)),
+                  // 3. Cloud & Sync Tab
+                  _buildCloudSyncTab(cardBg, borderColor, titleColor, subColor, accentColor),
+                ],
+              ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _openEditShelfModal(),
+          backgroundColor: accentColor,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('New Curated Shelf', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
       ),
     );
   }
