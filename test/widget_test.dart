@@ -4,6 +4,7 @@ import 'package:epub_audio/features/epub/domain/usecases/open_epub_usecase.dart'
 import 'package:epub_audio/features/library/data/datasources/hive_storage_service.dart';
 import 'package:epub_audio/features/library/data/sample_books_provider.dart';
 import 'package:epub_audio/features/library/presentation/screens/library_screen.dart';
+import 'package:epub_audio/features/library/presentation/widgets/circular_arc_shelf_widget.dart';
 import 'package:epub_audio/features/library/presentation/widgets/spine_rack_3d_carousel_widget.dart';
 import 'package:epub_audio/features/reader/domain/entities/bookmark.dart';
 import 'package:epub_audio/features/reader/domain/entities/text_highlight.dart';
@@ -217,5 +218,34 @@ void main() {
 
     expect(find.byType(SpineRack3dCarouselWidget), findsNothing);
     expect(find.textContaining('Malayalam Literature'), findsOneWidget);
+  });
+
+  testWidgets('CircularArcShelfWidget renders multi-tier scrollable curved rows in Carousel mode', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(home: LibraryScreen()));
+    for (int i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Switch to Carousel mode
+    await tester.tap(find.text('Carousel'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Scroll down to reveal Circular Library Arc
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -350));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify Circular Arc Shelf is displayed with its headers and rows
+    expect(find.byType(CircularArcShelfWidget), findsOneWidget);
+    expect(find.text('Circular Library Arc'), findsOneWidget);
+    expect(find.textContaining('Malayalam Classics'), findsOneWidget);
+
+    // Scroll horizontal row inside circular shelf
+    final horizontalList = find.byType(ListView).first;
+    await tester.drag(horizontalList, const Offset(-100, 0));
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

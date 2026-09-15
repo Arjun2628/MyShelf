@@ -21,6 +21,7 @@ import 'package:epub_audio/features/text_content/data/services/shared_text_servi
 import 'package:epub_audio/features/text_content/domain/entities/text_document.dart';
 import 'package:epub_audio/features/text_content/presentation/screens/text_editor_screen.dart';
 import 'package:epub_audio/features/text_content/presentation/widgets/quick_paste_modal.dart';
+import 'package:epub_audio/features/library/presentation/widgets/circular_arc_shelf_widget.dart';
 import 'package:epub_audio/features/library/presentation/widgets/interactive_bookshelf_category_widget.dart';
 import 'package:epub_audio/features/library/presentation/widgets/spine_rack_3d_carousel_widget.dart';
 import 'package:epub_audio/main.dart';
@@ -1984,6 +1985,43 @@ class _LibraryScreenState extends State<LibraryScreen> {
             SliverToBoxAdapter(child: _buildHistoryShelf(historyBooks)),
           ],
 
+          // 4. Circular Arc 3D Multi-Row Shelf (Carousel Mode)
+          if (_isCarouselMode && !isCategoryFiltered && _books.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: CircularArcShelfWidget(
+                rows: [
+                  if (malayalamBooks.isNotEmpty)
+                    CircularShelfRowData(
+                      title: 'Malayalam Classics & Novels',
+                      books: malayalamBooks,
+                      accentColor: const Color(0xFFEA580C),
+                    ),
+                  if (englishBooks.isNotEmpty)
+                    CircularShelfRowData(
+                      title: 'World Masterpieces & Literature',
+                      books: englishBooks,
+                      accentColor: const Color(0xFF7C3AED),
+                    ),
+                  if (importedBooks.isNotEmpty)
+                    CircularShelfRowData(
+                      title: 'Documents & User Imports',
+                      books: importedBooks,
+                      accentColor: const Color(0xFF0284C7),
+                    ),
+                ],
+                isDark: _isDark,
+                goldAccent: _goldAccent,
+                textPrimary: _textPrimary,
+                textSecondary: _textSecondary,
+                cardBg: _cardBg,
+                onBookTap: (book) => _openReader(book),
+                onReadPressed: (book) => _openReader(book),
+                onListenPressed: (book) => _openAudiobook(book),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          ],
+
           if (isCategoryFiltered) ...[
             // Category Filtered Collection
             SliverToBoxAdapter(
@@ -2075,6 +2113,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ),
               _buildGridSliver(_books),
+            ] else if (_isCarouselMode) ...[
+              // In Carousel Mode: 3-Tier Interactive Bookshelf Category Hub
+              SliverToBoxAdapter(
+                child: InteractiveBookshelfCategoryWidget(
+                  selectedCategory: _selectedFilterTag,
+                  onCategorySelected: (categoryKey) {
+                    setState(() {
+                      _selectedFilterTag = categoryKey;
+                    });
+                  },
+                  isDark: _isDark,
+                  goldAccent: _goldAccent,
+                  textPrimary: _textPrimary,
+                  textSecondary: _textSecondary,
+                ),
+              ),
             ] else ...[
               // 6. Malayalam Literature Shelf
               if (malayalamBooks.isNotEmpty) ...[
