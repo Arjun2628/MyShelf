@@ -21,6 +21,7 @@ import 'package:epub_audio/features/text_content/data/services/shared_text_servi
 import 'package:epub_audio/features/text_content/domain/entities/text_document.dart';
 import 'package:epub_audio/features/text_content/presentation/screens/text_editor_screen.dart';
 import 'package:epub_audio/features/text_content/presentation/widgets/quick_paste_modal.dart';
+import 'package:epub_audio/features/library/presentation/widgets/interactive_bookshelf_category_widget.dart';
 import 'package:epub_audio/main.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -1067,10 +1068,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
         return lang.contains('ml') ||
             book.id.contains('chemmeen') ||
             book.metadata.title.contains('ചെമ്മീൻ');
-      } else if (_selectedFilterTag == 'English') {
-        return lang.contains('en') || book.id.contains('alice');
+      } else if (_selectedFilterTag == 'English' ||
+          _selectedFilterTag == 'Classics') {
+        return lang.contains('en') ||
+            book.id.contains('alice') ||
+            book.id.contains('chemmeen');
+      } else if (_selectedFilterTag == 'Audio') {
+        return true; // All curated and loaded books have Audio/TTS support
       } else if (_selectedFilterTag == 'Imported') {
-        return book.id != 'sample_chemmeen' && book.id != 'sample_alice';
+        return (book.id != 'sample_chemmeen' &&
+                book.id != 'sample_alice') ||
+            book.isText ||
+            book.isScan;
       }
 
       return true;
@@ -1734,8 +1743,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
 
     final filteredBooks = _getFilteredBooks();
-    final isSearching =
-        _searchQuery.trim().isNotEmpty || _selectedFilterTag != 'All';
 
     // Reading History Books
     final historyBooks = <MapEntry<Book, BookProgress>>[];
@@ -1772,6 +1779,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         )
         .toList();
 
+    final bool isTextSearch = _searchQuery.trim().isNotEmpty;
+    final bool isCategoryFiltered = _selectedFilterTag != 'All';
+
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -1800,17 +1810,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ),
 
-        // 2. If actively searching or filtering, show direct filtered collection
-        if (isSearching) ...[
+        // 2. If actively searching by text, show direct search results
+        if (isTextSearch) ...[
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
               child: Row(
                 children: [
                   Text(
-                    _selectedFilterTag != 'All'
-                        ? 'Category: $_selectedFilterTag (${filteredBooks.length})'
-                        : 'Search Results (${filteredBooks.length})',
+                    'Search Results (${filteredBooks.length})',
                     style: TextStyle(
                       fontSize: 16.5,
                       fontWeight: FontWeight.bold,
@@ -1819,23 +1827,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ),
                   const Spacer(),
-                  if (_searchQuery.isNotEmpty || _selectedFilterTag != 'All')
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                          _searchQuery = '';
-                          _selectedFilterTag = 'All';
-                        });
-                      },
-                      child: Text(
-                        'Reset Filter',
-                        style: TextStyle(
-                          color: _goldAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      });
+                    },
+                    child: Text(
+                      'Clear',
+                      style: TextStyle(
+                        color: _goldAccent,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -1858,85 +1864,192 @@ class _LibraryScreenState extends State<LibraryScreen> {
           // 4. Editorial Tagline
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: _buildEditorialTagline(),
             ),
           ),
-          if (_isGridView) ...[
-            _buildGridSliver(_books),
+
+          // 5. Continue Reading / History Shelf
+          if (historyBooks.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: _buildShelfHeader(
+                title: 'Continue Reading & Listening',
+                subtitle: 'Pick up right where you paused',
+                icon: Icons.history_rounded,
+                iconColor: _goldAccent,
+                count: historyBooks.length,
+              ),
+            ),
+            SliverToBoxAdapter(child: _buildHistoryShelf(historyBooks)),
+          ],
+
+          if (isCategoryFiltered) ...[
+            // Category Filtered Collection
+            SliverToBoxAdapter(
+              child: InteractiveBookshelfCategoryWidget(
+                selectedCategory: _selectedFilterTag,
+                onCategorySelected: (categoryKey) {
+                  setState(() {
+                    _selectedFilterTag = categoryKey;
+                  });
+                },
+                isDark: _isDark,
+                goldAccent: _goldAccent,
+                textPrimary: _textPrimary,
+                textSecondary: _textSecondary,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _goldAccent.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Category: $_selectedFilterTag',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'serif',
+                          color: _textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '(${filteredBooks.length} Books)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedFilterTag = 'All';
+                        });
+                      },
+                      child: Text(
+                        'Show All Shelves',
+                        style: TextStyle(
+                          color: _goldAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (filteredBooks.isEmpty)
+              SliverToBoxAdapter(child: _buildEmptySearchState())
+            else
+              _isGridView
+                  ? _buildGridSliver(filteredBooks)
+                  : _buildListSliver(filteredBooks),
           ] else ...[
-            // 5. Continue Reading / History Shelf
-            if (historyBooks.isNotEmpty) ...[
+            if (_isGridView) ...[
               SliverToBoxAdapter(
-                child: _buildShelfHeader(
-                  title: 'Continue Reading & Listening',
-                  subtitle: 'Pick up right where you paused',
-                  icon: Icons.history_rounded,
-                  iconColor: _goldAccent,
-                  count: historyBooks.length,
+                child: InteractiveBookshelfCategoryWidget(
+                  selectedCategory: _selectedFilterTag,
+                  onCategorySelected: (categoryKey) {
+                    setState(() {
+                      _selectedFilterTag = categoryKey;
+                    });
+                  },
+                  isDark: _isDark,
+                  goldAccent: _goldAccent,
+                  textPrimary: _textPrimary,
+                  textSecondary: _textSecondary,
                 ),
               ),
-              SliverToBoxAdapter(child: _buildHistoryShelf(historyBooks)),
-            ],
+              _buildGridSliver(_books),
+            ] else ...[
+              // 6. Malayalam Literature Shelf
+              if (malayalamBooks.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: _buildShelfHeader(
+                    title: 'Malayalam Literature & Classics',
+                    subtitle: 'മലയാള സാഹിത്യം • Audio & Sync',
+                    icon: Icons.local_fire_department_rounded,
+                    iconColor: const Color(0xFFEA580C),
+                    count: malayalamBooks.length,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildHorizontalShelf(
+                    books: malayalamBooks,
+                    tagColor: const Color(0xFFEA580C),
+                    shelfTag: 'Malayalam',
+                  ),
+                ),
+              ],
 
-            // 7. Malayalam Literature Shelf
-            if (malayalamBooks.isNotEmpty) ...[
+              // 7. Interactive 2-Tier 3D Bookshelf Category Hub
               SliverToBoxAdapter(
-                child: _buildShelfHeader(
-                  title: 'Malayalam Literature & Classics',
-                  subtitle: 'മലയാള സാഹിത്യം • Audio & Sync',
-                  icon: Icons.local_fire_department_rounded,
-                  iconColor: const Color(0xFFEA580C),
-                  count: malayalamBooks.length,
+                child: InteractiveBookshelfCategoryWidget(
+                  selectedCategory: _selectedFilterTag,
+                  onCategorySelected: (categoryKey) {
+                    setState(() {
+                      _selectedFilterTag = categoryKey;
+                    });
+                  },
+                  isDark: _isDark,
+                  goldAccent: _goldAccent,
+                  textPrimary: _textPrimary,
+                  textSecondary: _textSecondary,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: _buildHorizontalShelf(
-                  books: malayalamBooks,
-                  tagColor: const Color(0xFFEA580C),
-                  shelfTag: 'Malayalam',
-                ),
-              ),
-            ],
 
-            // 8. English & Global Classics Shelf
-            if (englishBooks.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildShelfHeader(
-                  title: 'World Classics & Novels',
-                  subtitle: 'Timeless literary masterpieces',
-                  icon: Icons.public_rounded,
-                  iconColor: const Color(0xFF7C3AED),
-                  count: englishBooks.length,
+              // 8. English & Global Classics Shelf
+              if (englishBooks.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: _buildShelfHeader(
+                    title: 'World Classics & Novels',
+                    subtitle: 'Timeless literary masterpieces',
+                    icon: Icons.public_rounded,
+                    iconColor: const Color(0xFF7C3AED),
+                    count: englishBooks.length,
+                  ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: _buildHorizontalShelf(
-                  books: englishBooks,
-                  tagColor: const Color(0xFF7C3AED),
-                  shelfTag: 'Classics',
+                SliverToBoxAdapter(
+                  child: _buildHorizontalShelf(
+                    books: englishBooks,
+                    tagColor: const Color(0xFF7C3AED),
+                    shelfTag: 'Classics',
+                  ),
                 ),
-              ),
-            ],
+              ],
 
-            // 9. Combined Imported Books & Notes Shelf
-            if (importedBooks.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: _buildShelfHeader(
-                  title: 'Your Documents & Imports',
-                  subtitle: 'Custom EPUBs, PDFs, OCR scans & text notes',
-                  icon: Icons.folder_special_rounded,
-                  iconColor: const Color(0xFF0284C7),
-                  count: importedBooks.length,
+              // 9. Combined Imported Books & Notes Shelf
+              if (importedBooks.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: _buildShelfHeader(
+                    title: 'Your Documents & Imports',
+                    subtitle: 'Custom EPUBs, PDFs, OCR scans & text notes',
+                    icon: Icons.folder_special_rounded,
+                    iconColor: const Color(0xFF0284C7),
+                    count: importedBooks.length,
+                  ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: _buildHorizontalShelf(
-                  books: importedBooks,
-                  tagColor: const Color(0xFF0284C7),
-                  shelfTag: 'Imported',
+                SliverToBoxAdapter(
+                  child: _buildHorizontalShelf(
+                    books: importedBooks,
+                    tagColor: const Color(0xFF0284C7),
+                    shelfTag: 'Imported',
+                  ),
                 ),
-              ),
+              ],
             ],
           ],
         ],

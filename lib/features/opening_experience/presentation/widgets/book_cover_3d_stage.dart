@@ -79,7 +79,7 @@ class _BookCover3DStageState extends State<BookCover3DStage>
               ..setEntry(3, 2, 0.0016)
               ..rotateX(currentRotateX)
               ..rotateY(currentRotateY)
-              ..scale(entranceScale),
+              ..scaleByDouble(entranceScale, entranceScale, entranceScale, 1.0),
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,

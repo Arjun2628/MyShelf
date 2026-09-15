@@ -580,7 +580,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               trailing: Switch(
                                 value: isDarkMode,
-                                activeColor: accentColor,
+                                activeThumbColor: accentColor,
                                 onChanged: (val) {
                                   appThemeModeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
                                   _updateProfile(_profile.copyWith(
@@ -764,15 +764,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [15, 30, 45, 60].map((mins) {
-                  return RadioListTile<int>(
-                    title: Text('$mins minutes / day'),
-                    value: mins,
+                  return RadioGroup<int>(
                     groupValue: selected,
                     onChanged: (val) {
                       if (val != null) {
                         setDlgState(() => selected = val);
                       }
                     },
+                    child: RadioListTile<int>(
+                      title: Text('$mins minutes / day'),
+                      value: mins,
+                    ),
                   );
                 }).toList(),
               ),
