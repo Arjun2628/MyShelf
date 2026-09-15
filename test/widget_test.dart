@@ -240,7 +240,7 @@ void main() {
 
     // Verify Circular Arc Shelf is displayed with its headers and rows
     expect(find.byType(CircularArcShelfWidget), findsOneWidget);
-    expect(find.text('Circular Library Arc'), findsOneWidget);
+    expect(find.textContaining('Rotunda Cylindrical Library'), findsOneWidget);
     expect(find.textContaining('Malayalam Classics'), findsOneWidget);
 
     // Scroll horizontal row inside circular shelf
