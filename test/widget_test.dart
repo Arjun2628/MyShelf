@@ -256,7 +256,7 @@ void main() {
     }
 
     // Verify switched to Face View
-    expect(find.textContaining('Face View • Rotating 3D cover cards'), findsOneWidget);
+    expect(find.textContaining('Face View • Rotating 3D standing books'), findsOneWidget);
 
     // Tap Spines toggle to switch back
     expect(find.text('Spines'), findsOneWidget);

@@ -124,7 +124,7 @@ class _CircularArcShelfWidgetState extends State<CircularArcShelfWidget> {
                       ),
                       Text(
                         _isFaceView
-                            ? 'Face View • Rotating 3D cover cards'
+                            ? 'Face View • Rotating 3D standing books'
                             : 'Spine View • Revolving leather spines',
                         style: TextStyle(
                           fontSize: 11,
@@ -366,7 +366,7 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
       displayBooks.addAll(books);
     }
 
-    final tierHeight = widget.isFaceView ? 228.0 : 178.0;
+    final tierHeight = widget.isFaceView ? 204.0 : 178.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +431,7 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
                 ),
               ),
 
-              // 2. Horizontally scrollable books (Spines or Face cards)
+              // 2. Horizontally scrollable books (Spines or Face books)
               AnimatedBuilder(
                 animation: _scrollController,
                 builder: (context, child) {
@@ -473,29 +473,30 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
     );
   }
 
-  // ----------------- FACE VIEW CARD (Full Cover Showcase) -----------------
+  // ----------------- FACE VIEW (Standing 3D Hardcover Book Showcase) -----------------
 
   Widget _buildRotundaFaceCard({
     required Book book,
     required int index,
   }) {
-    const cardWidth = 126.0;
-    const cardHeight = 196.0;
+    const bookWidth = 114.0;
+    const bookHeight = 166.0;
 
     double relativeOffset = 0.0;
     if (_scrollController.hasClients && _scrollController.position.haveDimensions) {
-      final itemCenter = index * (cardWidth + 10.0) + (cardWidth / 2);
+      final itemCenter = index * (bookWidth + 14.0) + (bookWidth / 2);
       final viewportCenter = _scrollController.offset + (_scrollController.position.viewportDimension / 2);
-      relativeOffset = ((itemCenter - viewportCenter) / 260.0).clamp(-1.2, 1.2);
+      relativeOffset = ((itemCenter - viewportCenter) / 250.0).clamp(-1.2, 1.2);
     }
 
     final rotationY = relativeOffset * 0.28; // 3D Cylindrical curve
-    final scale = (1.0 - (relativeOffset.abs() * 0.08)).clamp(0.90, 1.03);
+    final scale = (1.0 - (relativeOffset.abs() * 0.07)).clamp(0.91, 1.03);
     final shadowOffset = relativeOffset * 8.0;
+    final lightingDarken = (relativeOffset.abs() * 0.32).clamp(0.0, 0.40);
 
     return Container(
-      width: cardWidth,
-      margin: const EdgeInsets.symmetric(horizontal: 5),
+      width: bookWidth + 10.0,
+      margin: const EdgeInsets.symmetric(horizontal: 3),
       alignment: Alignment.bottomCenter,
       child: Transform(
         alignment: Alignment.bottomCenter,
@@ -504,155 +505,258 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
           ..rotateY(rotationY)
           ..scaleByDouble(scale, scale, 1.0, 1.0),
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             HapticFeedback.selectionClick();
             _showBookActionSheet(book);
           },
-          child: Container(
-            height: cardHeight,
-            decoration: BoxDecoration(
-              color: widget.cardBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: widget.isDark
-                    ? const Color(0xFF382F24)
-                    : const Color(0xFFDED3C2),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(
-                    alpha: widget.isDark ? 0.5 : 0.16,
+          child: SizedBox(
+            width: bookWidth,
+            height: bookHeight + 10.0,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 1. Realistic Shelf Drop & Contact Shadow underneath the standing book
+                Positioned(
+                  bottom: 1,
+                  left: 6,
+                  right: 4,
+                  height: 12,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: widget.isDark ? 0.75 : 0.35,
+                          ),
+                          blurRadius: 10,
+                          offset: Offset(shadowOffset * 0.7, 4),
+                        ),
+                      ],
+                    ),
                   ),
-                  blurRadius: 10,
-                  offset: Offset(shadowOffset, 5),
+                ),
+
+                // 2. Fore-edge (Right 3D Paper Page Block Thickness)
+                Positioned(
+                  top: 3,
+                  bottom: 4,
+                  right: 0,
+                  width: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: widget.isDark
+                            ? [
+                                const Color(0xFF7A6C58),
+                                const Color(0xFFD0C0A8),
+                                const Color(0xFFB5A48C),
+                              ]
+                            : [
+                                const Color(0xFFA59278),
+                                const Color(0xFFF0E4D0),
+                                const Color(0xFFD4C4AC),
+                              ],
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(2),
+                        bottomRight: Radius.circular(2),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 2,
+                          offset: const Offset(1, 1),
+                        ),
+                      ],
+                    ),
+                    child: const CustomPaint(
+                      painter: _PaperLinesPainter(isHorizontal: true),
+                    ),
+                  ),
+                ),
+
+                // 3. Head Page Block (Top Exposed Paper Edge)
+                Positioned(
+                  top: 0,
+                  left: 8,
+                  right: 4,
+                  height: 5,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: widget.isDark
+                            ? [const Color(0xFFB5A48C), const Color(0xFF7A6C58)]
+                            : [const Color(0xFFF0E4D0), const Color(0xFFA59278)],
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(2),
+                        topRight: Radius.circular(2),
+                      ),
+                    ),
+                    child: const CustomPaint(
+                      painter: _PaperLinesPainter(isHorizontal: false),
+                    ),
+                  ),
+                ),
+
+                // 4. Satin Bookmark Ribbon peeking from bottom
+                Positioned(
+                  bottom: 0,
+                  left: bookWidth * 0.40,
+                  width: 9,
+                  height: 12,
+                  child: CustomPaint(
+                    painter: _RibbonTailPainter(
+                      color: widget.goldAccent,
+                    ),
+                  ),
+                ),
+
+                // 5. Standing Hardcover Front Board (Cover Art + Left Spine Hinge + Sheen)
+                Positioned(
+                  top: 3,
+                  bottom: 4,
+                  left: 0,
+                  right: 7, // Leaves 7px visible for right fore-edge paper block
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(2),
+                        bottomLeft: Radius.circular(2),
+                        topRight: Radius.circular(4),
+                        bottomRight: Radius.circular(4),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: widget.isDark ? 0.6 : 0.25,
+                          ),
+                          blurRadius: 6,
+                          offset: Offset(shadowOffset * 0.5, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(2),
+                        bottomLeft: Radius.circular(2),
+                        topRight: Radius.circular(4),
+                        bottomRight: Radius.circular(4),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Cover Artwork or Luxury Leather Fallback
+                          Positioned.fill(
+                            child: book.coverImageBytes != null
+                                ? Image.memory(
+                                    book.coverImageBytes!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        _buildRealisticBookCoverFallback(book),
+                                  )
+                                : _buildRealisticBookCoverFallback(book),
+                          ),
+
+                          // Left Spine Joint / Hinge Indentation Crease
+                          Positioned(
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            width: 10,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.45),
+                                    Colors.black.withValues(alpha: 0.15),
+                                    Colors.white.withValues(alpha: 0.12),
+                                    Colors.black.withValues(alpha: 0.35),
+                                    Colors.transparent,
+                                  ],
+                                  stops: const [0.0, 0.35, 0.55, 0.8, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Hardcover Satin Gloss Sheen
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.18),
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.22),
+                                  ],
+                                  stops: const [0.0, 0.45, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Embossed Gold Format Ribbon Tag
+                          Positioned(
+                            top: 5,
+                            right: 5,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4.5,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.75),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: widget.goldAccent.withValues(alpha: 0.7),
+                                  width: 0.7,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 3,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                book.isPdf
+                                    ? 'PDF'
+                                    : (book.isScan
+                                        ? 'OCR'
+                                        : (book.isText ? 'TXT' : 'EPUB')),
+                                style: TextStyle(
+                                  color: widget.goldAccent,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // 3D Ambient Lighting Darken when rotated away
+                          if (lightingDarken > 0)
+                            Positioned.fill(
+                              child: Container(
+                                color: Colors.black.withValues(alpha: lightingDarken),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Cover Art Top
-                  Expanded(
-                    flex: 11,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (book.coverImageBytes != null)
-                          Image.memory(
-                            book.coverImageBytes!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildFaceCoverFallback(book),
-                          )
-                        else
-                          _buildFaceCoverFallback(book),
-
-                        // Format Badge
-                        Positioned(
-                          top: 5,
-                          right: 5,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4.5,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: widget.goldAccent.withValues(alpha: 0.6),
-                                width: 0.6,
-                              ),
-                            ),
-                            child: Text(
-                              book.isPdf
-                                  ? 'PDF'
-                                  : (book.isScan
-                                      ? 'OCR'
-                                      : (book.isText ? 'TXT' : 'EPUB')),
-                              style: TextStyle(
-                                color: widget.goldAccent,
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Light Sheen
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withValues(alpha: 0.16),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Bottom Title & Mini Action Strip
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                    color: widget.isDark
-                        ? const Color(0xFF1B140E)
-                        : const Color(0xFFF7EFE4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          book.metadata.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'serif',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10.5,
-                            color: widget.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          book.metadata.author,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: widget.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildMiniActionButton(
-                                label: 'Read',
-                                icon: Icons.menu_book_rounded,
-                                onTap: () => widget.onReadPressed(book),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: _buildMiniActionButton(
-                                label: 'Listen',
-                                icon: Icons.headphones_rounded,
-                                onTap: () => widget.onListenPressed(book),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -660,14 +764,14 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
     );
   }
 
-  Widget _buildFaceCoverFallback(Book book) {
+  Widget _buildRealisticBookCoverFallback(Book book) {
     final hash = book.id.hashCode.abs();
     final List<List<Color>> palettes = [
-      [const Color(0xFF4A1515), const Color(0xFF220808)],
-      [const Color(0xFF162B47), const Color(0xFF0A1524)],
-      [const Color(0xFF163821), const Color(0xFF091A0E)],
-      [const Color(0xFF4A3418), const Color(0xFF24180A)],
-      [const Color(0xFF252528), const Color(0xFF111114)],
+      [const Color(0xFF5A1515), const Color(0xFF280A0A), const Color(0xFF140505)], // Crimson Leather
+      [const Color(0xFF162D4A), const Color(0xFF0C1B2E), const Color(0xFF050C17)], // Navy Buckram
+      [const Color(0xFF163E23), const Color(0xFF0D2415), const Color(0xFF06130A)], // Hunter Green
+      [const Color(0xFF523717), const Color(0xFF2E1C0A), const Color(0xFF170D04)], // Aged Leather
+      [const Color(0xFF2A2A2E), const Color(0xFF17171A), const Color(0xFF0B0B0D)], // Onyx Cloth
     ];
     final colors = palettes[hash % palettes.length];
 
@@ -679,81 +783,109 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
           colors: colors,
         ),
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.menu_book_rounded,
-                size: 22,
-                color: widget.goldAccent.withValues(alpha: 0.8),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                book.metadata.title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'serif',
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFF7F1E6),
+      child: Stack(
+        children: [
+          // Ornate Gold Embossed Outer Frame Border
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.all(5.5),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: widget.goldAccent.withValues(alpha: 0.55),
+                    width: 1.0,
+                  ),
+                  borderRadius: BorderRadius.circular(3),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniActionButton({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2.5),
-        decoration: BoxDecoration(
-          color: widget.goldAccent.withValues(
-            alpha: widget.isDark ? 0.18 : 0.14,
-          ),
-          borderRadius: BorderRadius.circular(5),
-          border: Border.all(
-            color: widget.goldAccent.withValues(
-              alpha: widget.isDark ? 0.4 : 0.35,
-            ),
-            width: 0.7,
-          ),
-        ),
-        child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 10, color: widget.goldAccent),
-                const SizedBox(width: 2.5),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.bold,
-                    color: widget.goldAccent,
+                child: Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: widget.goldAccent.withValues(alpha: 0.25),
+                        width: 0.6,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+
+          // Center Ornate Gold Filigree & Book Typography
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.auto_stories_rounded,
+                    size: 20,
+                    color: widget.goldAccent.withValues(alpha: 0.85),
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        blurRadius: 3,
+                        offset: const Offset(0.5, 0.5),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    book.metadata.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.4,
+                      color: const Color(0xFFF9F3E8),
+                      height: 1.2,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          blurRadius: 3,
+                          offset: const Offset(0.8, 0.8),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 28,
+                    height: 1,
+                    color: widget.goldAccent.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    book.metadata.author,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.3,
+                      color: widget.goldAccent.withValues(alpha: 0.85),
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -982,21 +1114,74 @@ class _RotundaCylinderShelfTierState extends State<_RotundaCylinderShelfTier> {
   }
 }
 
-/// Custom painter for top paper page edges
+/// Custom painter for top and fore-edge paper page edges
 class _PaperLinesPainter extends CustomPainter {
+  final bool isHorizontal;
+
+  const _PaperLinesPainter({this.isHorizontal = false});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Colors.black.withValues(alpha: 0.12)
-      ..strokeWidth = 0.5;
+      ..strokeWidth = 0.55;
 
-    for (double x = 2; x < size.width; x += 2.5) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    if (isHorizontal) {
+      for (double y = 2; y < size.height; y += 2.5) {
+        canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      }
+    } else {
+      for (double x = 2; x < size.width; x += 2.5) {
+        canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _PaperLinesPainter oldDelegate) =>
+      oldDelegate.isHorizontal != isHorizontal;
+}
+
+/// Custom painter for silk bookmark ribbon tail with a bottom notch
+class _RibbonTailPainter extends CustomPainter {
+  final Color color;
+
+  const _RibbonTailPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width / 2, size.height - 3)
+      ..lineTo(0, size.height)
+      ..close();
+
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          color,
+          color.withValues(alpha: 0.78),
+        ],
+      ).createShader(Offset.zero & size);
+
+    // Subtle drop shadow
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RibbonTailPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 /// Custom painter for the curved wood back of the rotunda cylinder
