@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// An interactive 2-tier 3D wooden bookshelf displaying realistic book spines,
-/// horizontal book stacks, leaning books, dramatic 3D wall cast shadows, and
-/// floating category hotspot pills seamlessly integrated on the page background.
+/// An interactive 3-tier 3D wooden bookshelf displaying realistic book spines,
+/// horizontal book stacks, leaning books, dramatic 45-degree 3D wall cast shadows,
+/// and floating category hotspot pills seamlessly integrated on the page background.
 ///
 /// Tapping any category hotspot selects and filters the corresponding category of books.
 class InteractiveBookshelfCategoryWidget extends StatelessWidget {
@@ -27,9 +27,9 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       child: SizedBox(
-        height: 175,
+        height: 195,
         width: double.infinity,
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -37,56 +37,59 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
             return Stack(
               clipBehavior: Clip.none,
               children: [
-                // 1. Realistic Canvas: Wall cast shadow, 3D shelves, book spines & stacks
+                // 1. Realistic Canvas: 3-tier shelves, wall cast shadow, book spines & stacks
                 Positioned.fill(
                   child: CustomPaint(
-                    painter: _RealisticBookshelfPainter(
+                    painter: _Realistic3TierBookshelfPainter(
                       isDark: isDark,
                       goldAccent: goldAccent,
                     ),
                   ),
                 ),
 
-                // 2. Hotspot Pill: Top-Left ("Malayalam Classics Collection")
+                // 2. Tier 1 (Top Shelf) Hotspot Pills
                 _buildFloatingPill(
-                  top: 14,
-                  left: math.max(16.0, w * 0.12),
+                  top: 6,
+                  left: math.max(14.0, w * 0.10),
                   label: 'Malayalam Classics Collection',
                   categoryKey: 'Malayalam',
                   tooltip: 'Explore Malayalam Masterpieces',
                 ),
-
-                // 3. Hotspot Pill: Top-Center-Right ("EPUB Only")
                 _buildFloatingPill(
-                  top: 18,
-                  left: math.min(w - 180, w * 0.52),
+                  top: 6,
+                  right: math.max(14.0, w * 0.10),
                   label: 'EPUB Only',
                   categoryKey: 'EPUB',
                   tooltip: 'EPUB Format Books',
                 ),
 
-                // 4. Hotspot Pill: Top-Right ("Sync & Audio Support")
+                // 3. Tier 2 (Middle Shelf) Hotspot Pills
                 _buildFloatingPill(
-                  top: 56,
-                  right: math.max(12.0, w * 0.08),
+                  top: 64,
+                  left: math.max(14.0, w * 0.08),
                   label: 'Sync & Audio Support',
                   categoryKey: 'Audio',
                   tooltip: 'Books with Narrated Audio',
                 ),
-
-                // 5. Hotspot Pill: Bottom-Left ("Featured Author: VKN")
                 _buildFloatingPill(
-                  bottom: 34,
-                  left: math.max(16.0, w * 0.14),
+                  top: 64,
+                  right: math.max(14.0, w * 0.08),
                   label: 'Featured Author: VKN',
                   categoryKey: 'Classics',
                   tooltip: 'World & Malayalam Classics',
                 ),
 
-                // 6. Hotspot Pill: Bottom-Right ("Poetry Selection")
+                // 4. Tier 3 (Bottom Shelf) Hotspot Pills
                 _buildFloatingPill(
-                  bottom: 24,
-                  right: math.max(12.0, w * 0.06),
+                  bottom: 12,
+                  left: math.max(14.0, w * 0.12),
+                  label: 'PDF & Scans',
+                  categoryKey: 'PDF',
+                  tooltip: 'PDF Books and OCR Scans',
+                ),
+                _buildFloatingPill(
+                  bottom: 12,
+                  right: math.max(14.0, w * 0.10),
                   label: 'Poetry Selection',
                   categoryKey: 'Imported',
                   tooltip: 'Imported Documents & Notes',
@@ -120,7 +123,7 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             onTap: () {
               if (isSelected) {
                 onCategorySelected('All');
@@ -130,21 +133,21 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+              padding: const EdgeInsets.symmetric(horizontal: 8.5, vertical: 3.5),
               decoration: BoxDecoration(
                 color: isSelected
                     ? (isDark ? goldAccent : const Color(0xFF2B2620))
                     : (isDark
                         ? const Color(0xFF2C241B).withValues(alpha: 0.94)
                         : Colors.white.withValues(alpha: 0.95)),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
                       ? goldAccent
                       : (isDark
                           ? const Color(0xFF5A4B3C)
                           : const Color(0xFFDDD3C4)),
-                  width: isSelected ? 1.5 : 0.9,
+                  width: isSelected ? 1.4 : 0.85,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -153,8 +156,8 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
                         : Colors.black.withValues(
                             alpha: isDark ? 0.35 : 0.12,
                           ),
-                    blurRadius: isSelected ? 8 : 5,
-                    offset: const Offset(0, 2),
+                    blurRadius: isSelected ? 7 : 4,
+                    offset: const Offset(0, 1.5),
                   ),
                 ],
               ),
@@ -164,21 +167,21 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
                   if (isSelected) ...[
                     Icon(
                       Icons.check_circle_rounded,
-                      size: 11,
+                      size: 10.5,
                       color: isDark
                           ? const Color(0xFF1E1812)
                           : const Color(0xFFF7F1E6),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 3.5),
                   ],
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 10.2,
+                      fontSize: 9.8,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w600,
                       fontFamily: 'serif',
-                      letterSpacing: 0.2,
+                      letterSpacing: 0.15,
                       color: isSelected
                           ? (isDark
                               ? const Color(0xFF1E1812)
@@ -198,15 +201,15 @@ class InteractiveBookshelfCategoryWidget extends StatelessWidget {
   }
 }
 
-/// Custom Painter creating the exact 3D floating bookshelf look from the reference design:
-/// - Dramatic diagonal wall shadow on the left side
-/// - Top and bottom wooden shelves with 3D bevels and deep under-shelf shadows
-/// - Rich array of books with colorful textured spines, horizontal stacks, and leaning books
-class _RealisticBookshelfPainter extends CustomPainter {
+/// Custom Painter rendering a 3-tier wooden bookshelf with:
+/// - Dramatic 45-degree angle drop shadow on the left wall across all 3 tiers
+/// - Top, middle, and bottom 3D wooden planks with highlights, bevels, and under-shelf cast shadows
+/// - Realistic standing books with 3D page edges, spine creases, color bands, horizontal stacks, and leaning books
+class _Realistic3TierBookshelfPainter extends CustomPainter {
   final bool isDark;
   final Color goldAccent;
 
-  _RealisticBookshelfPainter({
+  _Realistic3TierBookshelfPainter({
     required this.isDark,
     required this.goldAccent,
   });
@@ -216,103 +219,105 @@ class _RealisticBookshelfPainter extends CustomPainter {
     final width = size.width;
     final height = size.height;
 
-    // Shelf coordinates
-    final shelfY1 = height * 0.44; // Top Shelf plank Y
-    final shelfY2 = height * 0.88; // Bottom Shelf plank Y
-    const shelfThickness = 8.5;
-    const shelfMargin = 24.0;
+    // 3 Shelf Y coordinates
+    final shelfY1 = height * 0.28; // Top Shelf plank Y
+    final shelfY2 = height * 0.58; // Middle Shelf plank Y
+    final shelfY3 = height * 0.88; // Bottom Shelf plank Y
+    const shelfThickness = 7.0;
+    const shelfMargin = 22.0;
     final shelfLeft = shelfMargin;
     final shelfRight = width - shelfMargin;
     final shelfW = shelfRight - shelfLeft;
 
-    // 1. Draw Dramatic Angled Cast Shadow on Left Wall
-    _drawDramaticWallShadow(
+    // 1. Draw Dramatic 45-degree Angled Cast Shadows on Left Wall
+    _drawDramaticWallShadows(
       canvas,
       shelfLeft,
       shelfY1,
       shelfY2,
+      shelfY3,
       shelfThickness,
       height,
     );
 
-    // 2. Draw Under-Shelf Deep Horizontal Shadows
+    // 2. Draw Under-Shelf Deep Horizontal Shadows for all 3 tiers
     final underShelfShadow = Paint()
-      ..color = Colors.black.withValues(alpha: isDark ? 0.45 : 0.22)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      ..color = Colors.black.withValues(alpha: isDark ? 0.42 : 0.20)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.5);
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(shelfLeft + 4, shelfY1 + shelfThickness, shelfW - 8, 8),
-        const Radius.circular(3),
-      ),
-      underShelfShadow,
-    );
+    for (final y in [shelfY1, shelfY2, shelfY3]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(shelfLeft + 3, y + shelfThickness, shelfW - 6, 6.5),
+          const Radius.circular(2.5),
+        ),
+        underShelfShadow,
+      );
+    }
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(shelfLeft + 4, shelfY2 + shelfThickness, shelfW - 8, 10),
-        const Radius.circular(3),
-      ),
-      underShelfShadow,
-    );
+    // 3. Draw Tier 1 (Top Shelf) Books
+    _drawTier1Books(canvas, shelfLeft + 6, shelfRight - 6, shelfY1);
 
-    // 3. Draw Top Shelf Books
-    _drawTopShelfBooks(canvas, shelfLeft + 8, shelfRight - 8, shelfY1);
+    // 4. Draw Tier 1 Wooden Plank (3D Bevel)
+    _draw3DWoodPlank(canvas, shelfLeft, shelfY1, shelfW, shelfThickness);
 
-    // 4. Draw Top Wooden Shelf (3D Bevel)
-    _draw3DWoodPlank(
-      canvas,
-      shelfLeft,
-      shelfY1,
-      shelfW,
-      shelfThickness,
-    );
+    // 5. Draw Tier 2 (Middle Shelf) Books (with horizontal stack in middle)
+    _drawTier2Books(canvas, shelfLeft + 6, shelfRight - 6, shelfY2);
 
-    // 5. Draw Bottom Shelf Books (Including horizontal book stack)
-    _drawBottomShelfBooks(canvas, shelfLeft + 8, shelfRight - 8, shelfY2);
+    // 6. Draw Tier 2 Wooden Plank (3D Bevel)
+    _draw3DWoodPlank(canvas, shelfLeft, shelfY2, shelfW, shelfThickness);
 
-    // 6. Draw Bottom Wooden Shelf (3D Bevel)
-    _draw3DWoodPlank(
-      canvas,
-      shelfLeft,
-      shelfY2,
-      shelfW,
-      shelfThickness,
-    );
+    // 7. Draw Tier 3 (Bottom Shelf) Books (with horizontal stack)
+    _drawTier3Books(canvas, shelfLeft + 6, shelfRight - 6, shelfY3);
+
+    // 8. Draw Tier 3 Wooden Plank (3D Bevel)
+    _draw3DWoodPlank(canvas, shelfLeft, shelfY3, shelfW, shelfThickness);
   }
 
-  /// Draws the realistic 45-degree angle drop shadow on the left wall
-  void _drawDramaticWallShadow(
+  /// Draws the realistic 45-degree angle drop shadow on the left wall across all 3 tiers
+  void _drawDramaticWallShadows(
     Canvas canvas,
     double shelfLeft,
     double shelfY1,
     double shelfY2,
+    double shelfY3,
     double shelfThickness,
     double totalHeight,
   ) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: isDark ? 0.35 : 0.14)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      ..color = Colors.black.withValues(alpha: isDark ? 0.35 : 0.13)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
 
-    // Top shelf angled shadow polygon
-    final path1 = Path();
-    path1.moveTo(shelfLeft + 6, shelfY1 - 55); // Top of first book
-    path1.lineTo(shelfLeft - 22, shelfY1 + 22); // Diagonal cast down-left
-    path1.lineTo(shelfLeft - 22, shelfY1 + shelfThickness + 14);
-    path1.lineTo(shelfLeft + 30, shelfY1 + shelfThickness + 4);
-    path1.lineTo(shelfLeft + 30, shelfY1 - 10);
-    path1.close();
-    canvas.drawPath(path1, shadowPaint);
+    // Combined wall shadow polygon connecting top, middle, and bottom shelves
+    final wallPath = Path();
+    // Top tier shadow
+    wallPath.moveTo(shelfLeft + 6, shelfY1 - 44);
+    wallPath.lineTo(shelfLeft - 20, shelfY1 + 16);
+    wallPath.lineTo(shelfLeft - 20, shelfY1 + shelfThickness + 10);
+    wallPath.lineTo(shelfLeft + 24, shelfY1 + shelfThickness + 4);
+    wallPath.lineTo(shelfLeft + 24, shelfY1 - 8);
+    wallPath.close();
+    canvas.drawPath(wallPath, shadowPaint);
 
-    // Bottom shelf angled shadow polygon
-    final path2 = Path();
-    path2.moveTo(shelfLeft + 6, shelfY2 - 58);
-    path2.lineTo(shelfLeft - 26, shelfY2 + 24);
-    path2.lineTo(shelfLeft - 26, shelfY2 + shelfThickness + 18);
-    path2.lineTo(shelfLeft + 36, shelfY2 + shelfThickness + 6);
-    path2.lineTo(shelfLeft + 36, shelfY2 - 12);
-    path2.close();
-    canvas.drawPath(path2, shadowPaint);
+    // Middle tier shadow
+    final midPath = Path();
+    midPath.moveTo(shelfLeft + 6, shelfY2 - 46);
+    midPath.lineTo(shelfLeft - 22, shelfY2 + 18);
+    midPath.lineTo(shelfLeft - 22, shelfY2 + shelfThickness + 12);
+    midPath.lineTo(shelfLeft + 26, shelfY2 + shelfThickness + 4);
+    midPath.lineTo(shelfLeft + 26, shelfY2 - 8);
+    midPath.close();
+    canvas.drawPath(midPath, shadowPaint);
+
+    // Bottom tier shadow
+    final botPath = Path();
+    botPath.moveTo(shelfLeft + 6, shelfY3 - 48);
+    botPath.lineTo(shelfLeft - 24, shelfY3 + 20);
+    botPath.lineTo(shelfLeft - 24, shelfY3 + shelfThickness + 14);
+    botPath.lineTo(shelfLeft + 28, shelfY3 + shelfThickness + 4);
+    botPath.lineTo(shelfLeft + 28, shelfY3 - 8);
+    botPath.close();
+    canvas.drawPath(botPath, shadowPaint);
   }
 
   /// Draws 3D wooden plank with lighter top face and darker front face
@@ -340,39 +345,38 @@ class _RealisticBookshelfPainter extends CustomPainter {
     final frontRect = Rect.fromLTWH(x, y, width, thickness);
     final frontPaint = Paint()..color = frontWoodColor;
     canvas.drawRRect(
-      RRect.fromRectAndRadius(frontRect, const Radius.circular(2)),
+      RRect.fromRectAndRadius(frontRect, const Radius.circular(1.5)),
       frontPaint,
     );
 
     // Top bevel surface
-    final topRect = Rect.fromLTWH(x, y, width, 2.5);
+    final topRect = Rect.fromLTWH(x, y, width, 2.0);
     final topPaint = Paint()..color = topWoodColor;
     canvas.drawRect(topRect, topPaint);
 
     // Top edge highlight line
     final hlPaint = Paint()
       ..color = highlightEdge
-      ..strokeWidth = 1.0;
-    canvas.drawLine(Offset(x + 1, y + 0.5), Offset(x + width - 1, y + 0.5), hlPaint);
+      ..strokeWidth = 0.8;
+    canvas.drawLine(Offset(x + 1, y + 0.4), Offset(x + width - 1, y + 0.4), hlPaint);
 
     // Bottom edge shadow line
     final shPaint = Paint()
       ..color = shadowEdge
-      ..strokeWidth = 1.0;
+      ..strokeWidth = 0.8;
     canvas.drawLine(
-      Offset(x + 1, y + thickness - 0.5),
-      Offset(x + width - 1, y + thickness - 0.5),
+      Offset(x + 1, y + thickness - 0.4),
+      Offset(x + width - 1, y + thickness - 0.4),
       shPaint,
     );
   }
 
-  void _drawTopShelfBooks(
+  void _drawTier1Books(
     Canvas canvas,
     double startX,
     double endX,
     double shelfY,
   ) {
-    // Curated color palette matching reference design
     final colors = [
       const Color(0xFFD66848), // Warm Terracotta
       const Color(0xFFE5A952), // Mustard Gold
@@ -387,30 +391,22 @@ class _RealisticBookshelfPainter extends CustomPainter {
       const Color(0xFF537A8C), // Slate Blue
       const Color(0xFFCC6644), // Burnt Sienna
       const Color(0xFF739E88), // Sage Olive
-      const Color(0xFFE8B058), // Light Ochre
-      const Color(0xFF446878), // Deep Slate
-      const Color(0xFFDB7555), // Coral
     ];
 
-    final heights = [
-      58.0, 52.0, 60.0, 54.0, 62.0, 50.0, 56.0, 63.0, 53.0, 59.0, 51.0, 61.0, 55.0, 48.0, 57.0, 53.0
-    ];
-    final widths = [
-      11.0, 13.0, 10.0, 14.0, 12.0, 15.0, 11.0, 13.0, 16.0, 10.0, 14.0, 12.0, 15.0, 11.0, 13.0, 12.0
-    ];
+    final heights = [44.0, 40.0, 46.0, 42.0, 48.0, 39.0, 45.0, 49.0, 41.0, 47.0, 43.0, 46.0];
+    final widths = [9.0, 11.0, 8.0, 12.0, 10.0, 13.0, 9.0, 11.0, 14.0, 8.0, 12.0, 10.0];
 
     double currentX = startX;
     int index = 0;
 
-    while (currentX < endX - 16) {
+    while (currentX < endX - 14) {
       final h = heights[index % heights.length];
       final w = widths[index % widths.length];
       final color = colors[index % colors.length];
 
-      // Occasional leaning book on the right end
-      if (currentX > endX - 35) {
+      if (currentX > endX - 28) {
         _drawLeaningBook(canvas, currentX, shelfY, h, w, color, tiltRight: true);
-        currentX += w + 6;
+        currentX += w + 5;
       } else {
         _drawSpineBook(
           canvas,
@@ -422,13 +418,13 @@ class _RealisticBookshelfPainter extends CustomPainter {
           hasAccentBand: index % 3 == 0,
           accentBandColor: colors[(index + 4) % colors.length],
         );
-        currentX += w + 1.6;
+        currentX += w + 1.4;
       }
       index++;
     }
   }
 
-  void _drawBottomShelfBooks(
+  void _drawTier2Books(
     Canvas canvas,
     double startX,
     double endX,
@@ -445,67 +441,61 @@ class _RealisticBookshelfPainter extends CustomPainter {
       const Color(0xFF537A8C), // Slate Blue
       const Color(0xFFD66D52), // Terracotta Rust
       const Color(0xFF739E88), // Sage Olive
-      const Color(0xFFE08354), // Coral Orange
-      const Color(0xFF446878), // Deep Slate
     ];
 
     double currentX = startX;
     int index = 0;
 
-    // 1. First: Leaning book on left
+    // 1. Leaning book on left
     _drawLeaningBook(
       canvas,
-      currentX + 4,
+      currentX + 3,
       shelfY,
-      56.0,
-      12.0,
+      44.0,
+      10.0,
       colors[0],
       tiltRight: false,
     );
-    currentX += 18.0;
+    currentX += 15.0;
 
     // 2. Standing books before stack
-    for (int i = 0; i < 4 && currentX < endX - 110; i++) {
+    for (int i = 0; i < 3 && currentX < endX - 90; i++) {
       _drawSpineBook(
         canvas,
         currentX,
         shelfY,
-        54.0 + (i % 3) * 4,
-        11.0 + (i % 2) * 2,
+        42.0 + (i % 3) * 3,
+        9.0 + (i % 2) * 2,
         colors[(i + 1) % colors.length],
         hasAccentBand: i == 1,
         accentBandColor: colors[(i + 5) % colors.length],
       );
-      currentX += 13.0;
+      currentX += 11.0;
     }
 
-    // 3. Realistic Horizontal Stack of 3 Books in middle-left!
-    final stackWidth = 38.0;
+    // 3. Horizontal Stack of 3 Books
+    const stackWidth = 32.0;
     _drawHorizontalBookStack(
       canvas,
       currentX,
       shelfY,
       stackWidth,
-      [
-        colors[3], // Top book
-        colors[2], // Middle book
-        colors[1], // Bottom book
-      ],
+      [colors[3], colors[2], colors[1]],
     );
     currentX += stackWidth + 3.0;
 
     // 4. Remaining Standing Books & Leaning Book on right
-    final heights = [58.0, 52.0, 62.0, 55.0, 60.0, 51.0, 57.0, 53.0];
-    final widths = [12.0, 10.0, 14.0, 11.0, 13.0, 12.0, 15.0, 11.0];
+    final heights = [46.0, 41.0, 48.0, 43.0, 47.0, 40.0, 45.0];
+    final widths = [10.0, 8.0, 12.0, 9.0, 11.0, 10.0, 12.0];
 
-    while (currentX < endX - 14) {
+    while (currentX < endX - 12) {
       final h = heights[index % heights.length];
       final w = widths[index % widths.length];
       final color = colors[(index + 4) % colors.length];
 
-      if (currentX > endX - 32) {
+      if (currentX > endX - 26) {
         _drawLeaningBook(canvas, currentX, shelfY, h, w, color, tiltRight: true);
-        currentX += w + 6;
+        currentX += w + 5;
       } else {
         _drawSpineBook(
           canvas,
@@ -515,9 +505,85 @@ class _RealisticBookshelfPainter extends CustomPainter {
           w,
           color,
           hasAccentBand: index % 2 == 1,
-          accentBandColor: colors[(index + 7) % colors.length],
+          accentBandColor: colors[(index + 6) % colors.length],
         );
-        currentX += w + 1.6;
+        currentX += w + 1.4;
+      }
+      index++;
+    }
+  }
+
+  void _drawTier3Books(
+    Canvas canvas,
+    double startX,
+    double endX,
+    double shelfY,
+  ) {
+    final colors = [
+      const Color(0xFF6A937D), // Sage Green
+      const Color(0xFFD66848), // Terracotta
+      const Color(0xFF4D6F80), // Slate
+      const Color(0xFFE5A952), // Mustard
+      const Color(0xFFD66D52), // Rust
+      const Color(0xFF5B8A99), // Ocean Teal
+      const Color(0xFFCC6644), // Sienna
+      const Color(0xFF739E88), // Olive
+      const Color(0xFFD4A359), // Ochre
+    ];
+
+    double currentX = startX;
+    int index = 0;
+
+    // 1. Standing books on left
+    for (int i = 0; i < 5 && currentX < endX - 70; i++) {
+      _drawSpineBook(
+        canvas,
+        currentX,
+        shelfY,
+        43.0 + (i % 3) * 3,
+        9.0 + (i % 2) * 3,
+        colors[i % colors.length],
+        hasAccentBand: i % 2 == 0,
+        accentBandColor: colors[(i + 3) % colors.length],
+      );
+      currentX += 12.0;
+    }
+
+    // 2. Horizontal Stack of 2 Books on right-center
+    const stackWidth = 30.0;
+    _drawHorizontalBookStack(
+      canvas,
+      currentX,
+      shelfY,
+      stackWidth,
+      [colors[4], colors[5]],
+    );
+    currentX += stackWidth + 3.0;
+
+    // 3. Remaining Standing Books & Leaning Book on right
+    final heights = [45.0, 42.0, 48.0, 40.0, 46.0];
+    final widths = [11.0, 9.0, 12.0, 10.0, 13.0];
+
+    while (currentX < endX - 12) {
+      final h = heights[index % heights.length];
+      final w = widths[index % widths.length];
+      final color = colors[(index + 2) % colors.length];
+
+      if (currentX > endX - 26) {
+        _drawLeaningBook(canvas, currentX, shelfY, h, w, color, tiltRight: true);
+        currentX += w + 5;
+      } else {
+        _drawSpineBook(
+          canvas,
+          currentX,
+          shelfY,
+          h,
+          w,
+          color,
+          hasAccentBand: index == 1,
+          accentBandColor: colors[(index + 5) % colors.length],
+        );
+        currentX += w + 1.4;
       }
       index++;
     }
@@ -538,7 +604,7 @@ class _RealisticBookshelfPainter extends CustomPainter {
     // Book spine body
     final bookPaint = Paint()..color = color;
     canvas.drawRRect(
-      RRect.fromRectAndRadius(bookRect, const Radius.circular(1.5)),
+      RRect.fromRectAndRadius(bookRect, const Radius.circular(1.2)),
       bookPaint,
     );
 
@@ -548,34 +614,34 @@ class _RealisticBookshelfPainter extends CustomPainter {
           ? const Color(0xFFC7BAA7)
           : const Color(0xFFFFFDF5);
     canvas.drawRect(
-      Rect.fromLTWH(x + 1, shelfY - height, width - 2, 1.8),
+      Rect.fromLTWH(x + 0.8, shelfY - height, width - 1.6, 1.5),
       topPagePaint,
     );
 
     // Left spine crease shadow
     final creasePaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.22)
-      ..strokeWidth = 0.8;
+      ..strokeWidth = 0.7;
     canvas.drawLine(
-      Offset(x + 1.0, shelfY - height + 2),
-      Offset(x + 1.0, shelfY - 1),
+      Offset(x + 0.8, shelfY - height + 1.5),
+      Offset(x + 0.8, shelfY - 0.8),
       creasePaint,
     );
 
     // Optional multi-tone color band on spine
-    if (hasAccentBand && accentBandColor != null && height > 46) {
+    if (hasAccentBand && accentBandColor != null && height > 36) {
       final bandPaint = Paint()..color = accentBandColor;
       final bandRect = Rect.fromLTWH(
         x + 0.5,
-        shelfY - height + (height * 0.32),
+        shelfY - height + (height * 0.30),
         width - 1.0,
-        height * 0.16,
+        height * 0.18,
       );
       canvas.drawRect(bandRect, bandPaint);
     }
   }
 
-  /// Draws a stack of 3 books laid flat horizontally
+  /// Draws a stack of books laid flat horizontally
   void _drawHorizontalBookStack(
     Canvas canvas,
     double x,
@@ -583,7 +649,7 @@ class _RealisticBookshelfPainter extends CustomPainter {
     double stackWidth,
     List<Color> bookColors,
   ) {
-    const bookThickness = 7.0;
+    const bookThickness = 5.5;
 
     for (int i = 0; i < bookColors.length; i++) {
       final bookY = shelfY - ((i + 1) * bookThickness);
@@ -592,7 +658,7 @@ class _RealisticBookshelfPainter extends CustomPainter {
       // Book spine
       final bookPaint = Paint()..color = bookColors[i];
       canvas.drawRRect(
-        RRect.fromRectAndRadius(bookRect, const Radius.circular(1.5)),
+        RRect.fromRectAndRadius(bookRect, const Radius.circular(1.2)),
         bookPaint,
       );
 
@@ -601,10 +667,10 @@ class _RealisticBookshelfPainter extends CustomPainter {
         ..color = isDark
             ? Colors.white.withValues(alpha: 0.15)
             : Colors.black.withValues(alpha: 0.1)
-        ..strokeWidth = 0.7;
+        ..strokeWidth = 0.6;
       canvas.drawLine(
-        Offset(x + 1, bookY + 0.5),
-        Offset(x + stackWidth - 1, bookY + 0.5),
+        Offset(x + 0.8, bookY + 0.4),
+        Offset(x + stackWidth - 0.8, bookY + 0.4),
         hlPaint,
       );
 
@@ -614,7 +680,7 @@ class _RealisticBookshelfPainter extends CustomPainter {
             ? const Color(0xFFC7BAA7)
             : const Color(0xFFFFFDF5);
       canvas.drawRect(
-        Rect.fromLTWH(x + stackWidth - 2.5, bookY + 1, 2.0, bookThickness - 2),
+        Rect.fromLTWH(x + stackWidth - 2.0, bookY + 0.8, 1.5, bookThickness - 1.6),
         pagePaint,
       );
     }
@@ -630,14 +696,14 @@ class _RealisticBookshelfPainter extends CustomPainter {
     required bool tiltRight,
   }) {
     canvas.save();
-    final angle = (tiltRight ? 1 : -1) * (14.0 * math.pi / 180.0);
+    final angle = (tiltRight ? 1 : -1) * (13.0 * math.pi / 180.0);
     canvas.translate(x + width / 2, shelfY);
     canvas.rotate(angle);
 
     final bookRect = Rect.fromLTWH(-width / 2, -height, width, height);
     final bookPaint = Paint()..color = color;
     canvas.drawRRect(
-      RRect.fromRectAndRadius(bookRect, const Radius.circular(1.5)),
+      RRect.fromRectAndRadius(bookRect, const Radius.circular(1.2)),
       bookPaint,
     );
 
@@ -647,17 +713,17 @@ class _RealisticBookshelfPainter extends CustomPainter {
           ? const Color(0xFFC7BAA7)
           : const Color(0xFFFFFDF5);
     canvas.drawRect(
-      Rect.fromLTWH(-width / 2 + 1, -height, width - 2, 1.8),
+      Rect.fromLTWH(-width / 2 + 0.8, -height, width - 1.6, 1.5),
       topPagePaint,
     );
 
     // Spine edge shadow
     final edgePaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.25)
-      ..strokeWidth = 0.8;
+      ..strokeWidth = 0.7;
     canvas.drawLine(
-      Offset(-width / 2 + 1, -height + 2),
-      Offset(-width / 2 + 1, -1),
+      Offset(-width / 2 + 0.8, -height + 1.5),
+      Offset(-width / 2 + 0.8, -0.8),
       edgePaint,
     );
 
@@ -665,7 +731,7 @@ class _RealisticBookshelfPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RealisticBookshelfPainter oldDelegate) {
+  bool shouldRepaint(covariant _Realistic3TierBookshelfPainter oldDelegate) {
     return oldDelegate.isDark != isDark || oldDelegate.goldAccent != goldAccent;
   }
 }
