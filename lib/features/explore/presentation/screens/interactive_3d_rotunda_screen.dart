@@ -72,7 +72,7 @@ class _Interactive3DRotundaScreenState
       body: SafeArea(
         child: Stack(
           children: [
-            // 1. Real-Time 3D Blender GLB Model Viewport
+            // 1. Real-Time 3D Blender GLB Model Viewport with Warm Ambient Lighting
             Positioned.fill(
               child: hasPlatformWebView
                   ? ModelViewer(
@@ -81,21 +81,42 @@ class _Interactive3DRotundaScreenState
                       alt: 'The Grand 3D Rotunda Library',
                       ar: false,
                       autoRotate: _autoRotate,
-                      autoRotateDelay: 1000,
-                      rotationPerSecond: '15deg',
+                      autoRotateDelay: 800,
+                      rotationPerSecond: '4deg',
                       cameraControls: true,
                       cameraOrbit: _cameraOrbit,
                       cameraTarget: _cameraTarget,
                       fieldOfView: '45deg',
                       backgroundColor: canvasBg,
-                      shadowIntensity: 1.0,
-                      shadowSoftness: 0.8,
-                      exposure: 1.1,
+                      shadowIntensity: 1.2,
+                      shadowSoftness: 1.0,
+                      exposure: 0.92,
                     )
                   : Image.asset(
                       'assets/blender_rotunda_main.png',
                       fit: BoxFit.cover,
                     ),
+            ),
+
+            // 2. Atmospheric Dark Amber Vignette (Melts the 3D canvas seamlessly into the dark theme)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        canvasBg.withValues(alpha: 0.75),
+                        Colors.transparent,
+                        Colors.transparent,
+                        canvasBg.withValues(alpha: 0.85),
+                      ],
+                      stops: const [0.0, 0.15, 0.75, 1.0],
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             // 2. Top Header Overlay (Title, Info, Close Button)
@@ -237,112 +258,102 @@ class _Interactive3DRotundaScreenState
               ),
             ),
 
-            // 4. Bottom Perspective Presets & Auto-Rotate Controls
+            // 4. Bottom Perspective Presets & Auto-Rotate Controls Dock
             Positioned(
-              bottom: 24,
+              bottom: 20,
               left: 16,
               right: 16,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Quick Perspective Preset Chips
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildPresetChip(
-                          id: 'overview',
-                          label: 'Overview',
-                          icon: Icons.hub_rounded,
-                          orbit: '0deg 75deg 10m',
-                          target: 'auto auto auto',
-                          goldAccent: goldAccent,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildPresetChip(
-                          id: 'chandelier',
-                          label: 'Chandelier',
-                          icon: Icons.lightbulb_rounded,
-                          orbit: '0deg 85deg 5.5m',
-                          target: '0m 0m 2m',
-                          goldAccent: goldAccent,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildPresetChip(
-                          id: 'desks',
-                          label: 'Study Desks',
-                          icon: Icons.menu_book_rounded,
-                          orbit: '45deg 80deg 5m',
-                          target: '1.5m -2m 1m',
-                          goldAccent: goldAccent,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildPresetChip(
-                          id: 'balcony',
-                          label: 'Upper Balcony',
-                          icon: Icons.balcony_rounded,
-                          orbit: '0deg 45deg 8m',
-                          target: '0m 0m 3.5m',
-                          goldAccent: goldAccent,
-                        ),
-                      ],
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.70),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: goldAccent.withValues(alpha: 0.35),
+                      width: 1.0,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Auto-Rotate Button
-                  GestureDetector(
-                    onTap: _toggleAutoRotate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _autoRotate
-                            ? goldAccent
-                            : Colors.black.withValues(alpha: 0.70),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: goldAccent,
-                          width: 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: goldAccent.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Preset Chips
+                      _buildPresetChip(
+                        id: 'overview',
+                        label: 'Overview',
+                        icon: Icons.hub_rounded,
+                        orbit: '0deg 75deg 10m',
+                        target: 'auto auto auto',
+                        goldAccent: goldAccent,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildPresetChip(
+                        id: 'chandelier',
+                        label: 'Chandelier',
+                        icon: Icons.lightbulb_rounded,
+                        orbit: '0deg 85deg 5.5m',
+                        target: '0m 0m 2m',
+                        goldAccent: goldAccent,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildPresetChip(
+                        id: 'desks',
+                        label: 'Desks',
+                        icon: Icons.menu_book_rounded,
+                        orbit: '45deg 80deg 5m',
+                        target: '1.5m -2m 1m',
+                        goldAccent: goldAccent,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildPresetChip(
+                        id: 'balcony',
+                        label: 'Balcony',
+                        icon: Icons.balcony_rounded,
+                        orbit: '0deg 45deg 8m',
+                        target: '0m 0m 3.5m',
+                        goldAccent: goldAccent,
+                      ),
+                      const SizedBox(width: 8),
+                      // Divider
+                      Container(
+                        height: 20,
+                        width: 1,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                      const SizedBox(width: 8),
+                      // Auto-Rotate Icon Button
+                      GestureDetector(
+                        onTap: _toggleAutoRotate,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _autoRotate
+                                ? goldAccent
+                                : Colors.white.withValues(alpha: 0.08),
+                          ),
+                          child: Icon(
                             _autoRotate
-                                ? Icons.pause_circle_filled_rounded
-                                : Icons.play_circle_fill_rounded,
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
                             size: 16,
                             color: _autoRotate
                                 ? const Color(0xFF140C07)
                                 : goldAccent,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _autoRotate ? 'Pause 360° Orbit' : 'Auto 360° Orbit',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: _autoRotate
-                                  ? const Color(0xFF140C07)
-                                  : goldAccent,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ],
