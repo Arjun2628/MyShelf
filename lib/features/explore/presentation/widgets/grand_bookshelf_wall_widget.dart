@@ -884,6 +884,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     child: Image.asset(
                       _targetCamera.bgAsset,
                       fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: const Color(0xFF19130D),
                       ),
@@ -913,6 +914,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     child: Image.asset(
                       _prevCamera.bgAsset,
                       fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: const Color(0xFF19130D),
                       ),
@@ -921,20 +923,14 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                 ),
               ),
             ] else ...[
-              // Settled Current Library Perspective
+              // Settled Current Library Perspective - 100% Crisp Pixel-for-Pixel
               Positioned.fill(
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..translateByDouble(bgX, bgY, 0.0, 1.0)
-                    ..rotateY(rotY)
-                    ..rotateX(rotX)
-                    ..rotateZ(rotZ)
-                    ..scaleByDouble(baseScale, baseScale, 1.0, 1.0),
+                child: Transform.translate(
+                  offset: Offset(bgX, bgY),
                   child: Image.asset(
                     currentCamera.bgAsset,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: const Color(0xFF19130D),
                     ),
@@ -943,26 +939,28 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
               ),
             ],
 
-            // 2. Subtle Atmospheric Wing Tint
-            Positioned.fill(
-              child: Container(
-                color: currentCamera.ambientTint,
+            // 2. Atmospheric Tint (Dark Mode only - completely clear in Light Mode)
+            if (isDark)
+              Positioned.fill(
+                child: Container(
+                  color: currentCamera.ambientTint,
+                ),
               ),
-            ),
 
-            // 3. Very Soft Ambient Vignette (Keeps rotunda fully visible & luminous)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: currentCamera.vignetteGradient,
-                    stops: const [0.0, 0.40, 1.0],
+            // 3. Ambient Vignette (Dark Mode only - zero fog in Light Mode)
+            if (isDark)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: currentCamera.vignetteGradient,
+                      stops: const [0.0, 0.40, 1.0],
+                    ),
                   ),
                 ),
               ),
-            ),
 
             // 4. Open Floating Rotunda Shelves Content
             Positioned.fill(
