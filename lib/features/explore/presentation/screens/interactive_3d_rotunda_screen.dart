@@ -39,10 +39,10 @@ class Interactive3DRotundaScreen extends StatefulWidget {
 
 class _Interactive3DRotundaScreenState
     extends State<Interactive3DRotundaScreen> {
-  bool _autoRotate = true;
+  bool _autoRotate = false;
   String _currentPreset = 'overview';
-  String _cameraOrbit = '0deg 75deg 10m';
-  String _cameraTarget = 'auto auto auto';
+  String _cameraOrbit = '0deg 85deg 0.5m';
+  String _cameraTarget = '0m 0m 1.8m';
   static const Key _stableViewerKey = ValueKey('model_viewer_rotunda_stable');
 
   void _selectPreset(String preset, String orbit, String target) {
@@ -72,21 +72,25 @@ class _Interactive3DRotundaScreenState
       body: SafeArea(
         child: Stack(
           children: [
-            // 1. Real-Time 3D Blender GLB Model Viewport with Warm Ambient Lighting
+            // 1. Real-Time 3D Blender GLB Model Viewport (Interior Eye-Level 360° Walkthrough)
             Positioned.fill(
               child: hasPlatformWebView
                   ? ModelViewer(
                       key: _stableViewerKey,
                       src: 'assets/demolibrary.glb',
-                      alt: 'The Grand 3D Rotunda Library',
+                      alt: 'The Grand 3D Rotunda Library Interior',
                       ar: false,
                       autoRotate: _autoRotate,
-                      autoRotateDelay: 800,
+                      autoRotateDelay: 1000,
                       rotationPerSecond: '4deg',
                       cameraControls: true,
                       cameraOrbit: _cameraOrbit,
                       cameraTarget: _cameraTarget,
-                      fieldOfView: '45deg',
+                      minCameraOrbit: 'auto auto 0.1m',
+                      maxCameraOrbit: 'auto auto 4.5m',
+                      fieldOfView: '75deg',
+                      minFieldOfView: '35deg',
+                      maxFieldOfView: '95deg',
                       backgroundColor: canvasBg,
                       shadowIntensity: 1.0,
                       shadowSoftness: 1.0,
@@ -288,31 +292,31 @@ class _Interactive3DRotundaScreenState
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Preset Chips
+                        // Preset Chips (Interior Walkthrough Angles)
                         _buildPresetChip(
                           id: 'overview',
-                          label: 'Overview',
-                          icon: Icons.hub_rounded,
-                          orbit: '0deg 75deg 10m',
-                          target: 'auto auto auto',
-                          goldAccent: goldAccent,
-                        ),
-                        const SizedBox(width: 4),
-                        _buildPresetChip(
-                          id: 'chandelier',
-                          label: 'Chandelier',
-                          icon: Icons.lightbulb_rounded,
-                          orbit: '0deg 85deg 5.5m',
-                          target: '0m 0m 2m',
+                          label: 'Interior 360°',
+                          icon: Icons.panorama_photosphere_rounded,
+                          orbit: '0deg 85deg 0.5m',
+                          target: '0m 0m 1.8m',
                           goldAccent: goldAccent,
                         ),
                         const SizedBox(width: 4),
                         _buildPresetChip(
                           id: 'desks',
-                          label: 'Desks',
+                          label: 'Study Desk',
                           icon: Icons.menu_book_rounded,
-                          orbit: '45deg 80deg 5m',
-                          target: '1.5m -2m 1m',
+                          orbit: '180deg 80deg 1.2m',
+                          target: '0m -6.5m 1.0m',
+                          goldAccent: goldAccent,
+                        ),
+                        const SizedBox(width: 4),
+                        _buildPresetChip(
+                          id: 'chandelier',
+                          label: 'Dome Vault',
+                          icon: Icons.lightbulb_rounded,
+                          orbit: '0deg 30deg 1.5m',
+                          target: '0m 0m 6.0m',
                           goldAccent: goldAccent,
                         ),
                         const SizedBox(width: 4),
@@ -320,8 +324,8 @@ class _Interactive3DRotundaScreenState
                           id: 'balcony',
                           label: 'Balcony',
                           icon: Icons.balcony_rounded,
-                          orbit: '0deg 45deg 8m',
-                          target: '0m 0m 3.5m',
+                          orbit: '60deg 75deg 2.0m',
+                          target: '0m 0m 4.0m',
                           goldAccent: goldAccent,
                         ),
                         const SizedBox(width: 6),

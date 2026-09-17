@@ -295,24 +295,24 @@ void main() {
     // Verify 3D Rotunda Screen elements
     expect(find.text('3D GRAND ROTUNDA'), findsOneWidget);
     expect(find.text('INTERACTIVE 360° BLENDER MODEL'), findsOneWidget);
-    expect(find.text('Overview'), findsOneWidget);
-    expect(find.text('Chandelier'), findsOneWidget);
-    expect(find.text('Desks'), findsOneWidget);
+    expect(find.text('Interior 360°'), findsOneWidget);
+    expect(find.text('Study Desk'), findsOneWidget);
+    expect(find.text('Dome Vault'), findsOneWidget);
     expect(find.text('Balcony'), findsOneWidget);
-    expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
 
     // Test switching preset chips
-    await tester.tap(find.text('Desks'));
+    await tester.tap(find.text('Study Desk'));
     for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
     // Test toggling Auto-Rotate
-    await tester.tap(find.byIcon(Icons.pause_rounded));
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
     for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
 
     // Close 3D Rotunda screen
     await tester.tap(find.byIcon(Icons.close_rounded));
