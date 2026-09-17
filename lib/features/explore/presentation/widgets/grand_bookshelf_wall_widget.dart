@@ -77,303 +77,489 @@ class LibraryWingCamera {
     required this.particleColor,
   });
 
-  static LibraryWingCamera forCategory(String categoryId) {
+  static LibraryWingCamera forCategory(String categoryId, {bool isDark = false}) {
     switch (categoryId.toLowerCase()) {
       case 'cat_scifi':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'UPPER ROTUNDA • DOME MEZZANINE',
           wingName: 'CELESTIAL DOME BALCONY',
           wingSubtitle: 'LOOKING DOWN UNDER STARRY GLASS DOME',
-          bgAsset: 'assets/rotunda_top_dome_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_top_dome_view.jpg'
+              : 'assets/rotunda_top_dome_view_light.jpg',
           pitch: -0.04,
           yaw: 0.02,
           roll: -0.008,
           dx: 0.0,
           dy: 12.0,
           scale: 1.14,
-          ambientTint: Color(0x061E354D),
-          vignetteGradient: [
-            Color(0x700B131C),
-            Colors.transparent,
-            Color(0x80080E14),
-          ],
+          ambientTint: isDark
+              ? const Color(0x061E354D)
+              : const Color(0x04C0D4E8),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x700B131C),
+                  Colors.transparent,
+                  Color(0x80080E14),
+                ]
+              : const [
+                  Color(0x350B131C),
+                  Colors.transparent,
+                  Color(0x45080E14),
+                ],
           wingIcon: Icons.rocket_launch_rounded,
           crestLetter: 'C',
-          shelfTopGradient: [
-            Color(0xFF382618),
-            Color(0xFF563B25),
-            Color(0xFF8D6847),
-            Color(0xFF563B25),
-            Color(0xFF382618),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF2B1C12),
-            Color(0xFF170E08),
-          ],
-          shelfTrimGold: Color(0xFFC7A762),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF382618),
+                  Color(0xFF563B25),
+                  Color(0xFF8D6847),
+                  Color(0xFF563B25),
+                  Color(0xFF382618),
+                ]
+              : const [
+                  Color(0xFF5C3C24),
+                  Color(0xFF865B38),
+                  Color(0xFFC7986B),
+                  Color(0xFF865B38),
+                  Color(0xFF5C3C24),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF2B1C12),
+                  Color(0xFF170E08),
+                ]
+              : const [
+                  Color(0xFF452B18),
+                  Color(0xFF24150A),
+                ],
+          shelfTrimGold: const Color(0xFFC7A762),
           beamLabel: 'CELESTIAL DOME MEZZANINE TIER',
-          particleColor: Color(0x80C7A762),
+          particleColor: const Color(0x80C7A762),
         );
 
       case 'cat_history':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'GROUND FLOOR • EAST STUDY DESK',
           wingName: 'SCHOLAR\'S READING DESK',
           wingSubtitle: 'SEATED AT AMBER LAMP STUDY TABLE',
-          bgAsset: 'assets/rotunda_reading_desk_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_reading_desk_view.jpg'
+              : 'assets/rotunda_reading_desk_view_light.jpg',
           pitch: 0.03,
           yaw: -0.02,
           roll: -0.006,
           dx: 10.0,
           dy: -6.0,
           scale: 1.14,
-          ambientTint: Color(0x08C79A5B),
-          vignetteGradient: [
-            Color(0x6520150B),
-            Colors.transparent,
-            Color(0x80140C05),
-          ],
+          ambientTint: isDark
+              ? const Color(0x08C79A5B)
+              : const Color(0x05E5BA76),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x6520150B),
+                  Colors.transparent,
+                  Color(0x80140C05),
+                ]
+              : const [
+                  Color(0x3020150B),
+                  Colors.transparent,
+                  Color(0x40140C05),
+                ],
           wingIcon: Icons.history_edu_rounded,
           crestLetter: 'H',
-          shelfTopGradient: [
-            Color(0xFF422B1B),
-            Color(0xFF634129),
-            Color(0xFF9E714B),
-            Color(0xFF634129),
-            Color(0xFF422B1B),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF321F13),
-            Color(0xFF190F08),
-          ],
-          shelfTrimGold: Color(0xFFD4AF37),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF422B1B),
+                  Color(0xFF634129),
+                  Color(0xFF9E714B),
+                  Color(0xFF634129),
+                  Color(0xFF422B1B),
+                ]
+              : const [
+                  Color(0xFF654228),
+                  Color(0xFF8F613B),
+                  Color(0xFFCF9E70),
+                  Color(0xFF8F613B),
+                  Color(0xFF654228),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF321F13),
+                  Color(0xFF190F08),
+                ]
+              : const [
+                  Color(0xFF4C2F1A),
+                  Color(0xFF28170B),
+                ],
+          shelfTrimGold: const Color(0xFFD4AF37),
           beamLabel: 'ARCHIVAL STUDY DESK TIER',
-          particleColor: Color(0x80D4AF37),
+          particleColor: const Color(0x80D4AF37),
         );
 
       case 'cat_mystery':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'WEST SPIRAL ASCENT • TIER II',
           wingName: 'SPIRAL STAIRCASE ARC',
           wingSubtitle: 'CLIMBING THE ROTUNDA BOOKSHELF WALL',
-          bgAsset: 'assets/rotunda_spiral_staircase_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_spiral_staircase_view.jpg'
+              : 'assets/rotunda_spiral_staircase_view_light.jpg',
           pitch: -0.02,
           yaw: 0.03,
           roll: 0.010,
           dx: -12.0,
           dy: 6.0,
           scale: 1.14,
-          ambientTint: Color(0x061A1424),
-          vignetteGradient: [
-            Color(0x68120D1A),
-            Colors.transparent,
-            Color(0x850A0710),
-          ],
+          ambientTint: isDark
+              ? const Color(0x061A1424)
+              : const Color(0x04DDD0EE),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x68120D1A),
+                  Colors.transparent,
+                  Color(0x850A0710),
+                ]
+              : const [
+                  Color(0x35120D1A),
+                  Colors.transparent,
+                  Color(0x450A0710),
+                ],
           wingIcon: Icons.psychology_alt_rounded,
           crestLetter: 'M',
-          shelfTopGradient: [
-            Color(0xFF352419),
-            Color(0xFF503625),
-            Color(0xFF825D41),
-            Color(0xFF503625),
-            Color(0xFF352419),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF281910),
-            Color(0xFF140C07),
-          ],
-          shelfTrimGold: Color(0xFFCBB078),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF352419),
+                  Color(0xFF503625),
+                  Color(0xFF825D41),
+                  Color(0xFF503625),
+                  Color(0xFF352419),
+                ]
+              : const [
+                  Color(0xFF593B26),
+                  Color(0xFF7F5637),
+                  Color(0xFFBC8E64),
+                  Color(0xFF7F5637),
+                  Color(0xFF593B26),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF281910),
+                  Color(0xFF140C07),
+                ]
+              : const [
+                  Color(0xFF422816),
+                  Color(0xFF221309),
+                ],
+          shelfTrimGold: const Color(0xFFCBB078),
           beamLabel: 'SPIRAL STAIRCASE ASCENT TIER',
-          particleColor: Color(0x80CBB078),
+          particleColor: const Color(0x80CBB078),
         );
 
       case 'cat_malayalam':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'GROUND FLOOR • SOUTH DESK QUARTER',
           wingName: 'HERITAGE STUDY NOOK',
           wingSubtitle: 'PERSPECTIVE FROM WARM TEAK READING TABLE',
-          bgAsset: 'assets/rotunda_reading_desk_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_reading_desk_view.jpg'
+              : 'assets/rotunda_reading_desk_view_light.jpg',
           pitch: 0.02,
           yaw: -0.03,
           roll: 0.004,
           dx: -6.0,
           dy: -4.0,
           scale: 1.13,
-          ambientTint: Color(0x08D9923B),
-          vignetteGradient: [
-            Color(0x651E1208),
-            Colors.transparent,
-            Color(0x80100803),
-          ],
+          ambientTint: isDark
+              ? const Color(0x08D9923B)
+              : const Color(0x06F0B264),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x651E1208),
+                  Colors.transparent,
+                  Color(0x80100803),
+                ]
+              : const [
+                  Color(0x301E1208),
+                  Colors.transparent,
+                  Color(0x40100803),
+                ],
           wingIcon: Icons.menu_book_rounded,
           crestLetter: 'M',
-          shelfTopGradient: [
-            Color(0xFF482D1A),
-            Color(0xFF6B4327),
-            Color(0xFFA56F43),
-            Color(0xFF6B4327),
-            Color(0xFF482D1A),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF352011),
-            Color(0xFF1B0F07),
-          ],
-          shelfTrimGold: Color(0xFFD9B464),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF482D1A),
+                  Color(0xFF6B4327),
+                  Color(0xFFA56F43),
+                  Color(0xFF6B4327),
+                  Color(0xFF482D1A),
+                ]
+              : const [
+                  Color(0xFF6B4327),
+                  Color(0xFF98623B),
+                  Color(0xFFD69F6B),
+                  Color(0xFF98623B),
+                  Color(0xFF6B4327),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF352011),
+                  Color(0xFF1B0F07),
+                ]
+              : const [
+                  Color(0xFF52331B),
+                  Color(0xFF2C190D),
+                ],
+          shelfTrimGold: const Color(0xFFD9B464),
           beamLabel: 'HERITAGE TEAKWOOD STUDY TIER',
-          particleColor: Color(0x80D9B464),
+          particleColor: const Color(0x80D9B464),
         );
 
       case 'cat_sleep':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'UPPER ROTUNDA • STARLIGHT MEZZANINE',
           wingName: 'STARLIT DOME SANCTUARY',
           wingSubtitle: 'ELEVATED VIEW OF MOONLIT CUPOLA',
-          bgAsset: 'assets/rotunda_top_dome_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_top_dome_view.jpg'
+              : 'assets/rotunda_top_dome_view_light.jpg',
           pitch: -0.05,
           yaw: -0.02,
           roll: 0.006,
           dx: -4.0,
           dy: 14.0,
           scale: 1.14,
-          ambientTint: Color(0x06142030),
-          vignetteGradient: [
-            Color(0x70091018),
-            Colors.transparent,
-            Color(0x8504070C),
-          ],
+          ambientTint: isDark
+              ? const Color(0x06142030)
+              : const Color(0x04D6E0EC),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x70091018),
+                  Colors.transparent,
+                  Color(0x8504070C),
+                ]
+              : const [
+                  Color(0x35091018),
+                  Colors.transparent,
+                  Color(0x4504070C),
+                ],
           wingIcon: Icons.bedtime_rounded,
           crestLetter: 'S',
-          shelfTopGradient: [
-            Color(0xFF332317),
-            Color(0xFF4F3624),
-            Color(0xFF7E5A3D),
-            Color(0xFF4F3624),
-            Color(0xFF332317),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF26180F),
-            Color(0xFF130B07),
-          ],
-          shelfTrimGold: Color(0xFFC4A466),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF332317),
+                  Color(0xFF4F3624),
+                  Color(0xFF7E5A3D),
+                  Color(0xFF4F3624),
+                  Color(0xFF332317),
+                ]
+              : const [
+                  Color(0xFF563B26),
+                  Color(0xFF7C5438),
+                  Color(0xFFBA895D),
+                  Color(0xFF7C5438),
+                  Color(0xFF563B26),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF26180F),
+                  Color(0xFF130B07),
+                ]
+              : const [
+                  Color(0xFF412818),
+                  Color(0xFF21130A),
+                ],
+          shelfTrimGold: const Color(0xFFC4A466),
           beamLabel: 'STARLIT DOME TIER',
-          particleColor: Color(0x80C4A466),
+          particleColor: const Color(0x80C4A466),
         );
 
       case 'cat_fantasy':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'NORTH ROTUNDA • GRAND TIER III',
           wingName: 'HIGH VAULT BALCONY',
           wingSubtitle: 'OVERLOOKING THE ARCHED VAULTS',
-          bgAsset: 'assets/rotunda_spiral_staircase_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_spiral_staircase_view.jpg'
+              : 'assets/rotunda_spiral_staircase_view_light.jpg',
           pitch: -0.03,
           yaw: -0.03,
           roll: -0.008,
           dx: 8.0,
           dy: 8.0,
           scale: 1.14,
-          ambientTint: Color(0x06281838),
-          vignetteGradient: [
-            Color(0x68180E24),
-            Colors.transparent,
-            Color(0x85100818),
-          ],
+          ambientTint: isDark
+              ? const Color(0x06281838)
+              : const Color(0x04E4D8EE),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x68180E24),
+                  Colors.transparent,
+                  Color(0x85100818),
+                ]
+              : const [
+                  Color(0x35180E24),
+                  Colors.transparent,
+                  Color(0x45100818),
+                ],
           wingIcon: Icons.auto_fix_high_rounded,
           crestLetter: 'F',
-          shelfTopGradient: [
-            Color(0xFF3D2719),
-            Color(0xFF5B3B26),
-            Color(0xFF946845),
-            Color(0xFF5B3B26),
-            Color(0xFF3D2719),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF2E1C12),
-            Color(0xFF160D08),
-          ],
-          shelfTrimGold: Color(0xFFD4AF37),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF3D2719),
+                  Color(0xFF5B3B26),
+                  Color(0xFF946845),
+                  Color(0xFF5B3B26),
+                  Color(0xFF3D2719),
+                ]
+              : const [
+                  Color(0xFF5F3E28),
+                  Color(0xFF885A3B),
+                  Color(0xFFC99468),
+                  Color(0xFF885A3B),
+                  Color(0xFF5F3E28),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF2E1C12),
+                  Color(0xFF160D08),
+                ]
+              : const [
+                  Color(0xFF482D1B),
+                  Color(0xFF26160C),
+                ],
+          shelfTrimGold: const Color(0xFFD4AF37),
           beamLabel: 'HIGH VAULT BALCONY TIER',
-          particleColor: Color(0x80D4AF37),
+          particleColor: const Color(0x80D4AF37),
         );
 
       case 'cat_children':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'LOWER ROTUNDA • SUNLIT ALCOVE',
           wingName: 'ALCOVE READING DESK',
           wingSubtitle: 'CLOSE-UP PERSPECTIVE OF WARM LAMPLIT DESK',
-          bgAsset: 'assets/rotunda_reading_desk_view.jpg',
+          bgAsset: isDark
+              ? 'assets/rotunda_reading_desk_view.jpg'
+              : 'assets/rotunda_reading_desk_view_light.jpg',
           pitch: 0.02,
           yaw: 0.02,
           roll: 0.0,
           dx: 8.0,
           dy: -4.0,
           scale: 1.14,
-          ambientTint: Color(0x061C2E1F),
-          vignetteGradient: [
-            Color(0x65121A13),
-            Colors.transparent,
-            Color(0x80080D09),
-          ],
+          ambientTint: isDark
+              ? const Color(0x061C2E1F)
+              : const Color(0x05DCEDDE),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x65121A13),
+                  Colors.transparent,
+                  Color(0x80080D09),
+                ]
+              : const [
+                  Color(0x30121A13),
+                  Colors.transparent,
+                  Color(0x40080D09),
+                ],
           wingIcon: Icons.child_care_rounded,
           crestLetter: 'K',
-          shelfTopGradient: [
-            Color(0xFF3A2618),
-            Color(0xFF583A25),
-            Color(0xFF8E6442),
-            Color(0xFF583A25),
-            Color(0xFF3A2618),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF2A1B10),
-            Color(0xFF140C07),
-          ],
-          shelfTrimGold: Color(0xFFC9A86A),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF3A2618),
+                  Color(0xFF583A25),
+                  Color(0xFF8E6442),
+                  Color(0xFF583A25),
+                  Color(0xFF3A2618),
+                ]
+              : const [
+                  Color(0xFF5C3C26),
+                  Color(0xFF845737),
+                  Color(0xFFC38E61),
+                  Color(0xFF845737),
+                  Color(0xFF5C3C26),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF2A1B10),
+                  Color(0xFF140C07),
+                ]
+              : const [
+                  Color(0xFF442B19),
+                  Color(0xFF23140A),
+                ],
+          shelfTrimGold: const Color(0xFFC9A86A),
           beamLabel: 'READING ALCOVE DESK TIER',
-          particleColor: Color(0x80C9A86A),
+          particleColor: const Color(0x80C9A86A),
         );
 
       case 'cat_philosophy':
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'CENTRAL FLOOR • BALUSTRADE CORE',
           wingName: 'CENTRAL ROTUNDA BALUSTRADE',
           wingSubtitle: 'STANDING AT THE CIRCULAR BALUSTRADE EDGE',
-          bgAsset: 'assets/grand_library_bg.jpg',
+          bgAsset: isDark
+              ? 'assets/grand_library_bg.jpg'
+              : 'assets/grand_library_bg_light.jpg',
           pitch: 0.03,
           yaw: 0.01,
           roll: 0.004,
           dx: 0.0,
           dy: -10.0,
           scale: 1.15,
-          ambientTint: Color(0x08C79A5B),
-          vignetteGradient: [
-            Color(0x651E140A),
-            Colors.transparent,
-            Color(0x800E0803),
-          ],
+          ambientTint: isDark
+              ? const Color(0x08C79A5B)
+              : const Color(0x05E5BA76),
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x651E140A),
+                  Colors.transparent,
+                  Color(0x800E0803),
+                ]
+              : const [
+                  Color(0x301E140A),
+                  Colors.transparent,
+                  Color(0x400E0803),
+                ],
           wingIcon: Icons.lightbulb_rounded,
           crestLetter: 'P',
-          shelfTopGradient: [
-            Color(0xFF452D1C),
-            Color(0xFF67432A),
-            Color(0xFFA2724D),
-            Color(0xFF67432A),
-            Color(0xFF452D1C),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF342013),
-            Color(0xFF1B0F08),
-          ],
-          shelfTrimGold: Color(0xFFD4AF37),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF452D1C),
+                  Color(0xFF67432A),
+                  Color(0xFFA2724D),
+                  Color(0xFF67432A),
+                  Color(0xFF452D1C),
+                ]
+              : const [
+                  Color(0xFF6A442A),
+                  Color(0xFF96623E),
+                  Color(0xFFD69D6F),
+                  Color(0xFF96623E),
+                  Color(0xFF6A442A),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF342013),
+                  Color(0xFF1B0F08),
+                ]
+              : const [
+                  Color(0xFF4F321E),
+                  Color(0xFF2A190D),
+                ],
+          shelfTrimGold: const Color(0xFFD4AF37),
           beamLabel: 'CENTRAL BALUSTRADE TIER',
-          particleColor: Color(0x80D4AF37),
+          particleColor: const Color(0x80D4AF37),
         );
 
       case 'all':
       default:
-        return const LibraryWingCamera(
+        return LibraryWingCamera(
           wingSector: 'ROTUNDA MAIN HALL • CENTRAL PANORAMA',
           wingName: 'GRAND ROTUNDA SANCTUARY',
           wingSubtitle: 'PANORAMIC EYE-LEVEL PERSPECTIVE',
-          bgAsset: 'assets/grand_library_bg.jpg',
+          bgAsset: isDark
+              ? 'assets/grand_library_bg.jpg'
+              : 'assets/grand_library_bg_light.jpg',
           pitch: 0.0,
           yaw: 0.0,
           roll: 0.0,
@@ -381,27 +567,46 @@ class LibraryWingCamera {
           dy: 0.0,
           scale: 1.14,
           ambientTint: Colors.transparent,
-          vignetteGradient: [
-            Color(0x60000000),
-            Colors.transparent,
-            Color(0x75000000),
-          ],
+          vignetteGradient: isDark
+              ? const [
+                  Color(0x60000000),
+                  Colors.transparent,
+                  Color(0x75000000),
+                ]
+              : const [
+                  Color(0x30000000),
+                  Colors.transparent,
+                  Color(0x40000000),
+                ],
           wingIcon: Icons.all_inclusive_rounded,
           crestLetter: 'G',
-          shelfTopGradient: [
-            Color(0xFF462E1D),
-            Color(0xFF6A462C),
-            Color(0xFFA67650),
-            Color(0xFF6A462C),
-            Color(0xFF462E1D),
-          ],
-          shelfFrontGradient: [
-            Color(0xFF332013),
-            Color(0xFF1A0E08),
-          ],
-          shelfTrimGold: Color(0xFFD4AF37),
+          shelfTopGradient: isDark
+              ? const [
+                  Color(0xFF462E1D),
+                  Color(0xFF6A462C),
+                  Color(0xFFA67650),
+                  Color(0xFF6A462C),
+                  Color(0xFF462E1D),
+                ]
+              : const [
+                  Color(0xFF6C462C),
+                  Color(0xFF99653F),
+                  Color(0xFFDAA072),
+                  Color(0xFF99653F),
+                  Color(0xFF6C462C),
+                ],
+          shelfFrontGradient: isDark
+              ? const [
+                  Color(0xFF332013),
+                  Color(0xFF1A0E08),
+                ]
+              : const [
+                  Color(0xFF4E311D),
+                  Color(0xFF29180C),
+                ],
+          shelfTrimGold: const Color(0xFFD4AF37),
           beamLabel: 'ROTUNDA SANCTUARY TIER',
-          particleColor: Color(0x80D4AF37),
+          particleColor: const Color(0x80D4AF37),
         );
     }
   }
@@ -479,6 +684,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
   late Animation<double> _cameraCurve;
   LibraryWingCamera _prevCamera = LibraryWingCamera.forCategory('all');
   LibraryWingCamera _targetCamera = LibraryWingCamera.forCategory('all');
+  bool? _lastIsDark;
 
   @override
   void initState() {
@@ -518,6 +724,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
   void _selectCategory(String id) {
     if (_selectedCategory == id) return;
     HapticFeedback.selectionClick();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     setState(() {
       _prevCamera = LibraryWingCamera.lerp(
@@ -526,7 +733,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
         _cameraCurve.value,
       );
       _selectedCategory = id;
-      _targetCamera = LibraryWingCamera.forCategory(id);
+      _targetCamera = LibraryWingCamera.forCategory(id, isDark: isDark);
     });
 
     _cameraAnimController.forward(from: 0.0);
@@ -619,6 +826,12 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (_lastIsDark != isDark) {
+      _lastIsDark = isDark;
+      _prevCamera = LibraryWingCamera.forCategory(_selectedCategory, isDark: isDark);
+      _targetCamera = LibraryWingCamera.forCategory(_selectedCategory, isDark: isDark);
+    }
     final books = _filteredBooks;
 
     return AnimatedBuilder(
