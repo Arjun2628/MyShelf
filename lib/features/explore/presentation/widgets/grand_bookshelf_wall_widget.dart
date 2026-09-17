@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:epub_audio/features/epub/domain/entities/book.dart';
 import 'package:epub_audio/features/explore/domain/entities/category.dart';
+import 'package:epub_audio/features/explore/presentation/screens/interactive_3d_rotunda_screen.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/book_exploration_inspection_sheet.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/realistic_book_spine_widget.dart';
 import 'package:flutter/material.dart';
@@ -85,8 +86,8 @@ class LibraryWingCamera {
           wingName: 'CELESTIAL DOME BALCONY',
           wingSubtitle: 'LOOKING DOWN UNDER STARRY GLASS DOME',
           bgAsset: isDark
-              ? 'assets/rotunda_top_dome_view.jpg'
-              : 'assets/rotunda_top_dome_view_light.jpg',
+              ? 'assets/blender_rotunda_dome.png'
+              : 'assets/blender_rotunda_dome.png',
           pitch: -0.04,
           yaw: 0.02,
           roll: -0.008,
@@ -144,8 +145,8 @@ class LibraryWingCamera {
           wingName: 'SCHOLAR\'S READING DESK',
           wingSubtitle: 'SEATED AT AMBER LAMP STUDY TABLE',
           bgAsset: isDark
-              ? 'assets/rotunda_reading_desk_view.jpg'
-              : 'assets/rotunda_reading_desk_view_light.jpg',
+              ? 'assets/blender_rotunda_desk.png'
+              : 'assets/blender_rotunda_desk.png',
           pitch: 0.03,
           yaw: -0.02,
           roll: -0.006,
@@ -203,8 +204,8 @@ class LibraryWingCamera {
           wingName: 'SPIRAL STAIRCASE ARC',
           wingSubtitle: 'CLIMBING THE ROTUNDA BOOKSHELF WALL',
           bgAsset: isDark
-              ? 'assets/rotunda_spiral_staircase_view.jpg'
-              : 'assets/rotunda_spiral_staircase_view_light.jpg',
+              ? 'assets/blender_rotunda_main.png'
+              : 'assets/blender_rotunda_main.png',
           pitch: -0.02,
           yaw: 0.03,
           roll: 0.010,
@@ -262,8 +263,8 @@ class LibraryWingCamera {
           wingName: 'HERITAGE STUDY NOOK',
           wingSubtitle: 'PERSPECTIVE FROM WARM TEAK READING TABLE',
           bgAsset: isDark
-              ? 'assets/rotunda_reading_desk_view.jpg'
-              : 'assets/rotunda_reading_desk_view_light.jpg',
+              ? 'assets/blender_rotunda_desk.png'
+              : 'assets/blender_rotunda_desk.png',
           pitch: 0.02,
           yaw: -0.03,
           roll: 0.004,
@@ -321,8 +322,8 @@ class LibraryWingCamera {
           wingName: 'STARLIT DOME SANCTUARY',
           wingSubtitle: 'ELEVATED VIEW OF MOONLIT CUPOLA',
           bgAsset: isDark
-              ? 'assets/rotunda_top_dome_view.jpg'
-              : 'assets/rotunda_top_dome_view_light.jpg',
+              ? 'assets/blender_rotunda_dome.png'
+              : 'assets/blender_rotunda_dome.png',
           pitch: -0.05,
           yaw: -0.02,
           roll: 0.006,
@@ -380,8 +381,8 @@ class LibraryWingCamera {
           wingName: 'HIGH VAULT BALCONY',
           wingSubtitle: 'OVERLOOKING THE ARCHED VAULTS',
           bgAsset: isDark
-              ? 'assets/rotunda_spiral_staircase_view.jpg'
-              : 'assets/rotunda_spiral_staircase_view_light.jpg',
+              ? 'assets/blender_rotunda_main.png'
+              : 'assets/blender_rotunda_main.png',
           pitch: -0.03,
           yaw: -0.03,
           roll: -0.008,
@@ -439,8 +440,8 @@ class LibraryWingCamera {
           wingName: 'ALCOVE READING DESK',
           wingSubtitle: 'CLOSE-UP PERSPECTIVE OF WARM LAMPLIT DESK',
           bgAsset: isDark
-              ? 'assets/rotunda_reading_desk_view.jpg'
-              : 'assets/rotunda_reading_desk_view_light.jpg',
+              ? 'assets/blender_rotunda_desk.png'
+              : 'assets/blender_rotunda_desk.png',
           pitch: 0.02,
           yaw: 0.02,
           roll: 0.0,
@@ -498,8 +499,8 @@ class LibraryWingCamera {
           wingName: 'CENTRAL ROTUNDA BALUSTRADE',
           wingSubtitle: 'STANDING AT THE CIRCULAR BALUSTRADE EDGE',
           bgAsset: isDark
-              ? 'assets/grand_library_bg.jpg'
-              : 'assets/grand_library_bg_light.jpg',
+              ? 'assets/blender_rotunda_main.png'
+              : 'assets/blender_rotunda_main.png',
           pitch: 0.03,
           yaw: 0.01,
           roll: 0.004,
@@ -558,8 +559,8 @@ class LibraryWingCamera {
           wingName: 'GRAND ROTUNDA SANCTUARY',
           wingSubtitle: 'PANORAMIC EYE-LEVEL PERSPECTIVE',
           bgAsset: isDark
-              ? 'assets/grand_library_bg.jpg'
-              : 'assets/grand_library_bg_light.jpg',
+              ? 'assets/blender_rotunda_main.png'
+              : 'assets/blender_rotunda_main.png',
           pitch: 0.0,
           yaw: 0.0,
           roll: 0.0,
@@ -1023,6 +1024,9 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                             ),
                           ),
                           const SizedBox(width: 8),
+                          // 3D Walkthrough Tour Button (Blender Model)
+                          _build3DWalkthroughButton(context),
+                          const SizedBox(width: 6),
                           // Dynamic Library Wing Compass Pill
                           _buildWingCompassBadge(currentCamera, true),
                         ],
@@ -1177,6 +1181,55 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
       default:
         return Icons.auto_stories_rounded;
     }
+  }
+
+  Widget _build3DWalkthroughButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Interactive3DRotundaScreen.show(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE5B869), Color(0xFFB58E23)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFFDE68A),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFB58E23).withValues(alpha: 0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.view_in_ar_rounded,
+              size: 13,
+              color: Color(0xFF140C07),
+            ),
+            SizedBox(width: 4),
+            Text(
+              '3D TOUR',
+              style: TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+                color: Color(0xFF140C07),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildWingCompassBadge(LibraryWingCamera camera, bool isDark) {

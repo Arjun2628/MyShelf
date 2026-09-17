@@ -267,4 +267,60 @@ void main() {
     expect(find.text('CELESTIAL DOME BALCONY'), findsOneWidget);
     expect(find.text('UPPER ROTUNDA • DOME MEZZANINE'), findsOneWidget);
   });
+
+  testWidgets('GrandBookshelfWallWidget renders 3D Tour button and opens Interactive3DRotundaScreen', (tester) async {
+    await tester.pumpWidget(
+      createTestWidget(
+        ExploreScreen(
+          repository: mockExploreRepo,
+          initialViewMode: ExploreViewMode.discoveryStage,
+        ),
+      ),
+    );
+
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify 3D Tour button exists in header
+    expect(find.text('3D TOUR'), findsOneWidget);
+    expect(find.byIcon(Icons.view_in_ar_rounded), findsWidgets);
+
+    // Tap 3D Tour button
+    await tester.tap(find.text('3D TOUR'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify 3D Rotunda Screen elements
+    expect(find.text('3D GRAND ROTUNDA'), findsOneWidget);
+    expect(find.text('INTERACTIVE 360° BLENDER MODEL'), findsOneWidget);
+    expect(find.text('Overview'), findsOneWidget);
+    expect(find.text('Chandelier'), findsOneWidget);
+    expect(find.text('Study Desks'), findsOneWidget);
+    expect(find.text('Upper Balcony'), findsOneWidget);
+    expect(find.text('Pause 360° Orbit'), findsOneWidget);
+
+    // Test switching preset chips
+    await tester.tap(find.text('Study Desks'));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Test toggling Auto-Rotate
+    await tester.tap(find.text('Pause 360° Orbit'));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Auto 360° Orbit'), findsOneWidget);
+
+    // Close 3D Rotunda screen
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    expect(find.text('THE GRAND LIBRARY'), findsOneWidget);
+  });
 }
+
