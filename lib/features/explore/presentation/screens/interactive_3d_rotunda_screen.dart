@@ -43,7 +43,7 @@ class _Interactive3DRotundaScreenState
   String _currentPreset = 'overview';
   String _cameraOrbit = '0deg 75deg 10m';
   String _cameraTarget = 'auto auto auto';
-  Key _viewerKey = const ValueKey('model_viewer_initial');
+  static const Key _stableViewerKey = ValueKey('model_viewer_rotunda_stable');
 
   void _selectPreset(String preset, String orbit, String target) {
     HapticFeedback.selectionClick();
@@ -51,7 +51,6 @@ class _Interactive3DRotundaScreenState
       _currentPreset = preset;
       _cameraOrbit = orbit;
       _cameraTarget = target;
-      _viewerKey = ValueKey('model_viewer_$preset');
     });
   }
 
@@ -59,7 +58,6 @@ class _Interactive3DRotundaScreenState
     HapticFeedback.selectionClick();
     setState(() {
       _autoRotate = !_autoRotate;
-      _viewerKey = ValueKey('model_viewer_rotate_$_autoRotate');
     });
   }
 
@@ -78,7 +76,7 @@ class _Interactive3DRotundaScreenState
             Positioned.fill(
               child: hasPlatformWebView
                   ? ModelViewer(
-                      key: _viewerKey,
+                      key: _stableViewerKey,
                       src: 'assets/demolibrary.glb',
                       alt: 'The Grand 3D Rotunda Library',
                       ar: false,

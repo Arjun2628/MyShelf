@@ -52,6 +52,7 @@ dependencies:
   google_mlkit_text_recognition: ^0.16.0
   flutter_tesseract_ocr: ^0.4.31
   model_viewer_plus: ^1.7.1
+  webview_flutter_platform_interface: ^2.15.1
 
 dev_dependencies:
   flutter_test:
