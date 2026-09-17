@@ -1555,22 +1555,24 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
     required bool isDark,
     required Color goldAccent,
   }) {
-    // Rich deep mahogany wood tone palette
+    // Rich, authentic antique polished mahogany & amber library shelf wood tones
     const topDeckColors = [
-      Color(0xFF2A1A10),
-      Color(0xFF4A301E),
-      Color(0xFF7A5230), // Center lamp sheen highlight
-      Color(0xFF4A301E),
-      Color(0xFF2A1A10),
+      Color(0xFF331A0E), // Deep outer grain
+      Color(0xFF5E341B), // Warm burnished mahogany
+      Color(0xFF965727), // Luminous amber timber
+      Color(0xFFBA773E), // Central warm library lamp reflection sheen
+      Color(0xFF965727), // Luminous amber timber
+      Color(0xFF5E341B), // Warm burnished mahogany
+      Color(0xFF331A0E), // Deep outer grain
     ];
 
     const fasciaFaceColors = [
-      Color(0xFF3E2818),
-      Color(0xFF25160D),
-      Color(0xFF140B06),
+      Color(0xFF4C2715), // Milled top bullnose bevel
+      Color(0xFF30170B), // Solid dark walnut core
+      Color(0xFF180A04), // Shadowed underside base
     ];
 
-    const edgeHighlight = Color(0xFFD4AF37);
+    const edgeHighlight = Color(0xFFE2BC6A);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1584,13 +1586,13 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
               boxShadow: [
                 // Deep Ambient Occlusion Drop Shadow onto the Library Wall
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.60),
+                  color: Colors.black.withValues(alpha: 0.65),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
                 // Rich Under-Shelf Warm Ambient Hearth Glow
                 BoxShadow(
-                  color: const Color(0xFF1E1005).withValues(alpha: 0.45),
+                  color: const Color(0xFF3A1C08).withValues(alpha: 0.55),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -1605,7 +1607,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: topDeckColors,
-                      stops: [0.0, 0.20, 0.50, 0.80, 1.0],
+                      stops: [0.0, 0.16, 0.35, 0.50, 0.65, 0.84, 1.0],
                     ),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(4),
@@ -1618,7 +1620,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                   ),
                   child: Stack(
                     children: [
-                      // Perspective Gradient Receding into Wall Depth
+                      // Perspective Gradient Receding into Wall Depth with Warm Amber Luster
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -1626,11 +1628,11 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withValues(alpha: 0.45), // Rear shadow line against wall
-                                Colors.transparent,
-                                Colors.white.withValues(alpha: 0.08), // Front tabletop sheen
+                                Colors.black.withValues(alpha: 0.50), // Rear shadow line against wall
+                                const Color(0xFFC88A4B).withValues(alpha: 0.16), // Warm amber wood grain luster
+                                const Color(0xFFFDE68A).withValues(alpha: 0.20), // Front tabletop sheen
                               ],
-                              stops: const [0.0, 0.50, 1.0],
+                              stops: const [0.0, 0.45, 1.0],
                             ),
                           ),
                         ),
@@ -1647,7 +1649,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withValues(alpha: 0.65),
+                                Colors.black.withValues(alpha: 0.70),
                                 Colors.transparent,
                               ],
                             ),

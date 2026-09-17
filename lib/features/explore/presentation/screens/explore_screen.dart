@@ -149,10 +149,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     // Explore is exclusively presented in atmospheric dark rotunda mode
     const isDark = true;
-    const canvasBg = Color(0xFF0F1216);
+    const canvasBg = Color(0xFF140C07);
     const titleColor = Color(0xFFF9F5EC);
-    const subColor = Color(0xFFD4AF7A);
-    const accentColor = Color(0xFFD4AF7A);
+    const subColor = Color(0xFFD4AF37);
+    const accentColor = Color(0xFFD4AF37);
 
     return Scaffold(
       backgroundColor: canvasBg,
