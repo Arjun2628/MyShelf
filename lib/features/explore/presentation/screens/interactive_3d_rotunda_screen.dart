@@ -88,7 +88,7 @@ class _Interactive3DRotundaScreenState
                       cameraTarget: _cameraTarget,
                       fieldOfView: '45deg',
                       backgroundColor: canvasBg,
-                      shadowIntensity: 1.2,
+                      shadowIntensity: 1.0,
                       shadowSoftness: 1.0,
                       exposure: 0.92,
                     )
@@ -119,7 +119,7 @@ class _Interactive3DRotundaScreenState
               ),
             ),
 
-            // 2. Top Header Overlay (Title, Info, Close Button)
+            // 3. Top Header Overlay (Title, Info, Close Button)
             Positioned(
               top: 12,
               left: 16,
@@ -218,7 +218,7 @@ class _Interactive3DRotundaScreenState
               ),
             ),
 
-            // 3. Gesture Navigation Hint Tooltip
+            // 4. Gesture Navigation Hint Tooltip
             Positioned(
               top: 80,
               left: 16,
@@ -258,7 +258,7 @@ class _Interactive3DRotundaScreenState
               ),
             ),
 
-            // 4. Bottom Perspective Presets & Auto-Rotate Controls Dock
+            // 5. Bottom Perspective Presets & Auto-Rotate Controls Dock
             Positioned(
               bottom: 20,
               left: 16,
@@ -266,9 +266,9 @@ class _Interactive3DRotundaScreenState
               child: Center(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.70),
+                    color: Colors.black.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
                       color: goldAccent.withValues(alpha: 0.35),
@@ -282,76 +282,80 @@ class _Interactive3DRotundaScreenState
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Preset Chips
-                      _buildPresetChip(
-                        id: 'overview',
-                        label: 'Overview',
-                        icon: Icons.hub_rounded,
-                        orbit: '0deg 75deg 10m',
-                        target: 'auto auto auto',
-                        goldAccent: goldAccent,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPresetChip(
-                        id: 'chandelier',
-                        label: 'Chandelier',
-                        icon: Icons.lightbulb_rounded,
-                        orbit: '0deg 85deg 5.5m',
-                        target: '0m 0m 2m',
-                        goldAccent: goldAccent,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPresetChip(
-                        id: 'desks',
-                        label: 'Desks',
-                        icon: Icons.menu_book_rounded,
-                        orbit: '45deg 80deg 5m',
-                        target: '1.5m -2m 1m',
-                        goldAccent: goldAccent,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPresetChip(
-                        id: 'balcony',
-                        label: 'Balcony',
-                        icon: Icons.balcony_rounded,
-                        orbit: '0deg 45deg 8m',
-                        target: '0m 0m 3.5m',
-                        goldAccent: goldAccent,
-                      ),
-                      const SizedBox(width: 8),
-                      // Divider
-                      Container(
-                        height: 20,
-                        width: 1,
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
-                      const SizedBox(width: 8),
-                      // Auto-Rotate Icon Button
-                      GestureDetector(
-                        onTap: _toggleAutoRotate,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _autoRotate
-                                ? goldAccent
-                                : Colors.white.withValues(alpha: 0.08),
-                          ),
-                          child: Icon(
-                            _autoRotate
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded,
-                            size: 16,
-                            color: _autoRotate
-                                ? const Color(0xFF140C07)
-                                : goldAccent,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Preset Chips
+                        _buildPresetChip(
+                          id: 'overview',
+                          label: 'Overview',
+                          icon: Icons.hub_rounded,
+                          orbit: '0deg 75deg 10m',
+                          target: 'auto auto auto',
+                          goldAccent: goldAccent,
+                        ),
+                        const SizedBox(width: 4),
+                        _buildPresetChip(
+                          id: 'chandelier',
+                          label: 'Chandelier',
+                          icon: Icons.lightbulb_rounded,
+                          orbit: '0deg 85deg 5.5m',
+                          target: '0m 0m 2m',
+                          goldAccent: goldAccent,
+                        ),
+                        const SizedBox(width: 4),
+                        _buildPresetChip(
+                          id: 'desks',
+                          label: 'Desks',
+                          icon: Icons.menu_book_rounded,
+                          orbit: '45deg 80deg 5m',
+                          target: '1.5m -2m 1m',
+                          goldAccent: goldAccent,
+                        ),
+                        const SizedBox(width: 4),
+                        _buildPresetChip(
+                          id: 'balcony',
+                          label: 'Balcony',
+                          icon: Icons.balcony_rounded,
+                          orbit: '0deg 45deg 8m',
+                          target: '0m 0m 3.5m',
+                          goldAccent: goldAccent,
+                        ),
+                        const SizedBox(width: 6),
+                        // Divider
+                        Container(
+                          height: 18,
+                          width: 1,
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                        const SizedBox(width: 6),
+                        // Auto-Rotate Icon Button
+                        GestureDetector(
+                          onTap: _toggleAutoRotate,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _autoRotate
+                                  ? goldAccent
+                                  : Colors.white.withValues(alpha: 0.08),
+                            ),
+                            child: Icon(
+                              _autoRotate
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              size: 15,
+                              color: _autoRotate
+                                  ? const Color(0xFF140C07)
+                                  : goldAccent,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -375,12 +379,12 @@ class _Interactive3DRotundaScreenState
     return GestureDetector(
       onTap: () => _selectPreset(id, orbit, target),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5.5),
         decoration: BoxDecoration(
           color: isSelected
               ? goldAccent
               : Colors.black.withValues(alpha: 0.65),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? goldAccent
@@ -393,14 +397,14 @@ class _Interactive3DRotundaScreenState
           children: [
             Icon(
               icon,
-              size: 13,
+              size: 12,
               color: isSelected ? const Color(0xFF140C07) : goldAccent,
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
                 color: isSelected
                     ? const Color(0xFF140C07)
