@@ -225,10 +225,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
       greeting = 'Good afternoon';
     }
 
-    final effectiveTitleColor =
-        isTranslucent ? const Color(0xFFF9F5EC) : titleColor;
-    final effectiveSubColor =
-        isTranslucent ? const Color(0xFFD4AF7A) : subColor;
+    final effectiveTitleColor = isTranslucent
+        ? (isDark ? const Color(0xFFF9F5EC) : const Color(0xFF1C1917))
+        : titleColor;
+    final effectiveSubColor = isTranslucent
+        ? (isDark ? const Color(0xFFD4AF7A) : const Color(0xFF6B5843))
+        : subColor;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -251,10 +253,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       letterSpacing: -0.4,
                       shadows: isTranslucent
                           ? [
-                              const Shadow(
-                                color: Colors.black,
-                                blurRadius: 8,
-                                offset: Offset(0, 1.5),
+                              Shadow(
+                                color: isDark
+                                    ? Colors.black.withValues(alpha: 0.8)
+                                    : Colors.white.withValues(alpha: 0.9),
+                                blurRadius: isDark ? 8 : 4,
+                                offset: const Offset(0, 1.0),
                               ),
                             ]
                           : null,
@@ -268,9 +272,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       color: effectiveSubColor,
                       shadows: isTranslucent
                           ? [
-                              const Shadow(
-                                color: Colors.black,
-                                blurRadius: 6,
+                              Shadow(
+                                color: isDark
+                                    ? Colors.black.withValues(alpha: 0.7)
+                                    : Colors.white.withValues(alpha: 0.8),
+                                blurRadius: 4,
                               ),
                             ]
                           : null,
@@ -313,13 +319,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
           Container(
             decoration: BoxDecoration(
               color: isTranslucent
-                  ? Colors.black.withValues(alpha: 0.4)
+                  ? (isDark
+                      ? Colors.black.withValues(alpha: 0.45)
+                      : Colors.white.withValues(alpha: 0.80))
                   : (isDark
                       ? const Color(0xFF1B1F27)
                       : const Color(0xFFEFE6D8)),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: accentColor.withValues(alpha: 0.35),
+                color: isDark
+                    ? accentColor.withValues(alpha: 0.35)
+                    : const Color(0xFFB8934C).withValues(alpha: 0.5),
                 width: 0.8,
               ),
             ),

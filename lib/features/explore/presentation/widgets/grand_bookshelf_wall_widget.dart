@@ -987,7 +987,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text(
                                   'THE GRAND LIBRARY',
                                   style: TextStyle(
@@ -995,28 +995,36 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                                     fontSize: 16,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 2.0,
-                                    color: Color(0xFFF9F5EC),
+                                    color: isDark
+                                        ? const Color(0xFFF9F5EC)
+                                        : const Color(0xFF1E1813),
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black,
-                                        blurRadius: 8,
-                                        offset: Offset(0, 1.5),
+                                        color: isDark
+                                            ? Colors.black.withValues(alpha: 0.8)
+                                            : Colors.white.withValues(alpha: 0.9),
+                                        blurRadius: isDark ? 8 : 4,
+                                        offset: const Offset(0, 1.0),
                                       ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'YOUR NEXT STORY AWAITS',
                                   style: TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 1.6,
-                                    color: Color(0xFFD4AF37),
+                                    color: isDark
+                                        ? const Color(0xFFD4AF37)
+                                        : const Color(0xFF8C6518),
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black,
-                                        blurRadius: 5,
+                                        color: isDark
+                                            ? Colors.black
+                                            : Colors.white.withValues(alpha: 0.8),
+                                        blurRadius: 4,
                                       ),
                                     ],
                                   ),
@@ -1026,7 +1034,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                           ),
                           const SizedBox(width: 8),
                           // Dynamic Library Wing Compass Pill
-                          _buildWingCompassBadge(currentCamera),
+                          _buildWingCompassBadge(currentCamera, isDark),
                         ],
                       ),
                     ),
@@ -1038,36 +1046,55 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.35),
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.35)
+                              : Colors.white.withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : const Color(0xFFB8934C).withValues(alpha: 0.4),
                             width: 0.8,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.3)
+                                  : const Color(0xFF8C6518).withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: TextField(
                           controller: _searchController,
                           onChanged: (val) =>
                               setState(() => _searchQuery = val),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF1C1917),
                           ),
                           decoration: InputDecoration(
                             hintText: 'Search books, authors, or genres...',
                             hintStyle: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.65),
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.65)
+                                  : const Color(0xFF78716C),
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search_rounded,
                               size: 17,
-                              color: Color(0xFFD4AF37),
+                              color: isDark
+                                  ? const Color(0xFFD4AF37)
+                                  : const Color(0xFF8C6518),
                             ),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 15),
-                                    color: const Color(0xFFD4AF37),
+                                    color: isDark
+                                        ? const Color(0xFFD4AF37)
+                                        : const Color(0xFF8C6518),
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() => _searchQuery = '');
@@ -1095,6 +1122,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                             label: 'All Shelves',
                             icon: Icons.all_inclusive_rounded,
                             isSelected: _selectedCategory == 'all',
+                            isDark: isDark,
                           ),
                           ...widget.categories.map((cat) => _buildCategoryPill(
                                 id: cat.id,
@@ -1102,6 +1130,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                                 icon: _getCategoryIcon(cat.id),
                                 isSelected: _selectedCategory.toLowerCase() ==
                                     cat.id.toLowerCase(),
+                                isDark: isDark,
                               )),
                         ],
                       ),
@@ -1117,6 +1146,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                       books: books.isNotEmpty ? books : widget.allBooks,
                       isReversed: false,
                       controller: _tier1Controller,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 24),
 
@@ -1128,6 +1158,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                       books: books.isNotEmpty ? books : widget.allBooks,
                       isReversed: true,
                       controller: _tier2Controller,
+                      isDark: isDark,
                     ),
                   ],
                 ),
@@ -1139,7 +1170,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
               left: 18,
               right: 18,
               bottom: 14,
-              child: _buildSerendipityBanner(context),
+              child: _buildSerendipityBanner(context, isDark),
             ),
           ],
         );
@@ -1170,19 +1201,29 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
     }
   }
 
-  Widget _buildWingCompassBadge(LibraryWingCamera camera) {
-    const goldAccent = Color(0xFFD4AF37);
+  Widget _buildWingCompassBadge(LibraryWingCamera camera, bool isDark) {
+    final goldAccent = isDark ? const Color(0xFFD4AF37) : const Color(0xFF8C6518);
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 160),
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.5)
+            : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: goldAccent.withValues(alpha: 0.6),
           width: 0.8,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : const Color(0xFF8C6518).withValues(alpha: 0.1),
+            blurRadius: 6,
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1202,7 +1243,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                   camera.wingSector,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 7.0,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.8,
@@ -1213,12 +1254,14 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                   camera.wingName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'serif',
                     fontSize: 8.0,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.6,
-                    color: Color(0xFFF9F5EC),
+                    color: isDark
+                        ? const Color(0xFFF9F5EC)
+                        : const Color(0xFF1E1813),
                   ),
                 ),
               ],
@@ -1234,8 +1277,11 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
     required String label,
     required IconData icon,
     required bool isSelected,
+    required bool isDark,
   }) {
     const goldAccent = Color(0xFFD4AF37);
+    final textDark = isDark ? const Color(0xFFF9F5EC) : const Color(0xFF292524);
+    final iconDark = isDark ? const Color(0xFFE5B869) : const Color(0xFF8C6518);
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -1249,14 +1295,29 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     colors: [Color(0xFFE5B869), Color(0xFFB58E23)],
                   )
                 : null,
-            color: isSelected ? null : Colors.black.withValues(alpha: 0.4),
+            color: isSelected
+                ? null
+                : (isDark
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : Colors.white.withValues(alpha: 0.85)),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isSelected
                   ? goldAccent
-                  : Colors.white.withValues(alpha: 0.2),
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : const Color(0xFFB8934C).withValues(alpha: 0.35)),
               width: 0.8,
             ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFB58E23).withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1264,9 +1325,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
               Icon(
                 icon,
                 size: 12,
-                color: isSelected
-                    ? const Color(0xFF191107)
-                    : const Color(0xFFE5B869),
+                color: isSelected ? const Color(0xFF191107) : iconDark,
               ),
               const SizedBox(width: 4),
               Text(
@@ -1274,9 +1333,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                  color: isSelected
-                      ? const Color(0xFF191107)
-                      : const Color(0xFFF9F5EC),
+                  color: isSelected ? const Color(0xFF191107) : textDark,
                 ),
               ),
             ],
@@ -1295,6 +1352,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
     required List<Book> books,
     required bool isReversed,
     required ScrollController controller,
+    required bool isDark,
   }) {
     final goldAccent = camera.shelfTrimGold;
     final displayBooks = isReversed ? books.reversed.toList() : books;
@@ -1329,7 +1387,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
+                        color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.2),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -1387,10 +1445,14 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3.0),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.5)
+                      : Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: goldAccent.withValues(alpha: 0.5),
+                    color: isDark
+                        ? goldAccent.withValues(alpha: 0.5)
+                        : const Color(0xFFB8934C).withValues(alpha: 0.5),
                     width: 0.8,
                   ),
                 ),
@@ -1400,7 +1462,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     fontSize: 8.0,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.0,
-                    color: goldAccent,
+                    color: isDark ? goldAccent : const Color(0xFF8C6518),
                   ),
                 ),
               ),
@@ -1603,8 +1665,8 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
   }
 
   /// Floating Serendipity Discovery Bottom Banner
-  Widget _buildSerendipityBanner(BuildContext context) {
-    const goldAccent = Color(0xFFD4AF37);
+  Widget _buildSerendipityBanner(BuildContext context, bool isDark) {
+    final goldAccent = isDark ? const Color(0xFFD4AF37) : const Color(0xFF8C6518);
     final book = _serendipityBook ??
         (_filteredBooks.isNotEmpty
             ? _filteredBooks.first
@@ -1617,15 +1679,19 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.6),
+          color: isDark
+              ? Colors.black.withValues(alpha: 0.6)
+              : Colors.white.withValues(alpha: 0.90),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: goldAccent,
+            color: isDark ? goldAccent : const Color(0xFFB8934C),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.4)
+                  : const Color(0xFF8C6518).withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 3),
             ),
@@ -1657,7 +1723,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'SERENDIPITY DISCOVERY',
                     style: TextStyle(
                       fontSize: 8.5,
@@ -1671,11 +1737,13 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'serif',
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFFF9F5EC),
+                      color: isDark
+                          ? const Color(0xFFF9F5EC)
+                          : const Color(0xFF1C1917),
                     ),
                   ),
                 ],
@@ -1684,7 +1752,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
 
             Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
                   'Inspect',
                   style: TextStyle(
@@ -1693,7 +1761,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     color: goldAccent,
                   ),
                 ),
-                SizedBox(width: 2),
+                const SizedBox(width: 2),
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 14,
