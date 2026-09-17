@@ -7,16 +7,31 @@ import 'package:epub_audio/features/explore/presentation/screens/category_experi
 import 'package:epub_audio/features/explore/presentation/widgets/category_card.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/continue_listening_card.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/continue_reading_card.dart';
+import 'package:epub_audio/features/explore/presentation/widgets/grand_bookshelf_wall_widget.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/shelf_renderer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Main Explore discovery screen with dynamic section architecture, multiple shelf styles, and category browser.
+/// Available view modes for the Explore screen.
+enum ExploreViewMode {
+  /// Immersive animated Grand Bookshelf Wall exploration (Full-wall multi-tier authentic library).
+  discoveryStage,
+
+  /// Preserved Classic Editorial Catalog Feed with customizable dynamic shelves.
+  catalogFeed,
+}
+
+/// Main Explore discovery screen with dual view modes:
+/// 1. 3D Discovery Stage (Animated Spotlight carousel, tabletop bookcase with Spine & Face views, category portals).
+/// 2. Classic Catalog Feed (Preserved editorial shelves, mood categories, continuation cards).
 class ExploreScreen extends StatefulWidget {
   final ExploreRepository repository;
   final Function(Book book)? onBookSelected;
   final Function(Book book)? onReadBook;
   final Function(Book book)? onListenBook;
   final VoidCallback? onProfileTap;
+  final ExploreViewMode initialViewMode;
 
   const ExploreScreen({
     super.key,
@@ -25,6 +40,7 @@ class ExploreScreen extends StatefulWidget {
     this.onReadBook,
     this.onListenBook,
     this.onProfileTap,
+    this.initialViewMode = ExploreViewMode.discoveryStage,
   });
 
   @override
@@ -32,16 +48,47 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
+  static const String _prefViewModeKey = 'explore_view_mode_pref';
+
   List<ExploreSection> _sections = [];
   Map<String, List<Book>> _sectionBooks = {};
   List<Category> _categories = [];
   Map<String, CategoryExperienceConfig> _categoryConfigs = {};
   bool _isLoading = true;
+  late ExploreViewMode _currentViewMode;
 
   @override
   void initState() {
     super.initState();
+    _currentViewMode = widget.initialViewMode;
+    _loadViewModePref();
     _loadExploreData();
+  }
+
+  Future<void> _loadViewModePref() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final modeIndex = prefs.getInt(_prefViewModeKey);
+      if (modeIndex != null &&
+          modeIndex >= 0 &&
+          modeIndex < ExploreViewMode.values.length) {
+        if (mounted) {
+          setState(() {
+            _currentViewMode = ExploreViewMode.values[modeIndex];
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleViewMode(ExploreViewMode mode) async {
+    if (_currentViewMode == mode) return;
+    HapticFeedback.selectionClick();
+    setState(() => _currentViewMode = mode);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_prefViewModeKey, mode.index);
+    } catch (_) {}
   }
 
   Future<void> _loadExploreData() async {
@@ -58,7 +105,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     final Map<String, CategoryExperienceConfig> configMap = {};
     for (final cat in categories) {
-      final config = await widget.repository.getCategoryExperienceConfig(cat.experienceId);
+      final config =
+          await widget.repository.getCategoryExperienceConfig(cat.experienceId);
       configMap[cat.id] = config;
     }
 
@@ -73,6 +121,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   }
 
+  void _navigateToCategory(Category category) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CategoryExperienceScreen(
+          category: category,
+          repository: widget.repository,
+          onBookSelected: widget.onBookSelected,
+          onReadBook: widget.onReadBook,
+          onListenBook: widget.onListenBook,
+        ),
+      ),
+    );
+  }
+
+  List<Book> get _allBooks {
+    final Map<String, Book> map = {};
+    for (final books in _sectionBooks.values) {
+      for (final book in books) {
+        map[book.id] = book;
+      }
+    }
+    return map.values.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -84,44 +156,67 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return Scaffold(
       backgroundColor: canvasBg,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadExploreData,
-              color: accentColor,
-              child: CustomScrollView(
-                slivers: [
-                  // 1. Top Greeting Bar
-                  SliverToBoxAdapter(
-                    child: _buildGreetingHeader(context, isDark, titleColor, subColor, accentColor),
+          ? const Center(child: CircularProgressIndicator(color: accentColor))
+          : _currentViewMode == ExploreViewMode.discoveryStage
+              ? GrandBookshelfWallWidget(
+                  key: const ValueKey('grand_bookshelf_wall'),
+                  allBooks: _allBooks,
+                  categories: _categories,
+                  onBookSelected: (book) =>
+                      widget.onBookSelected?.call(book),
+                  onReadBook: widget.onReadBook,
+                  onListenBook: widget.onListenBook,
+                  topHeader: _buildGreetingHeader(
+                    context,
+                    isDark,
+                    titleColor,
+                    subColor,
+                    accentColor,
+                    isTranslucent: true,
                   ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadExploreData,
+                  color: accentColor,
+                  child: Column(
+                    children: [
+                      // 1. Top Header with Greeting & Mode Switcher
+                      _buildGreetingHeader(
+                        context,
+                        isDark,
+                        titleColor,
+                        subColor,
+                        accentColor,
+                        isTranslucent: false,
+                      ),
 
-                  // 2. Dynamic Sections
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final section = _sections[index];
-                        return _buildSectionItem(section, isDark, titleColor, subColor, accentColor);
-                      },
-                      childCount: _sections.length,
-                    ),
+                      // 2. Classic Catalog Feed
+                      Expanded(
+                        child: _buildCatalogFeed(
+                          isDark: isDark,
+                          titleColor: titleColor,
+                          subColor: subColor,
+                          accentColor: accentColor,
+                        ),
+                      ),
+                    ],
                   ),
-
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 100),
-                  ),
-                ],
-              ),
-            ),
+                ),
     );
   }
+
+  // ==========================================================================
+  // TOP GREETING HEADER WITH DUAL MODE SWITCHER
+  // ==========================================================================
 
   Widget _buildGreetingHeader(
     BuildContext context,
     bool isDark,
     Color titleColor,
     Color subColor,
-    Color accentColor,
-  ) {
+    Color accentColor, {
+    bool isTranslucent = false,
+  }) {
     final hour = DateTime.now().hour;
     String greeting = 'Good evening';
     if (hour < 12) {
@@ -130,62 +225,223 @@ class _ExploreScreenState extends State<ExploreScreen> {
       greeting = 'Good afternoon';
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 50, 18, 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final effectiveTitleColor =
+        isTranslucent ? const Color(0xFFF9F5EC) : titleColor;
+    final effectiveSubColor =
+        isTranslucent ? const Color(0xFFD4AF7A) : subColor;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+          18, isTranslucent ? 44 : 48, 18, isTranslucent ? 6 : 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$greeting, Reader',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: titleColor,
-                  letterSpacing: -0.4,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$greeting, Reader',
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w900,
+                      color: effectiveTitleColor,
+                      letterSpacing: -0.4,
+                      shadows: isTranslucent
+                          ? [
+                              const Shadow(
+                                color: Colors.black,
+                                blurRadius: 8,
+                                offset: Offset(0, 1.5),
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Curated books, worlds & audio experiences',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: effectiveSubColor,
+                      shadows: isTranslucent
+                          ? [
+                              const Shadow(
+                                color: Colors.black,
+                                blurRadius: 6,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 3),
-              Text(
-                'What world would you like to explore today?',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: subColor,
+              GestureDetector(
+                onTap: widget.onProfileTap,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [accentColor, accentColor.withValues(alpha: 0.6)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person_rounded,
+                      color: Color(0xFF1B140B),
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          GestureDetector(
-            onTap: widget.onProfileTap,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [accentColor, accentColor.withValues(alpha: 0.6)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+          const SizedBox(height: 10),
+
+          // Mode Toggle Bar (Discovery Stage vs Classic Catalog)
+          Container(
+            decoration: BoxDecoration(
+              color: isTranslucent
+                  ? Colors.black.withValues(alpha: 0.4)
+                  : (isDark
+                      ? const Color(0xFF1B1F27)
+                      : const Color(0xFFEFE6D8)),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.35),
+                width: 0.8,
+              ),
+            ),
+            padding: const EdgeInsets.all(3),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildModeToggleTab(
+                    label: 'Grand Bookshelf',
+                    icon: Icons.shelves,
+                    isActive:
+                        _currentViewMode == ExploreViewMode.discoveryStage,
+                    accentColor: accentColor,
+                    isDark: isDark,
+                    onTap: () =>
+                        _toggleViewMode(ExploreViewMode.discoveryStage),
                   ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.person_rounded,
-                  color: Color(0xFF1B140B),
-                  size: 22,
                 ),
-              ),
+                Expanded(
+                  child: _buildModeToggleTab(
+                    label: 'Editorial Feed',
+                    icon: Icons.view_agenda_rounded,
+                    isActive: _currentViewMode == ExploreViewMode.catalogFeed,
+                    accentColor: accentColor,
+                    isDark: isDark,
+                    onTap: () => _toggleViewMode(ExploreViewMode.catalogFeed),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildModeToggleTab({
+    required String label,
+    required IconData icon,
+    required bool isActive,
+    required Color accentColor,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          color: isActive ? accentColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isActive
+                  ? const Color(0xFF1A1107)
+                  : (isDark ? const Color(0xFF9E9A92) : const Color(0xFF6E6355)),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
+                color: isActive
+                    ? const Color(0xFF1A1107)
+                    : (isDark ? const Color(0xFF9E9A92) : const Color(0xFF6E6355)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // PRESERVED CLASSIC CATALOG FEED MODE
+  // ==========================================================================
+
+  Widget _buildCatalogFeed({
+    required bool isDark,
+    required Color titleColor,
+    required Color subColor,
+    required Color accentColor,
+  }) {
+    return CustomScrollView(
+      key: const ValueKey('explore_catalog_feed'),
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final section = _sections[index];
+              return _buildSectionItem(
+                section,
+                isDark,
+                titleColor,
+                subColor,
+                accentColor,
+              );
+            },
+            childCount: _sections.length,
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 100),
+        ),
+      ],
     );
   }
 
@@ -201,17 +457,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
         return const SizedBox.shrink();
 
       case ExploreSectionType.categories:
-        return _buildCategoriesSection(section, isDark, titleColor, subColor, accentColor);
+        return _buildCategoriesSection(
+          section,
+          isDark,
+          titleColor,
+          subColor,
+          accentColor,
+        );
 
       case ExploreSectionType.continueReading:
         final books = _sectionBooks[section.id] ?? [];
         if (books.isEmpty) return const SizedBox.shrink();
-        return _buildContinueReadingSection(section, books, titleColor, subColor);
+        return _buildContinueReadingSection(
+          section,
+          books,
+          titleColor,
+          subColor,
+        );
 
       case ExploreSectionType.continueListening:
         final books = _sectionBooks[section.id] ?? [];
         if (books.isEmpty) return const SizedBox.shrink();
-        return _buildContinueListeningSection(section, books, titleColor, subColor);
+        return _buildContinueListeningSection(
+          section,
+          books,
+          titleColor,
+          subColor,
+        );
 
       case ExploreSectionType.featured:
       case ExploreSectionType.popular:
@@ -284,19 +556,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 child: CategoryCard(
                   category: cat,
                   experienceConfig: config,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => CategoryExperienceScreen(
-                          category: cat,
-                          repository: widget.repository,
-                          onBookSelected: widget.onBookSelected,
-                          onReadBook: widget.onReadBook,
-                          onListenBook: widget.onListenBook,
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () => _navigateToCategory(cat),
                 ),
               );
             },
@@ -354,7 +614,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 book: book,
                 progressPercent: 0.45 + (index * 0.15),
                 currentChapter: index + 1,
-                onTap: () => widget.onReadBook?.call(book) ?? widget.onBookSelected?.call(book),
+                onTap: () => widget.onReadBook?.call(book) ??
+                    widget.onBookSelected?.call(book),
               );
             },
           ),
@@ -411,7 +672,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 book: book,
                 progressPercent: 0.60,
                 durationText: '8m left',
-                onTap: () => widget.onListenBook?.call(book) ?? widget.onBookSelected?.call(book),
+                onTap: () => widget.onListenBook?.call(book) ??
+                    widget.onBookSelected?.call(book),
               );
             },
           ),

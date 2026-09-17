@@ -104,11 +104,12 @@ void main() {
     expect(find.byType(PageView), findsOneWidget);
   });
 
-  testWidgets('ExploreScreen loads sections, greeting, and category items', (tester) async {
+  testWidgets('ExploreScreen renders Grand Bookshelf Wall and toggles to Editorial Feed mode', (tester) async {
     await tester.pumpWidget(
       createTestWidget(
         ExploreScreen(
           repository: mockExploreRepo,
+          initialViewMode: ExploreViewMode.discoveryStage,
         ),
       ),
     );
@@ -117,10 +118,40 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
+    // 1. Verify Header & Mode Switcher tabs
     expect(find.textContaining('Reader'), findsOneWidget);
+    expect(find.text('Grand Bookshelf'), findsOneWidget);
+    expect(find.text('Editorial Feed'), findsOneWidget);
+
+    // 2. Verify The Grand Library elements
+    expect(find.text('THE GRAND LIBRARY'), findsOneWidget);
+    expect(find.text('YOUR NEXT STORY AWAITS'), findsOneWidget);
+    expect(find.text('All Shelves'), findsOneWidget);
+    expect(find.text('SERENDIPITY DISCOVERY'), findsOneWidget);
+
+    // Test Serendipity Discovery Banner Tap
+    await tester.tap(find.text('SERENDIPITY DISCOVERY'));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Read Book'), findsOneWidget);
+
+    // Close inspection sheet
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    for (int i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // 3. Toggle Mode to Editorial Feed
+    await tester.tap(find.text('Editorial Feed'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify classic editorial catalog elements render
     expect(find.text('Featured Today'), findsOneWidget);
 
-    // Drag down to reveal categories
+    // Scroll down to check categories
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
     for (int i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -184,5 +215,56 @@ void main() {
     expect(find.text('Profile & Identity'), findsOneWidget);
     expect(find.text('Arjun (Reader)'), findsOneWidget);
     expect(find.textContaining('Reading Streak'), findsOneWidget);
+  });
+
+  testWidgets('GrandBookshelfWallWidget pivots 3D camera and updates wing compass badge on category change', (tester) async {
+    await tester.pumpWidget(
+      createTestWidget(
+        ExploreScreen(
+          repository: mockExploreRepo,
+          initialViewMode: ExploreViewMode.discoveryStage,
+        ),
+      ),
+    );
+
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Initially at Grand Rotunda Sanctuary
+    expect(find.text('GRAND ROTUNDA SANCTUARY'), findsOneWidget);
+    expect(find.text('ROTUNDA MAIN HALL • CENTRAL PANORAMA'), findsOneWidget);
+
+    // Tap History & Lore category
+    await tester.tap(find.text('History & Lore'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify camera wing badge updated to Scholar's Reading Desk
+    expect(find.text('SCHOLAR\'S READING DESK'), findsOneWidget);
+    expect(find.text('GROUND FLOOR • EAST STUDY DESK'), findsOneWidget);
+
+    // Tap Mystery & Crime category
+    await tester.tap(find.text('Mystery & Crime'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify camera wing badge updated to Spiral Staircase Arc
+    expect(find.text('SPIRAL STAIRCASE ARC'), findsOneWidget);
+    expect(find.text('WEST SPIRAL ASCENT • TIER II'), findsOneWidget);
+
+    // Scroll to and tap Sci-Fi & Time Travel category
+    await tester.ensureVisible(find.text('Sci-Fi & Time Travel'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sci-Fi & Time Travel'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify camera wing badge updated to Celestial Dome Balcony
+    expect(find.text('CELESTIAL DOME BALCONY'), findsOneWidget);
+    expect(find.text('UPPER ROTUNDA • DOME MEZZANINE'), findsOneWidget);
   });
 }
