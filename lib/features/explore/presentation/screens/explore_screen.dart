@@ -147,16 +147,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFF8FAFC);
-    final titleColor = isDark ? const Color(0xFFE4E0D8) : const Color(0xFF0F172A);
-    final subColor = isDark ? const Color(0xFF9499A5) : const Color(0xFF475569);
-    final accentColor = isDark ? const Color(0xFFD4AF7A) : const Color(0xFF2563EB);
+    // Explore is exclusively presented in atmospheric dark rotunda mode
+    const isDark = true;
+    const canvasBg = Color(0xFF0F1216);
+    const titleColor = Color(0xFFF9F5EC);
+    const subColor = Color(0xFFD4AF7A);
+    const accentColor = Color(0xFFD4AF7A);
 
     return Scaffold(
       backgroundColor: canvasBg,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: accentColor))
+          ? const Center(child: CircularProgressIndicator(color: accentColor))
           : _currentViewMode == ExploreViewMode.discoveryStage
               ? GrandBookshelfWallWidget(
                   key: const ValueKey('grand_bookshelf_wall'),

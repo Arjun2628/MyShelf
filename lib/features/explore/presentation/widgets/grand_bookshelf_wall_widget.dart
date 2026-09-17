@@ -77,7 +77,7 @@ class LibraryWingCamera {
     required this.particleColor,
   });
 
-  static LibraryWingCamera forCategory(String categoryId, {bool isDark = false}) {
+  static LibraryWingCamera forCategory(String categoryId, {bool isDark = true}) {
     switch (categoryId.toLowerCase()) {
       case 'cat_scifi':
         return LibraryWingCamera(
@@ -724,7 +724,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
   void _selectCategory(String id) {
     if (_selectedCategory == id) return;
     HapticFeedback.selectionClick();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const isDark = true;
 
     setState(() {
       _prevCamera = LibraryWingCamera.lerp(
@@ -826,7 +826,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const isDark = true;
     if (_lastIsDark != isDark) {
       _lastIsDark = isDark;
       _prevCamera = LibraryWingCamera.forCategory(_selectedCategory, isDark: isDark);
@@ -986,42 +986,34 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   'THE GRAND LIBRARY',
                                   style: TextStyle(
                                     fontFamily: 'serif',
                                     fontSize: 16,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 2.0,
-                                    color: isDark
-                                        ? const Color(0xFFF9F5EC)
-                                        : const Color(0xFF0F172A),
+                                    color: Color(0xFFF9F5EC),
                                     shadows: [
                                       Shadow(
-                                        color: isDark
-                                            ? Colors.black.withValues(alpha: 0.8)
-                                            : Colors.white.withValues(alpha: 0.9),
-                                        blurRadius: isDark ? 8 : 4,
-                                        offset: const Offset(0, 1.0),
+                                        color: Colors.black,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 1.0),
                                       ),
                                     ],
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
+                                const Text(
                                   'YOUR NEXT STORY AWAITS',
                                   style: TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 1.6,
-                                    color: isDark
-                                        ? const Color(0xFFD4AF37)
-                                        : const Color(0xFF2563EB),
+                                    color: Color(0xFFD4AF37),
                                     shadows: [
                                       Shadow(
-                                        color: isDark
-                                            ? Colors.black
-                                            : Colors.white.withValues(alpha: 0.8),
+                                        color: Colors.black,
                                         blurRadius: 4,
                                       ),
                                     ],
@@ -1032,7 +1024,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                           ),
                           const SizedBox(width: 8),
                           // Dynamic Library Wing Compass Pill
-                          _buildWingCompassBadge(currentCamera, isDark),
+                          _buildWingCompassBadge(currentCamera, true),
                         ],
                       ),
                     ),
@@ -1044,21 +1036,15 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.black.withValues(alpha: 0.35)
-                              : Colors.white.withValues(alpha: 0.94),
+                          color: Colors.black.withValues(alpha: 0.35),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : const Color(0xFFE2E8F0),
+                            color: Colors.white.withValues(alpha: 0.2),
                             width: 1.0,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.3)
-                                  : Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -1068,31 +1054,25 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                           controller: _searchController,
                           onChanged: (val) =>
                               setState(() => _searchQuery = val),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: Colors.white,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Search books, authors, or genres...',
                             hintStyle: TextStyle(
                               fontSize: 12,
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.65)
-                                  : const Color(0xFF94A3B8),
+                              color: Colors.white.withValues(alpha: 0.65),
                             ),
-                            prefixIcon: Icon(
+                            prefixIcon: const Icon(
                               Icons.search_rounded,
                               size: 17,
-                              color: isDark
-                                  ? const Color(0xFFD4AF37)
-                                  : const Color(0xFF2563EB),
+                              color: Color(0xFFD4AF37),
                             ),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 15),
-                                    color: isDark
-                                        ? const Color(0xFFD4AF37)
-                                        : const Color(0xFF2563EB),
+                                    color: const Color(0xFFD4AF37),
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() => _searchQuery = '');
@@ -1357,7 +1337,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
     );
   }
 
-  /// Open-Air Rotunda Shelf Tier with Authentic Layered Woodcraft
+  /// Open-Air Rotunda Shelf Tier with Authentic Layered Woodcraft & 3D Curved Rotunda Scroll
   Widget _buildOpenRotundaTier({
     required int tierNumber,
     required String tierLabel,
@@ -1386,29 +1366,22 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4.0),
                   decoration: BoxDecoration(
-                    gradient: isDark
-                        ? LinearGradient(
-                            colors: [
-                              const Color(0xFFFDE68A),
-                              goldAccent,
-                              const Color(0xFFB48A3C),
-                            ],
-                            stops: const [0.0, 0.5, 1.0],
-                          )
-                        : null,
-                    color: isDark ? null : Colors.white.withValues(alpha: 0.94),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFDE68A),
+                        Color(0xFFD4AF37),
+                        Color(0xFFB48A3C),
+                      ],
+                      stops: [0.0, 0.5, 1.0],
+                    ),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isDark
-                          ? const Color(0xFF8C6621)
-                          : const Color(0xFFE2E8F0),
+                      color: const Color(0xFF8C6621),
                       width: 1.0,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isDark
-                            ? Colors.black.withValues(alpha: 0.4)
-                            : Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withValues(alpha: 0.45),
                         blurRadius: 6,
                         offset: const Offset(0, 1.5),
                       ),
@@ -1421,19 +1394,15 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                         width: 3.5,
                         height: 3.5,
                         margin: const EdgeInsets.only(right: 5),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDark
-                              ? const Color(0xFF5A4016)
-                              : const Color(0xFF2563EB),
+                          color: Color(0xFF5A4016),
                         ),
                       ),
                       Icon(
                         camera.wingIcon,
                         size: 12,
-                        color: isDark
-                            ? const Color(0xFF1E1408)
-                            : const Color(0xFF2563EB),
+                        color: const Color(0xFF1E1408),
                       ),
                       const SizedBox(width: 4),
                       Flexible(
@@ -1441,14 +1410,12 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                           '$tierLabel • TIER 0$tierNumber',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'serif',
                             fontSize: 9.0,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
-                            color: isDark
-                                ? const Color(0xFF1E1408)
-                                : const Color(0xFF0F172A),
+                            color: Color(0xFF1E1408),
                           ),
                         ),
                       ),
@@ -1456,11 +1423,9 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                         width: 3.5,
                         height: 3.5,
                         margin: const EdgeInsets.only(left: 5),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDark
-                              ? const Color(0xFF5A4016)
-                              : const Color(0xFF2563EB),
+                          color: Color(0xFF5A4016),
                         ),
                       ),
                     ],
@@ -1474,25 +1439,12 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.94),
+                  color: Colors.black.withValues(alpha: 0.55),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isDark
-                        ? goldAccent.withValues(alpha: 0.5)
-                        : const Color(0xFFE2E8F0),
+                    color: goldAccent.withValues(alpha: 0.5),
                     width: 1.0,
                   ),
-                  boxShadow: !isDark
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 6,
-                            offset: const Offset(0, 1),
-                          ),
-                        ]
-                      : null,
                 ),
                 child: Text(
                   '${displayBooks.length} VOLUMES',
@@ -1500,7 +1452,7 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     fontSize: 8.0,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.0,
-                    color: isDark ? goldAccent : const Color(0xFF2563EB),
+                    color: goldAccent,
                   ),
                 ),
               ),
@@ -1509,177 +1461,233 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
         ),
         const SizedBox(height: 8),
 
-        // 2. Open Books Row
-        SizedBox(
-          height: 168,
-          child: ListView.builder(
-            controller: controller,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: displayBooks.length,
-            itemBuilder: (context, index) {
-              final book = displayBooks[index];
-              final isSelected = _selectedBookId == book.id;
-              final isHighlighted = _highlightedBookId == book.id;
+        // 2. 3D Curved Rotational Scroll Books Row
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final viewportWidth = constraints.maxWidth;
+            final viewportCenter = viewportWidth / 2;
 
-              final tilt = (index % 5 == 1)
-                  ? 5.0
-                  : (index % 5 == 3 ? -4.5 : 0.0);
-              final isStack = index % 7 == 3;
-              final spineWidth = isStack
-                  ? 50.0
-                  : (30.0 + (index % 4) * 3.0);
+            return SizedBox(
+              height: 172,
+              child: AnimatedBuilder(
+                animation: controller,
+                builder: (context, child) {
+                  return ListView.builder(
+                    controller: controller,
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: displayBooks.length,
+                    itemBuilder: (context, index) {
+                      final book = displayBooks[index];
+                      final isSelected = _selectedBookId == book.id;
+                      final isHighlighted = _highlightedBookId == book.id;
 
-              return Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: RealisticBookSpineWidget(
-                  book: book,
-                  index: isReversed ? index + 10 : index,
-                  width: spineWidth,
-                  height: 160,
-                  tiltAngle: tilt,
-                  isSelected: isSelected,
-                  isHighlighted: isHighlighted,
-                  onTap: () => _onBookTapped(book),
-                ),
-              );
-            },
-          ),
+                      final tilt = (index % 5 == 1)
+                          ? 5.0
+                          : (index % 5 == 3 ? -4.5 : 0.0);
+                      final isStack = index % 7 == 3;
+                      final spineWidth = isStack
+                          ? 50.0
+                          : (30.0 + (index % 4) * 3.0);
+
+                      // Calculate 3D Rotational Curvature & Perspective relative to viewport center
+                      final scrollOffset = controller.positions.isNotEmpty
+                          ? controller.positions.first.pixels
+                          : 0.0;
+                      // Approximate horizontal position of book center
+                      final bookLeft = 16.0 + index * (spineWidth + 4.0) - scrollOffset;
+                      final bookCenter = bookLeft + spineWidth / 2;
+                      final distFromCenter = ((bookCenter - viewportCenter) /
+                              (viewportWidth * 0.48))
+                          .clamp(-1.25, 1.25);
+
+                      // 3D cylindrical rotunda transformation
+                      final rotY = distFromCenter * 0.20; // Inward angle curve
+                      final zDepth = -(distFromCenter * distFromCenter) * 22.0; // Recedes at edges
+                      final yArc = (distFromCenter * distFromCenter) * 3.5; // Slight curved shelf sag
+                      final scale = (1.0 - distFromCenter.abs() * 0.04).clamp(0.92, 1.0);
+
+                      return Transform(
+                        alignment: Alignment.bottomCenter,
+                        transform: Matrix4.identity()
+                          ..setEntry(3, 2, 0.0012)
+                          ..translateByDouble(0.0, yArc, zDepth, 1.0)
+                          ..rotateY(rotY)
+                          ..scaleByDouble(scale, scale, 1.0, 1.0),
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: RealisticBookSpineWidget(
+                            book: book,
+                            index: isReversed ? index + 10 : index,
+                            width: spineWidth,
+                            height: 160,
+                            tiltAngle: tilt,
+                            isSelected: isSelected,
+                            isHighlighted: isHighlighted,
+                            onTap: () => _onBookTapped(book),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            );
+          },
         ),
 
-        // 3. Realistic Architectural Hardwood Bookshelf Architecture
+        // 3. Realistic Architectural Hardwood Table-like Bookshelf Architecture
         _buildRealisticBookshelfPlank(
           camera: camera,
           tierNumber: tierNumber,
-          isDark: isDark,
+          isDark: true,
           goldAccent: goldAccent,
         ),
       ],
     );
   }
 
-  /// Mastercrafted Realistic Hardwood Bookshelf Plank with Beveled Edge & Brass Accents
+  /// Mastercrafted Realistic Hardwood Table-like Shelf Plank with Landing Deck, Beveled Edge & Brass Accents
   Widget _buildRealisticBookshelfPlank({
     required LibraryWingCamera camera,
     required int tierNumber,
     required bool isDark,
     required Color goldAccent,
   }) {
-    // Wood tone gradients for light vs dark mode
-    final topDeckColors = isDark
-        ? const [
-            Color(0xFF3E2718),
-            Color(0xFF5D3D26),
-            Color(0xFF8B5E3C),
-            Color(0xFF5D3D26),
-            Color(0xFF3E2718),
-          ]
-        : const [
-            Color(0xFF7A5230),
-            Color(0xFFA67447),
-            Color(0xFFD4A373),
-            Color(0xFFA67447),
-            Color(0xFF7A5230),
-          ];
+    // Rich deep mahogany wood tone palette
+    const topDeckColors = [
+      Color(0xFF2A1A10),
+      Color(0xFF4A301E),
+      Color(0xFF7A5230), // Center lamp sheen highlight
+      Color(0xFF4A301E),
+      Color(0xFF2A1A10),
+    ];
 
-    final fasciaFaceColors = isDark
-        ? const [
-            Color(0xFF4A301E),
-            Color(0xFF2C1B10),
-            Color(0xFF190F08),
-          ]
-        : const [
-            Color(0xFF8B5E3C),
-            Color(0xFF6B4327),
-            Color(0xFF4A2D18),
-          ];
+    const fasciaFaceColors = [
+      Color(0xFF3E2818),
+      Color(0xFF25160D),
+      Color(0xFF140B06),
+    ];
 
-    final edgeHighlight = isDark
-        ? const Color(0xFFD4AF37).withValues(alpha: 0.65)
-        : const Color(0xFFF3E5C8).withValues(alpha: 0.90);
+    const edgeHighlight = Color(0xFFD4AF37);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Shelf Structure (Top Surface Deck + Sculpted Bevel Fascia)
+          // Realistic Table-like Structure (Top Landing Deck + Specular Chamfer + Bullnose Fascia)
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(4),
               boxShadow: [
                 // Deep Ambient Occlusion Drop Shadow onto the Library Wall
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.22),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
+                  color: Colors.black.withValues(alpha: 0.60),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
-                // Subtle Under-Shelf Soft Ambient Glow
+                // Rich Under-Shelf Warm Ambient Hearth Glow
                 BoxShadow(
-                  color: (isDark ? const Color(0xFF1E1005) : const Color(0xFF4A2D18))
-                      .withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: const Color(0xFF1E1005).withValues(alpha: 0.45),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Landing Board Surface (Where books physically rest)
+                // 1. Top Landing Table Deck Surface (Deep 18px perspective desk where books physically sit)
                 Container(
-                  height: 5.5,
+                  height: 18,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: topDeckColors,
-                      stops: const [0.0, 0.20, 0.50, 0.80, 1.0],
+                      stops: [0.0, 0.20, 0.50, 0.80, 1.0],
                     ),
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(3),
-                      topRight: Radius.circular(3),
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
                     ),
-                    border: Border(
-                      top: BorderSide(
-                        color: edgeHighlight,
-                        width: 1.0,
+                    border: Border.all(
+                      color: edgeHighlight.withValues(alpha: 0.35),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Perspective Gradient Receding into Wall Depth
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.45), // Rear shadow line against wall
+                                Colors.transparent,
+                                Colors.white.withValues(alpha: 0.08), // Front tabletop sheen
+                              ],
+                              stops: const [0.0, 0.50, 1.0],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      // Book Base Contact Shadow (Contact ambient occlusion directly beneath spines)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 4,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.65),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                // Specular Chamfer Highlight Line (The milled 45° wood edge catchlight)
+                // 2. Specular Chamfer Highlight Line (Milled 45° timber edge catchlight)
                 Container(
-                  height: 1.2,
+                  height: 1.4,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
                         edgeHighlight.withValues(alpha: 0.2),
-                        edgeHighlight,
+                        edgeHighlight.withValues(alpha: 0.9),
                         edgeHighlight.withValues(alpha: 0.2),
                       ],
                     ),
                   ),
                 ),
 
-                // Front Fascia Board (Sculpted Bullnose Timber Edge with Inlaid Hardware)
+                // 3. Front Fascia Board (Sculpted Bullnose Solid Wood Lip with Inlaid Brass Hardware)
                 Container(
-                  height: 14,
+                  height: 15,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: fasciaFaceColors,
                     ),
                     borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(3),
-                      bottomRight: Radius.circular(3),
+                      bottomLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(4),
                     ),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        width: 1.0,
-                      ),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.8),
+                      width: 0.8,
                     ),
                   ),
                   child: Row(
@@ -1687,22 +1695,22 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                     children: [
                       // Left Brushed Brass Medallion Pin
                       Container(
-                        width: 10,
-                        height: 10,
-                        margin: const EdgeInsets.only(left: 8),
+                        width: 11,
+                        height: 11,
+                        margin: const EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              const Color(0xFFFDE68A),
-                              goldAccent,
-                              const Color(0xFF8C6621),
+                              Color(0xFFFDE68A),
+                              Color(0xFFD4AF37),
+                              Color(0xFF8C6621),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 2,
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
                           ],
@@ -1714,12 +1722,12 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Container(
-                            height: 0.8,
+                            height: 1.0,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
                                   Colors.transparent,
-                                  goldAccent.withValues(alpha: 0.4),
+                                  goldAccent.withValues(alpha: 0.6),
                                   Colors.transparent,
                                 ],
                               ),
@@ -1730,22 +1738,22 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
 
                       // Right Brushed Brass Medallion Pin
                       Container(
-                        width: 10,
-                        height: 10,
-                        margin: const EdgeInsets.only(right: 8),
+                        width: 11,
+                        height: 11,
+                        margin: const EdgeInsets.only(right: 10),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              const Color(0xFFFDE68A),
-                              goldAccent,
-                              const Color(0xFF8C6621),
+                              Color(0xFFFDE68A),
+                              Color(0xFFD4AF37),
+                              Color(0xFF8C6621),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 2,
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
                           ],
@@ -1758,15 +1766,15 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
             ),
           ),
 
-          // Under-Shelf Support Brackets (Elegant Curved Cast Architectural Brackets)
+          // Under-Shelf Support Brackets (Cast Architectural Brackets)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildArchitecturalBracket(isDark, goldAccent),
-                _buildArchitecturalBracket(isDark, goldAccent),
-                _buildArchitecturalBracket(isDark, goldAccent),
+                _buildArchitecturalBracket(true, goldAccent),
+                _buildArchitecturalBracket(true, goldAccent),
+                _buildArchitecturalBracket(true, goldAccent),
               ],
             ),
           ),
@@ -1778,34 +1786,29 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
   /// Elegant Architectural Wall Support Bracket
   Widget _buildArchitecturalBracket(bool isDark, Color goldAccent) {
     return Container(
-      width: 10,
-      height: 8,
+      width: 12,
+      height: 9,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: isDark
-              ? [
-                  const Color(0xFF382314),
-                  const Color(0xFF140D07),
-                ]
-              : [
-                  const Color(0xFF6B4327),
-                  const Color(0xFF352011),
-                ],
+          colors: [
+            Color(0xFF382314),
+            Color(0xFF140D07),
+          ],
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(5),
-          bottomRight: Radius.circular(5),
+          bottomLeft: Radius.circular(6),
+          bottomRight: Radius.circular(6),
         ),
         border: Border.all(
-          color: goldAccent.withValues(alpha: 0.35),
-          width: 0.5,
+          color: goldAccent.withValues(alpha: 0.4),
+          width: 0.6,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 3,
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
