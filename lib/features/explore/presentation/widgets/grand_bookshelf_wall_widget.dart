@@ -1548,154 +1548,267 @@ class _GrandBookshelfWallWidgetState extends State<GrandBookshelfWallWidget>
           ),
         ),
 
-        // 3. Multi-Layered Ancient Hardwood Shelf Architecture
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Layer 1: Seasoned Oak/Walnut Deck Board with Amber Lamp Sheen
-              Container(
-                height: 7,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: camera.shelfTopGradient,
-                    stops: const [0.0, 0.22, 0.5, 0.78, 1.0],
-                  ),
-                  border: Border(
-                    top: BorderSide(
-                      color: goldAccent.withValues(alpha: 0.8),
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Layer 2: Intermediate Joinery Shadow Groove (Recessed Core Hardwood)
-              Container(
-                height: 2.0,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF160D07),
-                      Color(0xFF28180E),
-                      Color(0xFF160D07),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Layer 3: Heavy Sculpted Ancient Timber Fascia Beam
-              Container(
-                height: 16,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: camera.shelfFrontGradient,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left Bronze Endcap
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: goldAccent.withValues(alpha: 0.5),
-                        border: Border.all(
-                          color: const Color(0xFF4A3418),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.circle,
-                          size: 3.0,
-                          color: Color(0xFF1E1408),
-                        ),
-                      ),
-                    ),
-
-                    // Center Inscription (Expanded to prevent overflow)
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          '• ${camera.beamLabel} 0$tierNumber •',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'serif',
-                            fontSize: 8.0,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                            color: goldAccent.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Right Bronze Endcap
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: goldAccent.withValues(alpha: 0.5),
-                        border: Border.all(
-                          color: const Color(0xFF4A3418),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.circle,
-                          size: 3.0,
-                          color: Color(0xFF1E1408),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Layer 4: Under-Shelf Support Corbels
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildVictorianCorbel(goldAccent),
-                    _buildVictorianCorbel(goldAccent),
-                    _buildVictorianCorbel(goldAccent),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        // 3. Realistic Architectural Hardwood Bookshelf Architecture
+        _buildRealisticBookshelfPlank(
+          camera: camera,
+          tierNumber: tierNumber,
+          isDark: isDark,
+          goldAccent: goldAccent,
         ),
       ],
     );
   }
 
-  /// Hand-Forged Victorian Under-Shelf Support Corbel
-  Widget _buildVictorianCorbel(Color goldAccent) {
+  /// Mastercrafted Realistic Hardwood Bookshelf Plank with Beveled Edge & Brass Accents
+  Widget _buildRealisticBookshelfPlank({
+    required LibraryWingCamera camera,
+    required int tierNumber,
+    required bool isDark,
+    required Color goldAccent,
+  }) {
+    // Wood tone gradients for light vs dark mode
+    final topDeckColors = isDark
+        ? const [
+            Color(0xFF3E2718),
+            Color(0xFF5D3D26),
+            Color(0xFF8B5E3C),
+            Color(0xFF5D3D26),
+            Color(0xFF3E2718),
+          ]
+        : const [
+            Color(0xFF7A5230),
+            Color(0xFFA67447),
+            Color(0xFFD4A373),
+            Color(0xFFA67447),
+            Color(0xFF7A5230),
+          ];
+
+    final fasciaFaceColors = isDark
+        ? const [
+            Color(0xFF4A301E),
+            Color(0xFF2C1B10),
+            Color(0xFF190F08),
+          ]
+        : const [
+            Color(0xFF8B5E3C),
+            Color(0xFF6B4327),
+            Color(0xFF4A2D18),
+          ];
+
+    final edgeHighlight = isDark
+        ? const Color(0xFFD4AF37).withValues(alpha: 0.65)
+        : const Color(0xFFF3E5C8).withValues(alpha: 0.90);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Shelf Structure (Top Surface Deck + Sculpted Bevel Fascia)
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3),
+              boxShadow: [
+                // Deep Ambient Occlusion Drop Shadow onto the Library Wall
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.22),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+                // Subtle Under-Shelf Soft Ambient Glow
+                BoxShadow(
+                  color: (isDark ? const Color(0xFF1E1005) : const Color(0xFF4A2D18))
+                      .withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Top Landing Board Surface (Where books physically rest)
+                Container(
+                  height: 5.5,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: topDeckColors,
+                      stops: const [0.0, 0.20, 0.50, 0.80, 1.0],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(3),
+                      topRight: Radius.circular(3),
+                    ),
+                    border: Border(
+                      top: BorderSide(
+                        color: edgeHighlight,
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Specular Chamfer Highlight Line (The milled 45° wood edge catchlight)
+                Container(
+                  height: 1.2,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        edgeHighlight.withValues(alpha: 0.2),
+                        edgeHighlight,
+                        edgeHighlight.withValues(alpha: 0.2),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Front Fascia Board (Sculpted Bullnose Timber Edge with Inlaid Hardware)
+                Container(
+                  height: 14,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: fasciaFaceColors,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(3),
+                      bottomRight: Radius.circular(3),
+                    ),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left Brushed Brass Medallion Pin
+                      Container(
+                        width: 10,
+                        height: 10,
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFDE68A),
+                              goldAccent,
+                              const Color(0xFF8C6621),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 2,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Center Inlaid Gold Rule Line Accent
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Container(
+                            height: 0.8,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  goldAccent.withValues(alpha: 0.4),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Right Brushed Brass Medallion Pin
+                      Container(
+                        width: 10,
+                        height: 10,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFDE68A),
+                              goldAccent,
+                              const Color(0xFF8C6621),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              blurRadius: 2,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Under-Shelf Support Brackets (Elegant Curved Cast Architectural Brackets)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildArchitecturalBracket(isDark, goldAccent),
+                _buildArchitecturalBracket(isDark, goldAccent),
+                _buildArchitecturalBracket(isDark, goldAccent),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Elegant Architectural Wall Support Bracket
+  Widget _buildArchitecturalBracket(bool isDark, Color goldAccent) {
     return Container(
-      width: 12,
-      height: 9,
+      width: 10,
+      height: 8,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            goldAccent.withValues(alpha: 0.6),
-            const Color(0xFF140D07),
-          ],
+          colors: isDark
+              ? [
+                  const Color(0xFF382314),
+                  const Color(0xFF140D07),
+                ]
+              : [
+                  const Color(0xFF6B4327),
+                  const Color(0xFF352011),
+                ],
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(4),
-          bottomRight: Radius.circular(4),
+          bottomLeft: Radius.circular(5),
+          bottomRight: Radius.circular(5),
         ),
+        border: Border.all(
+          color: goldAccent.withValues(alpha: 0.35),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
     );
   }
