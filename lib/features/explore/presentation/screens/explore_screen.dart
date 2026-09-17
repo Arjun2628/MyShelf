@@ -148,15 +148,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFFBF7F0);
-    final titleColor = isDark ? const Color(0xFFE4E0D8) : const Color(0xFF261D13);
-    final subColor = isDark ? const Color(0xFF9499A5) : const Color(0xFF7A6E5F);
-    const accentColor = Color(0xFFD4AF7A);
+    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFF8FAFC);
+    final titleColor = isDark ? const Color(0xFFE4E0D8) : const Color(0xFF0F172A);
+    final subColor = isDark ? const Color(0xFF9499A5) : const Color(0xFF475569);
+    final accentColor = isDark ? const Color(0xFFD4AF7A) : const Color(0xFF2563EB);
 
     return Scaffold(
       backgroundColor: canvasBg,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: accentColor))
+          ? Center(child: CircularProgressIndicator(color: accentColor))
           : _currentViewMode == ExploreViewMode.discoveryStage
               ? GrandBookshelfWallWidget(
                   key: const ValueKey('grand_bookshelf_wall'),
@@ -226,10 +226,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
 
     final effectiveTitleColor = isTranslucent
-        ? (isDark ? const Color(0xFFF9F5EC) : const Color(0xFF1C1917))
+        ? (isDark ? const Color(0xFFF9F5EC) : const Color(0xFF0F172A))
         : titleColor;
     final effectiveSubColor = isTranslucent
-        ? (isDark ? const Color(0xFFD4AF7A) : const Color(0xFF6B5843))
+        ? (isDark ? const Color(0xFFD4AF7A) : const Color(0xFF475569))
         : subColor;
 
     return Container(
@@ -292,20 +292,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [accentColor, accentColor.withValues(alpha: 0.6)],
+                      colors: isDark
+                          ? [accentColor, accentColor.withValues(alpha: 0.6)]
+                          : [const Color(0xFF2563EB), const Color(0xFF1D4ED8)],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withValues(alpha: 0.3),
+                        color: (isDark ? accentColor : const Color(0xFF2563EB))
+                            .withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.person_rounded,
-                      color: Color(0xFF1B140B),
+                      color: isDark ? const Color(0xFF1B140B) : Colors.white,
                       size: 20,
                     ),
                   ),
@@ -321,17 +324,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
               color: isTranslucent
                   ? (isDark
                       ? Colors.black.withValues(alpha: 0.45)
-                      : Colors.white.withValues(alpha: 0.80))
+                      : Colors.white.withValues(alpha: 0.92))
                   : (isDark
                       ? const Color(0xFF1B1F27)
-                      : const Color(0xFFEFE6D8)),
+                      : Colors.white),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: isDark
                     ? accentColor.withValues(alpha: 0.35)
-                    : const Color(0xFFB8934C).withValues(alpha: 0.5),
-                width: 0.8,
+                    : const Color(0xFFE2E8F0),
+                width: 1.0,
               ),
+              boxShadow: !isDark
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
             padding: const EdgeInsets.all(3),
             child: Row(
@@ -374,18 +386,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
     required bool isDark,
     required VoidCallback onTap,
   }) {
+    final activeBg = isDark ? accentColor : const Color(0xFF2563EB);
+    final activeFg = isDark ? const Color(0xFF1A1107) : Colors.white;
+    final inactiveFg = isDark ? const Color(0xFF9E9A92) : const Color(0xFF64748B);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 7),
         decoration: BoxDecoration(
-          color: isActive ? accentColor : Colors.transparent,
+          color: isActive ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: accentColor.withValues(alpha: 0.35),
+                    color: activeBg.withValues(alpha: 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -398,9 +414,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             Icon(
               icon,
               size: 14,
-              color: isActive
-                  ? const Color(0xFF1A1107)
-                  : (isDark ? const Color(0xFF9E9A92) : const Color(0xFF6E6355)),
+              color: isActive ? activeFg : inactiveFg,
             ),
             const SizedBox(width: 6),
             Text(
@@ -408,9 +422,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
-                color: isActive
-                    ? const Color(0xFF1A1107)
-                    : (isDark ? const Color(0xFF9E9A92) : const Color(0xFF6E6355)),
+                color: isActive ? activeFg : inactiveFg,
               ),
             ),
           ],

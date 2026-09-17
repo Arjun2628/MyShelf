@@ -72,11 +72,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFFBF7F0);
-    final navBarBg = isDark ? const Color(0xFF1A1D24) : const Color(0xFF2C241B);
-    final navBarActive = const Color(0xFFEADBCE);
-    final navBarInactive = isDark ? const Color(0xFF8C93A0) : const Color(0xFF9E8F7F);
-    final navBorderColor = isDark ? const Color(0xFF2B313D) : const Color(0xFF3D352B);
+    final canvasBg = isDark ? const Color(0xFF14161A) : const Color(0xFFF8FAFC);
+    final navBarBg = isDark ? const Color(0xFF1A1D24) : Colors.white.withValues(alpha: 0.96);
+    final navBarActive = isDark ? const Color(0xFFEADBCE) : const Color(0xFF2563EB);
+    final navBarInactive = isDark ? const Color(0xFF8C93A0) : const Color(0xFF64748B);
+    final navBorderColor = isDark ? const Color(0xFF2B313D) : const Color(0xFFE2E8F0);
 
     return Scaffold(
       backgroundColor: canvasBg,
@@ -176,7 +176,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isActive
-                ? (isDark ? const Color(0xFF2C241B) : const Color(0xFF3E362C))
+                ? (isDark ? const Color(0xFF2C313D) : const Color(0xFFEFF6FF))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
           ),
