@@ -120,7 +120,8 @@ void main() {
 
     // 1. Verify Header & Mode Switcher tabs
     expect(find.textContaining('Reader'), findsOneWidget);
-    expect(find.text('Grand Bookshelf'), findsOneWidget);
+    expect(find.text('Walkthrough'), findsOneWidget);
+    expect(find.text('Bookshelf Wall'), findsOneWidget);
     expect(find.text('Editorial Feed'), findsOneWidget);
 
     // 2. Verify The Grand Library elements
@@ -203,7 +204,7 @@ void main() {
 
     // Verify bottom navigation tabs exist
     expect(find.text('Explore'), findsOneWidget);
-    expect(find.text('Library'), findsOneWidget);
+    expect(find.text('Library'), findsWidgets);
     expect(find.text('Profile'), findsOneWidget);
 
     // Switch to Profile Tab
@@ -322,5 +323,92 @@ void main() {
 
     expect(find.text('THE GRAND LIBRARY'), findsOneWidget);
   });
+
+  testWidgets('ExploreScreen renders FirstPersonLibraryWalkthroughWidget, walks hallway, taps shelf to open carousel, views book details, returns, and opens library map', (tester) async {
+    await tester.pumpWidget(
+      createTestWidget(
+        ExploreScreen(
+          repository: mockExploreRepo,
+          initialViewMode: ExploreViewMode.firstPersonWalkthrough,
+        ),
+      ),
+    );
+
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // 1. Screen 1: Verify 3D Hallway HUD elements (Library title, Map Pin, Walk/Look buttons, Signboard)
+    expect(find.text('Library'), findsOneWidget);
+    expect(find.byIcon(Icons.location_on_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.directions_walk_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.visibility_rounded), findsOneWidget);
+    expect(find.text('Science'), findsWidgets);
+    expect(find.text('Tap to open'), findsOneWidget);
+
+    // 2. Screen 2 & 3: Tap shelf "Tap to open" -> Opens Horizontal Book Carousel (Screen 3)
+    await tester.tap(find.text('Tap to open'));
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify Screen 3: Category Header, Book Titles, Bookmark icon
+    expect(find.text('Science'), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark_outline_rounded), findsOneWidget);
+
+    // 3. Screen 4: Tap on a Book Cover to open Full Book Details
+    final bookTitleFinder = find.text('Sci-Fi Chronicle: Mars Genesis');
+    if (bookTitleFinder.evaluate().isNotEmpty) {
+      await tester.tap(bookTitleFinder.first);
+    } else {
+      await tester.tap(find.byType(PageView));
+    }
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify Screen 4: Book details, Read Now, Listen, Favorites
+    expect(find.text('Back'), findsOneWidget);
+    expect(find.text('Read Now'), findsOneWidget);
+    expect(find.text('Listen Audiobook'), findsOneWidget);
+    expect(find.text('Add to Favorites'), findsOneWidget);
+    expect(find.textContaining('4.7'), findsOneWidget);
+
+    // 4. Screen 5: Tap "Back" -> Returns to Browse Books (Screen 3)
+    await tester.tap(find.text('Back'));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Tap "Library" on Screen 3 -> Returns to 3D Library Hall with toast (Screen 5)
+    await tester.tap(find.text('Library'));
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Back in Hallway View
+    expect(find.text('Library'), findsWidgets);
+
+    // 5. Screen 6: Tap Map Pin [📍] to Open Top-Down Library Map
+    await tester.tap(find.byIcon(Icons.location_on_rounded));
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Verify Screen 6: Top-down map with category teleport pins
+    expect(find.text('History'), findsWidgets);
+    expect(find.text('Fiction'), findsWidgets);
+    expect(find.textContaining('Tap any section above'), findsOneWidget);
+
+    // Teleport to History section
+    await tester.tap(find.text('History').first);
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // Back in Hallway at History
+    expect(find.text('History'), findsWidgets);
+  });
 }
+
 

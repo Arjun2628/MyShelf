@@ -7,6 +7,7 @@ import 'package:epub_audio/features/explore/presentation/screens/category_experi
 import 'package:epub_audio/features/explore/presentation/widgets/category_card.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/continue_listening_card.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/continue_reading_card.dart';
+import 'package:epub_audio/features/explore/presentation/widgets/first_person_library_walkthrough_widget.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/grand_bookshelf_wall_widget.dart';
 import 'package:epub_audio/features/explore/presentation/widgets/shelf_renderer.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Available view modes for the Explore screen.
 enum ExploreViewMode {
+  /// First-Person Point-Of-View walking walkthrough with interactive category shelves that open on tap.
+  firstPersonWalkthrough,
+
   /// Immersive animated Grand Bookshelf Wall exploration (Full-wall multi-tier authentic library).
   discoveryStage,
 
@@ -22,9 +26,10 @@ enum ExploreViewMode {
   catalogFeed,
 }
 
-/// Main Explore discovery screen with dual view modes:
-/// 1. 3D Discovery Stage (Animated Spotlight carousel, tabletop bookcase with Spine & Face views, category portals).
-/// 2. Classic Catalog Feed (Preserved editorial shelves, mood categories, continuation cards).
+/// Main Explore discovery screen with 3 view modes:
+/// 1. First-Person Walkthrough (First-person walking POV down the library aisle with tap-to-open category shelves).
+/// 2. 3D Grand Bookshelf Wall (Multi-tier bookshelf wall).
+/// 3. Classic Catalog Feed (Editorial shelves, mood categories, continuation cards).
 class ExploreScreen extends StatefulWidget {
   final ExploreRepository repository;
   final Function(Book book)? onBookSelected;
@@ -40,7 +45,7 @@ class ExploreScreen extends StatefulWidget {
     this.onReadBook,
     this.onListenBook,
     this.onProfileTap,
-    this.initialViewMode = ExploreViewMode.discoveryStage,
+    this.initialViewMode = ExploreViewMode.firstPersonWalkthrough,
   });
 
   @override
@@ -53,6 +58,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   List<ExploreSection> _sections = [];
   Map<String, List<Book>> _sectionBooks = {};
   List<Category> _categories = [];
+  Map<String, List<Book>> _categoryBooks = {};
   Map<String, CategoryExperienceConfig> _categoryConfigs = {};
   bool _isLoading = true;
   late ExploreViewMode _currentViewMode;
@@ -103,6 +109,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
       }
     }
 
+    final Map<String, List<Book>> categoryBooksMap = {};
+    for (final cat in categories) {
+      if (cat.bookIds.isNotEmpty) {
+        final books = await widget.repository.getBooksByIds(cat.bookIds);
+        categoryBooksMap[cat.id] = books;
+      }
+    }
+
     final Map<String, CategoryExperienceConfig> configMap = {};
     for (final cat in categories) {
       final config =
@@ -115,6 +129,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         _sections = sections;
         _sectionBooks = sectionBooksMap;
         _categories = categories;
+        _categoryBooks = categoryBooksMap;
         _categoryConfigs = configMap;
         _isLoading = false;
       });
@@ -154,55 +169,86 @@ class _ExploreScreenState extends State<ExploreScreen> {
     const subColor = Color(0xFFD4AF37);
     const accentColor = Color(0xFFD4AF37);
 
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: canvasBg,
+        body: Center(child: CircularProgressIndicator(color: accentColor)),
+      );
+    }
+
+    Widget content;
+    switch (_currentViewMode) {
+      case ExploreViewMode.firstPersonWalkthrough:
+        content = FirstPersonLibraryWalkthroughWidget(
+          key: const ValueKey('first_person_walkthrough'),
+          categories: _categories,
+          categoryBooks: _categoryBooks,
+          categoryConfigs: _categoryConfigs,
+          onBookSelected: (book) => widget.onBookSelected?.call(book),
+          onReadBook: widget.onReadBook,
+          onListenBook: widget.onListenBook,
+          topHeader: _buildGreetingHeader(
+            context,
+            isDark,
+            titleColor,
+            subColor,
+            accentColor,
+            isTranslucent: true,
+          ),
+        );
+        break;
+      case ExploreViewMode.discoveryStage:
+        content = GrandBookshelfWallWidget(
+          key: const ValueKey('grand_bookshelf_wall'),
+          allBooks: _allBooks,
+          categories: _categories,
+          onBookSelected: (book) => widget.onBookSelected?.call(book),
+          onReadBook: widget.onReadBook,
+          onListenBook: widget.onListenBook,
+          topHeader: _buildGreetingHeader(
+            context,
+            isDark,
+            titleColor,
+            subColor,
+            accentColor,
+            isTranslucent: true,
+          ),
+        );
+        break;
+      case ExploreViewMode.catalogFeed:
+        content = RefreshIndicator(
+          onRefresh: _loadExploreData,
+          color: accentColor,
+          child: Column(
+            children: [
+              // 1. Top Header with Greeting & Mode Switcher
+              _buildGreetingHeader(
+                context,
+                isDark,
+                titleColor,
+                subColor,
+                accentColor,
+                isTranslucent: false,
+              ),
+
+              // 2. Classic Catalog Feed
+              Expanded(
+                child: _buildCatalogFeed(
+                  isDark: isDark,
+                  titleColor: titleColor,
+                  subColor: subColor,
+                  accentColor: accentColor,
+                ),
+              ),
+            ],
+          ),
+        );
+        break;
+    }
+
     return Scaffold(
       backgroundColor: canvasBg,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: accentColor))
-          : _currentViewMode == ExploreViewMode.discoveryStage
-              ? GrandBookshelfWallWidget(
-                  key: const ValueKey('grand_bookshelf_wall'),
-                  allBooks: _allBooks,
-                  categories: _categories,
-                  onBookSelected: (book) =>
-                      widget.onBookSelected?.call(book),
-                  onReadBook: widget.onReadBook,
-                  onListenBook: widget.onListenBook,
-                  topHeader: _buildGreetingHeader(
-                    context,
-                    isDark,
-                    titleColor,
-                    subColor,
-                    accentColor,
-                    isTranslucent: true,
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadExploreData,
-                  color: accentColor,
-                  child: Column(
-                    children: [
-                      // 1. Top Header with Greeting & Mode Switcher
-                      _buildGreetingHeader(
-                        context,
-                        isDark,
-                        titleColor,
-                        subColor,
-                        accentColor,
-                        isTranslucent: false,
-                      ),
-
-                      // 2. Classic Catalog Feed
-                      Expanded(
-                        child: _buildCatalogFeed(
-                          isDark: isDark,
-                          titleColor: titleColor,
-                          subColor: subColor,
-                          accentColor: accentColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+      body: content,
     );
   }
 
@@ -351,7 +397,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
               children: [
                 Expanded(
                   child: _buildModeToggleTab(
-                    label: 'Grand Bookshelf',
+                    label: 'Walkthrough',
+                    icon: Icons.directions_walk_rounded,
+                    isActive:
+                        _currentViewMode == ExploreViewMode.firstPersonWalkthrough,
+                    accentColor: accentColor,
+                    isDark: isDark,
+                    onTap: () =>
+                        _toggleViewMode(ExploreViewMode.firstPersonWalkthrough),
+                  ),
+                ),
+                Expanded(
+                  child: _buildModeToggleTab(
+                    label: 'Bookshelf Wall',
                     icon: Icons.shelves,
                     isActive:
                         _currentViewMode == ExploreViewMode.discoveryStage,

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>3D Grand Library Room Walkthrough</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; left: 0; top: 0; }
+    #crosshair {
+      position: absolute; left: 50%; top: 50%; width: 6px; height: 6px;
+      margin-left: -3px; margin-top: -3px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4); pointer-events: none;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="crosshair"></div>
+
+  <script>
+    // --- 1. Three.js 3D Library Room Scene Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.035);
+
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    container.appendChild(renderer.domElement);
+
+    // --- 2. Atmospheric Lighting ---
+    const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.85);
+    scene.add(ambientLight);
+
+    // Warm sun pouring from the grand arched window at the far end
+    const sunLight = new THREE.DirectionalLight(0xfffae8, 1.8);
+    sunLight.position.set(0, 8, 18);
+    sunLight.target.position.set(0, 0, 0);
+    sunLight.castShadow = true;
+    scene.add(sunLight);
+    scene.add(sunLight.target);
+
+    // --- 3. 3D Architectural Room Geometry ---
+    // Floor: Polished Cream Marble Floor
+    const floorGeo = new THREE.PlaneGeometry(16, 36, 32, 32);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0xe8e2d5,
+      roughness: 0.12,
+      metalness: 0.08,
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // High Coffered Ceiling
+    const ceilingGeo = new THREE.PlaneGeometry(16, 36);
+    const ceilingMat = new THREE.MeshStandardMaterial({
+      color: 0xe4dec8,
+      roughness: 0.6,
+    });
+    const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = 6.2;
+    scene.add(ceiling);
+
+    // Side Alabaster Walls with Window Arches
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xeee8d5, roughness: 0.45 });
+    
+    // Left Wall
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.6, 6.2, 36), wallMat);
+    leftWall.position.set(-6.5, 3.1, 0);
+    scene.add(leftWall);
+
+    // Right Wall
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.6, 6.2, 36), wallMat);
+    rightWall.position.set(6.5, 3.1, 0);
+    scene.add(rightWall);
+
+    // Back Wall with Grand Entrance Arched Doors
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(14, 6.2, 0.6), wallMat);
+    backWall.position.set(0, 3.1, -17.8);
+    scene.add(backWall);
+
+    // Front Wall with Giant Arched Window Overlooking Trees
+    const frontWall = new THREE.Mesh(new THREE.BoxGeometry(14, 6.2, 0.6), wallMat);
+    frontWall.position.set(0, 3.1, 17.8);
+    scene.add(frontWall);
+
+    // Giant Sunlit Arched Window Pane
+    const windowGeo = new THREE.PlaneGeometry(8, 5);
+    const windowMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const windowMesh = new THREE.Mesh(windowGeo, windowMat);
+    windowMesh.position.set(0, 3.2, 17.4);
+    windowMesh.rotation.y = Math.PI;
+    scene.add(windowMesh);
+
+    // --- 4. Bronze Pendant Dome Lamps ---
+    const lampPositions = [-10, -4, 2, 8, 14];
+    lampPositions.forEach((posZ) => {
+      // Cord
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.8), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+      cord.position.set(0, 5.3, posZ);
+      scene.add(cord);
+
+      // Bronze Dome
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), new THREE.MeshStandardMaterial({ color: 0xb8860b, roughness: 0.3, metalness: 0.8 }));
+      dome.position.set(0, 4.4, posZ);
+      scene.add(dome);
+
+      // Bulb & PointLight
+      const pLight = new THREE.PointLight(0xffe8ba, 1.2, 8);
+      pLight.position.set(0, 4.2, posZ);
+      scene.add(pLight);
+    });
+
+    // --- 5. Symmetrical Wooden Bookcases & Book Spines ---
+    const oakWoodMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.4 });
+    const signboardMat = new THREE.MeshStandardMaterial({ color: 0x1a120b, roughness: 0.3 });
+
+    const shelfSections = [
+      { id: 'cat_history', title: 'History', x: -4.2, z: 10.0, angle: Math.PI / 2 },
+      { id: 'cat_mystery', title: 'Fiction', x: 4.2, z: 10.0, angle: -Math.PI / 2 },
+      { id: 'cat_scifi', title: 'Science', x: -4.2, z: 1.0, angle: Math.PI / 2 },
+      { id: 'cat_fantasy', title: 'Comics', x: 4.2, z: 1.0, angle: -Math.PI / 2 },
+      { id: 'cat_sleep', title: 'Technology', x: -4.2, z: -9.0, angle: Math.PI / 2 },
+      { id: 'cat_malayalam', title: 'Arts', x: 4.2, z: -9.0, angle: -Math.PI / 2 },
+    ];
+
+    const spineColors = [0x1e3a8a, 0x991b1b, 0x065f46, 0xb45309, 0x4c1d95, 0x3f3f46, 0xd97706, 0x0284c7];
+
+    shelfSections.forEach((section) => {
+      const shelfGroup = new THREE.Group();
+      shelfGroup.position.set(section.x, 0, section.z);
+      shelfGroup.rotation.y = section.angle;
+
+      // Bookcase Frame (Height: 3.6m, Width: 4.5m, Depth: 0.8m)
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.6, 0.8), oakWoodMat);
+      frame.position.y = 1.8;
+      frame.castShadow = true;
+      shelfGroup.add(frame);
+
+      // Dark Wood Signboard at Top
+      const signboard = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.45, 0.88), signboardMat);
+      signboard.position.set(0, 3.35, 0);
+      shelfGroup.add(signboard);
+
+      // Books rows (4 shelves)
+      for (let row = 0; row < 4; row++) {
+        const yPos = 0.5 + row * 0.75;
+        for (let b = -18; b <= 18; b++) {
+          const color = spineColors[Math.abs((b * 3 + row * 7) % spineColors.length)];
+          const bookMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.35 });
+          const bookHeight = 0.48 + (Math.sin(b * 5) * 0.06);
+          const bookWidth = 0.08;
+          const bookDepth = 0.65;
+          const book = new THREE.Mesh(new THREE.BoxGeometry(bookWidth, bookHeight, bookDepth), bookMat);
+          book.position.set(b * 0.1, yPos, 0.06);
+          shelfGroup.add(book);
+        }
+      }
+
+      // Green Potted Plant on top of the shelf
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.35, 16), new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 }));
+      pot.position.set(0, 3.8, 0);
+      shelfGroup.add(pot);
+
+      const plant = new THREE.Mesh(new THREE.DodecahedronGeometry(0.38), new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.3 }));
+      plant.position.set(0, 4.1, 0);
+      shelfGroup.add(plant);
+
+      scene.add(shelfGroup);
+    });
+
+    // Scholar Reading Table with Warm Desk Lamp near the Front Window (z = 13.5)
+    const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.85, 1.4), oakWoodMat);
+    table.position.set(0, 0.42, 13.5);
+    scene.add(table);
+
+    const deskLamp = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.2 }));
+    deskLamp.position.set(0.6, 1.05, 13.5);
+    scene.add(deskLamp);
+
+    const deskLight = new THREE.PointLight(0xffdf88, 1.5, 5);
+    deskLight.position.set(0.6, 0.95, 13.5);
+    scene.add(deskLight);
+
+    // --- 6. First-Person 3D Camera & Game Physics ---
+    let playerPos = new THREE.Vector3(0, 1.6, -1.5);
+    let playerYaw = 0.0;
+    let playerPitch = 0.0;
+    let walkOdometer = 0.0;
+
+    camera.position.copy(playerPos);
+
+    function updateCamera() {
+      // Head-bobbing while moving
+      const headBob = Math.sin(walkOdometer * 9.0) * 0.045;
+      camera.position.set(playerPos.x, playerPos.y + headBob, playerPos.z);
+
+      const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+      euler.y = playerYaw;
+      euler.x = playerPitch;
+      camera.quaternion.setFromEuler(euler);
+
+      checkProximity();
+    }
+
+    let currentNearShelf = null;
+
+    function checkProximity() {
+      let closest = null;
+      let minDistance = 999;
+
+      shelfSections.forEach((s) => {
+        const dist = Math.hypot(playerPos.x - s.x, playerPos.z - s.z);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closest = s;
+        }
+      });
+
+      if (minDistance < 4.2) {
+        if (currentNearShelf !== closest.id) {
+          currentNearShelf = closest.id;
+          if (window.FlutterChannel) {
+            window.FlutterChannel.postMessage(JSON.stringify({ type: 'nearby_shelf', id: closest.id, title: closest.title }));
+          }
+        }
+      } else {
+        if (currentNearShelf !== null) {
+          currentNearShelf = null;
+          if (window.FlutterChannel) {
+            window.FlutterChannel.postMessage(JSON.stringify({ type: 'nearby_shelf', id: null }));
+          }
+        }
+      }
+    }
+
+    // --- 7. Public Control API for Flutter ---
+    window.movePlayer = function(moveX, moveZ) {
+      // Move relative to camera yaw
+      const forward = new THREE.Vector3(-Math.sin(playerYaw), 0, -Math.cos(playerYaw)).normalize();
+      const right = new THREE.Vector3(Math.cos(playerYaw), 0, -Math.sin(playerYaw)).normalize();
+
+      playerPos.addScaledVector(forward, -moveZ);
+      playerPos.addScaledVector(right, moveX);
+
+      // Boundaries inside library
+      playerPos.x = Math.max(-4.8, Math.min(4.8, playerPos.x));
+      playerPos.z = Math.max(-15.5, Math.min(15.5, playerPos.z));
+
+      walkOdometer += (Math.abs(moveX) + Math.abs(moveZ));
+      updateCamera();
+    };
+
+    window.rotatePlayer = function(deltaYaw, deltaPitch) {
+      playerYaw -= deltaYaw;
+      playerPitch = Math.max(-0.45, Math.min(0.45, playerPitch - deltaPitch));
+      updateCamera();
+    };
+
+    window.teleportToShelf = function(shelfId) {
+      const s = shelfSections.find(sec => sec.id === shelfId);
+      if (s) {
+        playerPos.set(s.x > 0 ? s.x - 2.0 : s.x + 2.0, 1.6, s.z);
+        playerYaw = s.x > 0 ? -Math.PI / 2 : Math.PI / 2;
+        playerPitch = 0;
+        updateCamera();
+      }
+    };
+
+    // Render Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateCamera();
+  </script>
+</body>
+</html>
